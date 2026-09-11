@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { toUiLocale } from "@tmr/core";
 import { randomToken } from "@tmr/core/node";
 import { createVerificationToken, getUserByEmail } from "@tmr/db";
 import { handleRouteError, jsonOk, readJson } from "@/lib/api";
@@ -25,7 +26,10 @@ export async function POST(request: Request) {
       });
       await sendEmail({
         to: email,
-        ...renderVerificationEmail(`${env.appUrl}/verify?token=${token}`),
+        ...renderVerificationEmail(
+          `${env.appUrl}/verify?token=${token}`,
+          toUiLocale(user.uiLanguage),
+        ),
       });
     }
     return jsonOk({ ok: true });

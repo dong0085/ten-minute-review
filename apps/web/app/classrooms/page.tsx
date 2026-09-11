@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { bankSize, getDailyQuizByClassroomAndDate, listClassrooms } from "@tmr/db";
 import {
   ClassroomCard,
@@ -17,6 +18,7 @@ function localDate(timezone: string): string {
 
 export default async function ClassroomsPage() {
   const user = await requireUser();
+  const t = await getTranslations("Classroom.ListPage");
   const db = getDb();
   const classrooms = await listClassrooms(db, user.id);
   const today = localDate(user.timezone);
@@ -34,13 +36,9 @@ export default async function ClassroomsPage() {
   if (cards.length === 0) {
     return (
       <div className="mx-auto max-w-xl space-y-6 py-8 text-center">
-        <h1 className="text-2xl font-semibold">Your notes become a ten-minute quiz</h1>
-        <p className="text-neutral-600">
-          Create a classroom, paste or photograph your tutoring notes, and every morning you
-          get a short quiz drawn from what you studied: vocabulary, phrases, grammar, ideas,
-          and comprehension.
-        </p>
-        <LinkButton href="/classrooms/new">Create a classroom</LinkButton>
+        <h1 className="text-2xl font-semibold">{t("emptyTitle")}</h1>
+        <p className="text-neutral-600">{t("emptyBlurb")}</p>
+        <LinkButton href="/classrooms/new">{t("create")}</LinkButton>
       </div>
     );
   }
@@ -48,9 +46,9 @@ export default async function ClassroomsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Classrooms</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <LinkButton href="/classrooms/new" size="sm">
-          + New classroom
+          {t("newClassroom")}
         </LinkButton>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

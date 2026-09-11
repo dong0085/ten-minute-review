@@ -1,6 +1,6 @@
 import type {
   ButtonHTMLAttributes,
-  InputHTMLAttributes,
+  ComponentProps,
   ReactNode,
   TextareaHTMLAttributes,
 } from "react";
@@ -43,7 +43,7 @@ export function Button({
   );
 }
 
-export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, ...props }: ComponentProps<"input">) {
   return (
     <input
       className={cn(

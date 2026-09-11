@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Alert, Button } from "@/components/ui";
 
 async function readError(response: Response): Promise<string | null> {
@@ -16,6 +17,8 @@ async function readError(response: Response): Promise<string | null> {
 }
 
 export function DeleteAccount() {
+  const t = useTranslations("Account.DeleteAccount");
+  const tc = useTranslations("Common");
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -27,14 +30,12 @@ export function DeleteAccount() {
     try {
       const response = await fetch("/api/me", { method: "DELETE" });
       if (!response.ok) {
-        throw new Error((await readError(response)) ?? "Could not delete your account.");
+        throw new Error((await readError(response)) ?? t("error"));
       }
       router.push("/");
       router.refresh();
     } catch (deleteError) {
-      setError(
-        deleteError instanceof Error ? deleteError.message : "Could not delete your account.",
-      );
+      setError(deleteError instanceof Error ? deleteError.message : t("error"));
       setDeleting(false);
     }
   };
@@ -42,12 +43,9 @@ export function DeleteAccount() {
   if (!confirming) {
     return (
       <div className="space-y-2">
-        <p className="text-sm text-neutral-600">
-          Deleting your account removes your classrooms, uploads, knowledge points, quizzes,
-          attempts, and stored images.
-        </p>
+        <p className="text-sm text-neutral-600">{t("description")}</p>
         <Button variant="danger" onClick={() => setConfirming(true)}>
-          Delete account
+          {t("deleteAccount")}
         </Button>
         {error ? <Alert tone="error">{error}</Alert> : null}
       </div>
@@ -56,16 +54,13 @@ export function DeleteAccount() {
 
   return (
     <div className="space-y-3">
-      <Alert tone="error">
-        This removes every classroom, upload, knowledge point, quiz, attempt, and stored image.
-        This cannot be undone.
-      </Alert>
+      <Alert tone="error">{t("warning")}</Alert>
       <div className="flex flex-wrap gap-2">
         <Button variant="danger" onClick={() => void remove()} disabled={deleting}>
-          {deleting ? "Deleting…" : "Yes, delete everything"}
+          {deleting ? t("deleting") : t("confirm")}
         </Button>
         <Button variant="secondary" onClick={() => setConfirming(false)} disabled={deleting}>
-          Cancel
+          {tc("cancel")}
         </Button>
       </div>
       {error ? <Alert tone="error">{error}</Alert> : null}

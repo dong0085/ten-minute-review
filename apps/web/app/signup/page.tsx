@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Alert } from "@/components/ui";
 import { SignUpForm } from "@/components/auth/signup-form";
 
@@ -13,18 +14,15 @@ export default async function SignUpPage({
   const params = await searchParams;
   const code = first(params.code) ?? "";
   const error = first(params.error);
+  const t = await getTranslations("Auth.SignUpPage");
 
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Create your account</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Your notes become a ten-minute quiz every morning.
-        </p>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        <p className="mt-1 text-sm text-neutral-600">{t("subtitle")}</p>
       </div>
-      {error === "invite" ? (
-        <Alert tone="error">A valid invite code is needed to sign up.</Alert>
-      ) : null}
+      {error === "invite" ? <Alert tone="error">{t("inviteError")}</Alert> : null}
       <SignUpForm initialCode={code} />
     </div>
   );

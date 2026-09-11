@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import {
   bankSize,
   countBankByCategory,
@@ -14,7 +15,7 @@ import { Badge, Card } from "@/components/ui";
 import { BankSummary } from "@/components/classroom/bank-summary";
 import { LinkButton } from "@/components/classroom/link-button";
 import { TodayQuizAction } from "@/components/classroom/today-quiz-action";
-import { formatQuizDate } from "@/components/quiz/question-review";
+import { formatQuizDate } from "@/lib/format";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 
@@ -28,13 +29,9 @@ function localDate(timezone: string): string {
   }
 }
 
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
-}
-
-function firstLine(value: string | null): string {
+function firstLine(value: string | null, fallback: string): string {
   const line = (value ?? "").split("\n").find((entry) => entry.trim() !== "");
-  return line?.trim() ?? "Text notes";
+  return line?.trim() ?? fallback;
 }
 
 function nowMs(): number {
@@ -51,6 +48,9 @@ export default async function ClassroomHomePage({
   const { id } = await params;
   const { create } = await searchParams;
   const user = await requireUser();
+  const t = await getTranslations("Classroom.HomePage");
+  const locale = await getLocale();
+  const format = await getFormatter();
   const db = getDb();
   const classroom = await getClassroom(db, user.id, id);
   if (!classroom) {
@@ -93,15 +93,12 @@ export default async function ClassroomHomePage({
         </Card>
         <Card className="flex flex-col justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold">Add notes</h2>
-            <p className="mt-1 text-sm text-neutral-600">
-              Paste your notes or add photos of your handwriting. New material joins the
-              question bank.
-            </p>
+            <h2 className="text-lg font-semibold">{t("addNotesTitle")}</h2>
+            <p className="mt-1 text-sm text-neutral-600">{t("addNotesBlurb")}</p>
           </div>
           <div>
             <LinkButton href={`/classrooms/${classroom.id}/upload`} variant="secondary">
-              Add notes
+              {t("addNotes")}
             </LinkButton>
           </div>
         </Card>
@@ -113,15 +110,13 @@ export default async function ClassroomHomePage({
 
       <Card className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Recent uploads</h2>
+          <h2 className="text-lg font-semibold">{t("recentUploads")}</h2>
           <Link className="text-sm underline" href={`/classrooms/${classroom.id}/history`}>
-            View history
+            {t("viewHistory")}
           </Link>
         </div>
         {recent.length === 0 ? (
-          <p className="text-sm text-neutral-600">
-            Nothing yet. Add your first notes to get started.
-          </p>
+          <p className="text-sm text-neutral-600">{t("noUploads")}</p>
         ) : (
           <ul className="divide-y divide-neutral-100">
             {recent.map(({ upload }) => (
@@ -130,14 +125,16 @@ export default async function ClassroomHomePage({
                   <p className="truncate text-sm">
                     {upload.subject ??
                       (upload.kind === "text"
-                        ? firstLine(upload.textContent)
-                        : (upload.originalFilename ?? "Image notes"))}
+                        ? firstLine(upload.textContent, t("textNotes"))
+                        : (upload.originalFilename ?? t("imageNotes")))}
                   </p>
                   <p className="mt-0.5 text-xs text-neutral-500">
-                    {formatDate(upload.createdAt)}
+                    {format.dateTime(upload.createdAt, { dateStyle: "medium" })}
                   </p>
                 </div>
-                <Badge tone="neutral">{upload.kind === "text" ? "Text" : "Image"}</Badge>
+                <Badge tone="neutral">
+                  {upload.kind === "text" ? t("text") : t("image")}
+                </Badge>
               </li>
             ))}
           </ul>
@@ -147,15 +144,13 @@ export default async function ClassroomHomePage({
       <div className="grid gap-4 md:grid-cols-2">
         <Card className={`space-y-3${unfinished.length === 0 ? " md:col-span-2" : ""}`}>
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Recent quizzes</h2>
+            <h2 className="text-lg font-semibold">{t("recentQuizzes")}</h2>
             <Link className="text-sm underline" href={`/classrooms/${classroom.id}/quizzes`}>
-              View all
+              {t("viewAll")}
             </Link>
           </div>
           {recentQuizzes.length === 0 ? (
-            <p className="text-sm text-neutral-600">
-              No quizzes yet. They appear after your notes are processed.
-            </p>
+            <p className="text-sm text-neutral-600">{t("noQuizzes")}</p>
           ) : (
             <ul className="divide-y divide-neutral-100">
               {recentQuizzes.map((quiz) => (
@@ -167,23 +162,23 @@ export default async function ClassroomHomePage({
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium">
-                          {formatQuizDate(quiz.quizDate)}
+                          {formatQuizDate(quiz.quizDate, locale)}
                         </p>
                         <Badge tone={quiz.kind === "manual" ? "amber" : "neutral"}>
-                          {quiz.kind === "manual" ? "On demand" : "Daily"}
+                          {quiz.kind === "manual" ? t("onDemand") : t("daily")}
                         </Badge>
                       </div>
                       <p className="mt-0.5 text-xs text-neutral-500">
-                        {quiz.size} {quiz.size === 1 ? "question" : "questions"}
+                        {t("questions", { count: quiz.size })}
                       </p>
                     </div>
                     {quiz.attemptCount === 0 ? (
                       <span className="inline-flex shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-900">
-                        Take
+                        {t("take")}
                       </span>
                     ) : (
                       <p className="shrink-0 text-xs text-neutral-500">
-                        Best {quiz.bestScore} / {quiz.size}
+                        {t("best", { score: quiz.bestScore ?? 0, size: quiz.size })}
                       </p>
                     )}
                   </Link>
@@ -196,10 +191,8 @@ export default async function ClassroomHomePage({
         {unfinished.length > 0 ? (
           <Card className="space-y-3">
             <div>
-              <h2 className="text-lg font-semibold">Unfinished</h2>
-              <p className="mt-1 text-sm text-neutral-500">
-                Quizzes you created but have not taken yet.
-              </p>
+              <h2 className="text-lg font-semibold">{t("unfinished")}</h2>
+              <p className="mt-1 text-sm text-neutral-500">{t("unfinishedBlurb")}</p>
             </div>
             <ul className="divide-y divide-neutral-100">
               {unfinished.map((quiz) => (
@@ -209,13 +202,15 @@ export default async function ClassroomHomePage({
                     className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 transition hover:bg-neutral-50"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium">{formatQuizDate(quiz.quizDate)}</p>
+                      <p className="text-sm font-medium">
+                        {formatQuizDate(quiz.quizDate, locale)}
+                      </p>
                       <p className="mt-0.5 text-xs text-neutral-500">
-                        {quiz.size} {quiz.size === 1 ? "question" : "questions"}
+                        {t("questions", { count: quiz.size })}
                       </p>
                     </div>
                     <span className="inline-flex shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-900">
-                      Take
+                      {t("take")}
                     </span>
                   </Link>
                 </li>

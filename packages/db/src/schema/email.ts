@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -9,7 +10,9 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { QuizKind } from "@tmr/core";
 import { users } from "./users";
+import { quizzes } from "./quizzes";
 
 export const emailPreferences = pgTable("email_preferences", {
   userId: uuid("user_id")
@@ -28,11 +31,18 @@ export const emailSends = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     sentOn: date("sent_on", { mode: "string" }).notNull(),
+    kind: text("kind").$type<QuizKind>().notNull().default("daily"),
+    quizId: uuid("quiz_id").references(() => quizzes.id, { onDelete: "cascade" }),
     classroomIds: jsonb("classroom_ids").$type<string[]>().notNull().default([]),
     providerMessageId: text("provider_message_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("email_sends_user_day_idx").on(table.userId, table.sentOn)],
+  (table) => [
+    uniqueIndex("email_sends_user_day_daily_idx")
+      .on(table.userId, table.sentOn)
+      .where(sql`kind = 'daily'`),
+    uniqueIndex("email_sends_user_quiz_idx").on(table.userId, table.quizId),
+  ],
 );
 
 export type EmailPreference = typeof emailPreferences.$inferSelect;

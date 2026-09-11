@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button, cn } from "@/components/ui";
 import { LinkButton } from "@/components/classroom/link-button";
 
@@ -44,16 +45,6 @@ function Spinner({ className }: { className?: string }) {
   );
 }
 
-function elapsedHint(seconds: number): string {
-  if (seconds < 10) {
-    return "This usually takes a few seconds.";
-  }
-  if (seconds < 30) {
-    return "Taking a little longer than usual.";
-  }
-  return "Almost there.";
-}
-
 export function TodayQuizAction({
   classroomId,
   dailyQuizId,
@@ -69,6 +60,8 @@ export function TodayQuizAction({
   autoStart?: boolean;
   initialJob: { status: JobStatus; requestedAt: string } | null;
 }) {
+  const t = useTranslations("Classroom.TodayQuiz");
+  const tCommon = useTranslations("Common");
   const router = useRouter();
   const autoStartedRef = useRef(false);
   const initialElapsed = initialJob
@@ -271,9 +264,9 @@ export function TodayQuizAction({
   const stepIndex = step === "running" ? 1 : 0;
 
   const steps = [
-    { key: "queued", label: "Queued" },
-    { key: "writing", label: "Writing your quiz" },
-    { key: "ready", label: "Ready" },
+    { key: "queued", label: t("stepQueued") },
+    { key: "writing", label: t("stepWriting") },
+    { key: "ready", label: t("stepReady") },
   ];
 
   const inlineProgress = (
@@ -290,14 +283,14 @@ export function TodayQuizAction({
         ) : (
           <span className="h-2 w-2 rounded-full bg-neutral-400" />
         )}
-        {phase === "posting" || step === "pending" ? "Queued" : "Writing your quiz"}
+        {phase === "posting" || step === "pending" ? t("stepQueued") : t("stepWriting")}
       </button>
       <button
         type="button"
         onClick={cancel}
         className="ml-auto text-xs text-neutral-500 underline hover:text-neutral-900"
       >
-        Cancel
+        {tCommon("cancel")}
       </button>
     </div>
   );
@@ -306,11 +299,9 @@ export function TodayQuizAction({
     <>
       <div className="flex flex-col justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold">Today&apos;s quiz</h2>
+          <h2 className="text-lg font-semibold">{t("title")}</h2>
           <p className="mt-1 text-sm text-neutral-600">
-            {activeQuizId
-              ? "Your quiz for today is ready."
-              : "Create one now, or wait for your morning email."}
+            {activeQuizId ? t("ready") : t("idle")}
           </p>
         </div>
         <div>
@@ -318,32 +309,32 @@ export function TodayQuizAction({
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <LinkButton href={`/classrooms/${classroomId}/quiz/${activeQuizId}`}>
-                  Take today&apos;s quiz
+                  {t("takeToday")}
                 </LinkButton>
                 <Button variant="secondary" onClick={start} disabled={composing}>
-                  Create a quiz now
+                  {t("createNow")}
                 </Button>
               </div>
               {composing && minimized ? inlineProgress : null}
             </div>
           ) : bankSize === 0 ? (
             <div className="space-y-2">
-              <Button disabled>Create a quiz now</Button>
+              <Button disabled>{t("createNow")}</Button>
               <p className="text-xs text-neutral-500">
                 <Link
                   className="underline hover:text-neutral-900"
                   href={`/classrooms/${classroomId}/upload`}
                 >
-                  Add notes
+                  {t("addNotes")}
                 </Link>{" "}
-                to create a quiz.
+                {t("addNotesSuffix")}
               </p>
             </div>
           ) : composing && minimized ? (
             inlineProgress
           ) : (
             <Button onClick={start} disabled={phase === "posting"}>
-              Create a quiz now
+              {t("createNow")}
             </Button>
           )}
         </div>
@@ -360,7 +351,7 @@ export function TodayQuizAction({
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Creating your quiz"
+            aria-label={t("creatingAria")}
             tabIndex={-1}
             onKeyDown={onDialogKeyDown}
             className={cn(
@@ -372,9 +363,15 @@ export function TodayQuizAction({
               <div className="space-y-4">
                 <div>
                   <h3 className="text-base font-semibold" aria-live="polite">
-                    {phase === "posting" ? "Queued" : steps[stepIndex]?.label}
+                    {phase === "posting" ? t("stepQueued") : steps[stepIndex]?.label}
                   </h3>
-                  <p className="mt-1 text-sm text-neutral-500">{elapsedHint(elapsed)}</p>
+                  <p className="mt-1 text-sm text-neutral-500">
+                    {elapsed < 10
+                      ? t("hintFewSeconds")
+                      : elapsed < 30
+                        ? t("hintLonger")
+                        : t("hintAlmost")}
+                  </p>
                 </div>
                 <ol className="space-y-2">
                   {steps.map((entry, index) => {
@@ -404,78 +401,71 @@ export function TodayQuizAction({
                 </ol>
                 <div className="flex justify-between gap-2 pt-1">
                   <Button variant="secondary" onClick={minimize}>
-                    Minimize
+                    {t("minimize")}
                   </Button>
                   <Button variant="ghost" onClick={cancel}>
-                    Cancel
+                    {tCommon("cancel")}
                   </Button>
                 </div>
               </div>
             ) : phase === "ready" && readyQuizId ? (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base font-semibold">Your quiz is ready.</h3>
+                  <h3 className="text-base font-semibold">{t("readyTitle")}</h3>
                   <p className="mt-1 text-sm text-neutral-500">
-                    {bankSize} knowledge point{bankSize === 1 ? "" : "s"} in the bank.
+                    {t("knowledgePoints", { count: bankSize })}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <LinkButton href={`/classrooms/${classroomId}/quiz/${readyQuizId}`}>
-                    Take quiz
+                    {t("take")}
                   </LinkButton>
                   <Button variant="secondary" onClick={start}>
-                    Create another quiz
+                    {t("createAnother")}
                   </Button>
                 </div>
                 <div className="pt-1">
                   <Button variant="ghost" onClick={close}>
-                    Close
+                    {t("close")}
                   </Button>
                 </div>
               </div>
             ) : timedOut ? (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base font-semibold">Still working…</h3>
-                  <p className="mt-1 text-sm text-neutral-500">
-                    It is taking longer than usual. You can wait or check the Quizzes page
-                    later.
-                  </p>
+                  <h3 className="text-base font-semibold">{t("timeoutTitle")}</h3>
+                  <p className="mt-1 text-sm text-neutral-500">{t("timeoutBlurb")}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={checkAgain}>Check again</Button>
+                  <Button onClick={checkAgain}>{t("checkAgain")}</Button>
                   <Button variant="ghost" onClick={close}>
-                    Close
+                    {t("close")}
                   </Button>
                 </div>
               </div>
             ) : phase === "stopped" ? (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base font-semibold">Stopped</h3>
-                  <p className="mt-1 text-sm text-neutral-500">
-                    No quiz was created. You can start again any time.
-                  </p>
+                  <h3 className="text-base font-semibold">{t("stoppedTitle")}</h3>
+                  <p className="mt-1 text-sm text-neutral-500">{t("stoppedBlurb")}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={start}>Create a quiz now</Button>
+                  <Button onClick={start}>{t("createNow")}</Button>
                   <Button variant="ghost" onClick={close}>
-                    Close
+                    {t("close")}
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base font-semibold">Couldn&apos;t create the quiz.</h3>
-                  <p className="mt-1 text-sm text-neutral-500">
-                    Something went wrong while writing it. Try again in a moment.
-                  </p>
+                  <h3 className="text-base font-semibold">{t("failedTitle")}</h3>
+                  <p className="mt-1 text-sm text-neutral-500">{t("failedBlurb")}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={start}>Try again</Button>
+                  <Button onClick={start}>{t("tryAgain")}</Button>
                   <Button variant="ghost" onClick={close}>
-                    Close
+                    {t("close")}
                   </Button>
                 </div>
               </div>

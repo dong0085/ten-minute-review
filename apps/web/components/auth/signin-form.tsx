@@ -4,10 +4,13 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Alert, Button, Card, Input, Label } from "@/components/ui";
 import { GoogleButton } from "./google-button";
 
 export function SignInForm() {
+  const t = useTranslations("Auth.SignInForm");
+  const tc = useTranslations("Common");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,13 +28,13 @@ export function SignInForm() {
         redirect: false,
       });
       if (!result || result.error) {
-        setError("Email or password is incorrect.");
+        setError(t("invalid"));
         return;
       }
       router.push("/classrooms");
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(tc("genericError"));
     } finally {
       setPending(false);
     }
@@ -41,7 +44,7 @@ export function SignInForm() {
     <Card className="space-y-5">
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
-          <Label>Email</Label>
+          <Label>{t("email")}</Label>
           <Input
             type="email"
             required
@@ -50,7 +53,7 @@ export function SignInForm() {
           />
         </div>
         <div>
-          <Label>Password</Label>
+          <Label>{t("password")}</Label>
           <Input
             type="password"
             required
@@ -60,22 +63,22 @@ export function SignInForm() {
         </div>
         {error ? <Alert tone="error">{error}</Alert> : null}
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Signing in..." : "Sign in"}
+          {pending ? t("submitting") : t("submit")}
         </Button>
       </form>
 
       <div className="flex items-center gap-3 text-xs text-neutral-400">
         <span className="h-px flex-1 bg-neutral-200" />
-        or
+        {t("or")}
         <span className="h-px flex-1 bg-neutral-200" />
       </div>
-      <GoogleButton label="Sign in with Google" />
+      <GoogleButton label={t("google")} />
       <div className="flex justify-between text-sm text-neutral-600">
         <Link className="underline" href="/forgot">
-          Forgot password?
+          {t("forgot")}
         </Link>
         <Link className="font-medium underline" href="/signup">
-          Create account
+          {t("createAccount")}
         </Link>
       </div>
     </Card>

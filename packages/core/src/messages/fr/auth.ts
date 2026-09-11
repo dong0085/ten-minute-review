@@ -1,0 +1,100 @@
+import type { MessageShape } from "../type";
+import type { auth as enAuth } from "../en/auth";
+
+export const auth: MessageShape<typeof enAuth> = {
+  SignInPage: {
+    title: "Se connecter",
+    subtitle: "Reprends là où tu en étais.",
+    verified: "Ton e-mail est vérifié. Connecte-toi pour continuer.",
+    inviteError: "Ce code d'invitation n'a pas fonctionné. Crée un compte avec un code valide.",
+    signInError: "Connexion impossible. Réessaie.",
+  },
+  SignInForm: {
+    email: "E-mail",
+    password: "Mot de passe",
+    invalid: "E-mail ou mot de passe incorrect.",
+    submitting: "Connexion…",
+    submit: "Se connecter",
+    or: "ou",
+    google: "Se connecter avec Google",
+    forgot: "Mot de passe oublié ?",
+    createAccount: "Créer un compte",
+  },
+  SignUpPage: {
+    title: "Crée ton compte",
+    subtitle: "Tes notes deviennent un quiz de dix minutes chaque matin.",
+    inviteError: "Un code d'invitation valide est nécessaire pour t'inscrire.",
+  },
+  SignUpForm: {
+    inviteCode: "Code d'invitation",
+    invitePlaceholder: "Depuis ton invitation",
+    email: "E-mail",
+    password: "Mot de passe",
+    language: "Langue (facultatif)",
+    browserDefault: "Langue du navigateur",
+    timezone: "Fuseau horaire (facultatif)",
+    inviteInvalid: "Ce code d'invitation n'est pas valide.",
+    emailTaken: "Un compte existe déjà avec cet e-mail.",
+    genericError: "Une erreur est survenue. Réessaie.",
+    creating: "Création du compte…",
+    createAccount: "Créer un compte",
+    or: "ou",
+    google: "S'inscrire avec Google",
+    alreadyHave: "Tu as déjà un compte ?",
+    signIn: "Se connecter",
+    checkEmailTitle: "Vérifie ta boîte e-mail",
+    checkEmailBody:
+      "Nous avons envoyé un lien de vérification à {email}. Ouvre-le pour terminer la création de ton compte.",
+    goToSignIn: "Aller à la connexion",
+  },
+  ForgotPage: {
+    title: "Réinitialiser ton mot de passe",
+    subtitle: "Nous t'enverrons un lien par e-mail pour choisir un nouveau mot de passe.",
+  },
+  ForgotForm: {
+    intro: "Entre ton e-mail et nous t'enverrons un lien pour réinitialiser ton mot de passe.",
+    sent: "Si un compte existe pour cet e-mail, nous avons envoyé un lien de réinitialisation.",
+    back: "Retour à la connexion",
+    sending: "Envoi…",
+    submit: "Envoyer le lien",
+  },
+  ResetPage: {
+    title: "Choisis un nouveau mot de passe",
+    invalid: "Ce lien de réinitialisation est invalide ou a expiré.",
+    requestNew: "Demande-en un nouveau",
+  },
+  ResetForm: {
+    password: "Nouveau mot de passe",
+    confirm: "Confirme le mot de passe",
+    mismatch: "Les deux mots de passe ne correspondent pas.",
+    invalidLink: "Ce lien de réinitialisation est invalide ou a expiré.",
+    updated: "Ton mot de passe a été mis à jour.",
+    saving: "Enregistrement…",
+    submit: "Définir le mot de passe",
+    signIn: "Se connecter",
+  },
+  VerifyPage: {
+    title: "Vérifie ton e-mail",
+  },
+  VerifyView: {
+    verifying: "Vérification de ton e-mail…",
+    invalid: "Ce lien de vérification est invalide ou a expiré.",
+    invalidHelp: "Connecte-toi pour demander un nouveau lien, ou recrée un compte.",
+    success: "Ton e-mail est vérifié.",
+    signIn: "Se connecter",
+    createAccount: "Créer un compte",
+  },
+  UnsubscribePage: {
+    invalidTitle: "Ce lien est invalide ou a expiré",
+    invalidBody: "Connecte-toi et ouvre ton compte pour gérer les préférences d'e-mail.",
+    goToAccount: "Aller au compte",
+    successTitle: "Tu es désabonné",
+    successBody:
+      "Les e-mails de quiz quotidiens sont désactivés pour ce compte. Tes classes, tes quiz et ton historique sont toujours là quand tu veux.",
+    manage: "Gérer les préférences d'e-mail",
+  },
+  GoogleButton: {
+    default: "Continuer avec Google",
+    redirecting: "Redirection…",
+  },
+};

@@ -2,9 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Alert, Button, Card, Input, Label } from "@/components/ui";
 
 export function ForgotForm() {
+  const t = useTranslations("Auth.ForgotForm");
+  const tc = useTranslations("Common");
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
@@ -21,12 +24,12 @@ export function ForgotForm() {
         body: JSON.stringify({ email }),
       });
       if (!response.ok) {
-        setError("Something went wrong. Please try again.");
+        setError(tc("genericError"));
         return;
       }
       setDone(true);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(tc("genericError"));
     } finally {
       setPending(false);
     }
@@ -35,11 +38,9 @@ export function ForgotForm() {
   if (done) {
     return (
       <Card className="space-y-3">
-        <Alert tone="success">
-          If an account exists for that email, we sent a reset link.
-        </Alert>
+        <Alert tone="success">{t("sent")}</Alert>
         <Link className="text-sm font-medium underline" href="/signin">
-          Back to sign in
+          {t("back")}
         </Link>
       </Card>
     );
@@ -48,11 +49,9 @@ export function ForgotForm() {
   return (
     <Card>
       <form className="space-y-4" onSubmit={onSubmit}>
-        <p className="text-sm text-neutral-600">
-          Enter your email and we will send you a link to reset your password.
-        </p>
+        <p className="text-sm text-neutral-600">{t("intro")}</p>
         <div>
-          <Label>Email</Label>
+          <Label>{tc("email")}</Label>
           <Input
             type="email"
             required
@@ -62,11 +61,11 @@ export function ForgotForm() {
         </div>
         {error ? <Alert tone="error">{error}</Alert> : null}
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Sending..." : "Send reset link"}
+          {pending ? t("sending") : t("submit")}
         </Button>
         <p className="text-center text-sm text-neutral-600">
           <Link className="underline" href="/signin">
-            Back to sign in
+            {t("back")}
           </Link>
         </p>
       </form>

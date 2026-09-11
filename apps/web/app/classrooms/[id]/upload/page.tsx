@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getClassroom } from "@tmr/db";
 import { UploadPanel } from "@/components/upload/upload-panel";
 import { getDb } from "@/lib/db";
@@ -8,6 +9,7 @@ import { requireUser } from "@/lib/session";
 export default async function UploadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
+  const t = await getTranslations("Classroom.UploadPage");
   const classroom = await getClassroom(getDb(), user.id, id);
   if (!classroom) {
     notFound();
@@ -21,11 +23,8 @@ export default async function UploadPage({ params }: { params: Promise<{ id: str
         >
           ← {classroom.name}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Add notes</h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Paste your session notes or attach photos of your handwriting. Points join the bank as
-          soon as extraction finishes.
-        </p>
+        <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
+        <p className="mt-1 text-sm text-neutral-500">{t("blurb")}</p>
       </div>
       <UploadPanel classroomId={id} />
     </div>

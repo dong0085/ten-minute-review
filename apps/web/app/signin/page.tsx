@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Alert } from "@/components/ui";
 import { SignInForm } from "@/components/auth/signin-form";
 
@@ -13,22 +14,17 @@ export default async function SignInPage({
   const params = await searchParams;
   const verified = first(params.verified) === "1";
   const error = first(params.error);
+  const t = await getTranslations("Auth.SignInPage");
 
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Sign in</h1>
-        <p className="mt-1 text-sm text-neutral-600">Pick up where you left off.</p>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        <p className="mt-1 text-sm text-neutral-600">{t("subtitle")}</p>
       </div>
-      {verified ? (
-        <Alert tone="success">Your email is verified. Sign in to continue.</Alert>
-      ) : null}
+      {verified ? <Alert tone="success">{t("verified")}</Alert> : null}
       {error ? (
-        <Alert tone="error">
-          {error === "invite"
-            ? "That invite code did not work. Create an account with a valid code."
-            : "We could not sign you in. Please try again."}
-        </Alert>
+        <Alert tone="error">{error === "invite" ? t("inviteError") : t("signInError")}</Alert>
       ) : null}
       <SignInForm />
     </div>

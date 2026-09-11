@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getQuizWithQuestionsForUser } from "@tmr/db";
 import { QuizRunner } from "@/components/quiz/quiz-runner";
-import { formatQuizDate } from "@/components/quiz/question-review";
+import { formatQuizDate } from "@/lib/format";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 
@@ -13,6 +14,8 @@ export default async function QuizPage({
 }) {
   const { id, quizId } = await params;
   const user = await requireUser();
+  const t = await getTranslations("Classroom.QuizPage");
+  const locale = await getLocale();
   const data = await getQuizWithQuestionsForUser(getDb(), user.id, quizId);
   if (!data || data.quiz.classroomId !== id) {
     notFound();
@@ -24,14 +27,16 @@ export default async function QuizPage({
           className="text-sm text-neutral-600 hover:text-neutral-900"
           href={`/classrooms/${id}/quizzes`}
         >
-          ← All quizzes
+          {t("allQuizzes")}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">{formatQuizDate(data.quiz.quizDate)}</h1>
+        <h1 className="mt-2 text-2xl font-semibold">
+          {formatQuizDate(data.quiz.quizDate, locale)}
+        </h1>
         <p className="mt-1 text-sm text-neutral-500">
-          {data.quiz.size} questions. Answers are revealed after you submit.
+          {t("note", { count: data.quiz.size })}
         </p>
       </div>
-      <QuizRunner quizId={quizId} classroomId={id} />
+      <QuizRunner quizId={quizId} classroomId={id} userId={user.id} />
     </div>
   );
 }

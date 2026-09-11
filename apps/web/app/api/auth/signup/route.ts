@@ -1,5 +1,6 @@
 import { hash } from "@node-rs/argon2";
 import { z } from "zod";
+import { toUiLocale } from "@tmr/core";
 import { randomToken } from "@tmr/core/node";
 import {
   createUser,
@@ -58,7 +59,10 @@ export async function POST(request: Request) {
     });
     await sendEmail({
       to: body.email,
-      ...renderVerificationEmail(`${env.appUrl}/verify?token=${token}`),
+      ...renderVerificationEmail(
+        `${env.appUrl}/verify?token=${token}`,
+        toUiLocale(body.uiLanguage),
+      ),
     });
 
     if (referrerUserId) {

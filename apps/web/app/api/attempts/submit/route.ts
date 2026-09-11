@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const body = await readJson(request, submitSchema);
     const token = verifyAttemptToken(body.attemptToken, env.authSecret);
     if (!token) {
-      return jsonError("Attempt token is invalid or expired", 400);
+      return jsonError("Attempt token is invalid or expired", 400, "attempt_invalid");
     }
 
     const db = getDb();

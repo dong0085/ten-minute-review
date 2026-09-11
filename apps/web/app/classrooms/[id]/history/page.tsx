@@ -1,33 +1,22 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { getClassroom, listUploadsForUser } from "@tmr/db";
 import { Alert, Badge, Card } from "@/components/ui";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { objectUrl } from "@/lib/storage";
 
-function firstLine(value: string | null): string {
+function firstLine(value: string | null, fallback: string): string {
   const line = (value ?? "").split("\n").find((entry) => entry.trim() !== "");
-  return line?.trim() ?? "Text notes";
-}
-
-function formatWhen(value: Date): string {
-  return value.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-}
-
-function StatusBadge({ status }: { status: string }) {
-  if (status === "done") {
-    return <Badge tone="green">Processed</Badge>;
-  }
-  if (status === "failed") {
-    return <Badge tone="red">Failed</Badge>;
-  }
-  return <Badge tone="amber">{status === "running" ? "Reading" : "Queued"}</Badge>;
+  return line?.trim() ?? fallback;
 }
 
 export default async function HistoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
+  const t = await getTranslations("Classroom.HistoryPage");
+  const format = await getFormatter();
   const db = getDb();
   const classroom = await getClassroom(db, user.id, id);
   if (!classroom) {
@@ -44,6 +33,16 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
     })),
   );
 
+  function statusBadge(status: string) {
+    if (status === "done") {
+      return <Badge tone="green">{t("statusProcessed")}</Badge>;
+    }
+    if (status === "failed") {
+      return <Badge tone="red">{t("statusFailed")}</Badge>;
+    }
+    return <Badge tone="amber">{status === "running" ? t("statusReading") : t("statusQueued")}</Badge>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -54,23 +53,19 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
           >
             ← {classroom.name}
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold">Upload history</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            Everything you have fed into this classroom, newest first.
-          </p>
+          <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
+          <p className="mt-1 text-sm text-neutral-500">{t("blurb")}</p>
         </div>
         <Link
           className="inline-flex items-center justify-center rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
           href={`/classrooms/${id}/upload`}
         >
-          Add notes
+          {t("addNotes")}
         </Link>
       </div>
       {uploads.length === 0 ? (
         <Card>
-          <p className="text-sm text-neutral-600">
-            No uploads yet. Add your first notes and they will show up here.
-          </p>
+          <p className="text-sm text-neutral-600">{t("empty")}</p>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -96,22 +91,25 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
                       <p className="truncate text-sm font-medium">
                         {upload.subject ??
                           (upload.kind === "image"
-                            ? (upload.originalFilename ?? "Image")
-                            : firstLine(upload.textContent))}
+                            ? (upload.originalFilename ?? t("image"))
+                            : firstLine(upload.textContent, t("textNotes")))}
                       </p>
                       <p className="text-xs text-neutral-500">
-                        {formatWhen(upload.createdAt)} ·{" "}
-                        {upload.kind === "image" ? "Image" : "Text"}
+                        {format.dateTime(upload.createdAt, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}{" "}
+                        · {upload.kind === "image" ? t("image") : t("textNotes")}
                       </p>
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     {skipped > 0 ? (
                       <span className="text-xs text-neutral-500">
-                        {skipped} {skipped === 1 ? "line" : "lines"} skipped
+                        {t("linesSkipped", { count: skipped })}
                       </span>
                     ) : null}
-                    <StatusBadge status={upload.extractionStatus} />
+                    {statusBadge(upload.extractionStatus)}
                   </div>
                 </summary>
                 <div className="border-t border-neutral-200 p-4">
@@ -119,7 +117,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={src}
-                      alt={upload.originalFilename ?? "Uploaded note"}
+                      alt={upload.originalFilename ?? t("imageAlt")}
                       className="max-h-96 rounded-lg border border-neutral-200 object-contain"
                     />
                   ) : (
@@ -129,8 +127,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
                   )}
                   {skipped > 0 ? (
                     <p className="mt-3 text-xs text-neutral-500">
-                      {skipped} {skipped === 1 ? "line was" : "lines were"} skipped during
-                      extraction.
+                      {t("skippedDetail", { count: skipped })}
                     </p>
                   ) : null}
                   {upload.extractionError ? (

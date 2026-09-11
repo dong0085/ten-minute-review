@@ -2,26 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { CATEGORIES, type Category } from "@tmr/core";
 import { Alert, Badge, Button, Card, Input, Label, cn } from "@/components/ui";
+import { clearQuizDraft, loadQuizDraft, saveQuizDraft } from "@/lib/quiz-draft";
 import { QuestionReviewCard, type AnswerShape } from "./question-review";
-
-type QuestionKind = "mcq" | "fill_blank" | "true_false" | "image";
-
-type QuizQuestion = {
-  id: string;
-  position: number;
-  category: string;
-  type: QuestionKind;
-  stem: string;
-  options: string[] | null;
-  imageUrl?: string | null;
-};
-
-type LocalResponse = {
-  index?: number | null;
-  blanks?: (string | null)[];
-  value?: boolean | null;
-};
+import type { LocalResponse, QuizQuestion } from "./types";
 
 type SubmitResult = {
   attemptId: string;
@@ -66,18 +52,41 @@ function isAnswered(question: QuizQuestion, response: LocalResponse | undefined)
   return typeof response.index === "number";
 }
 
-async function readError(response: Response): Promise<string | null> {
+class ApiRequestError extends Error {
+  readonly code: string | undefined;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+async function readError(response: Response): Promise<ApiRequestError | null> {
   const data: unknown = await response.json().catch(() => null);
   if (data && typeof data === "object" && "error" in data) {
     const message = (data as { error?: unknown }).error;
     if (typeof message === "string") {
-      return message;
+      const code = (data as { code?: unknown }).code;
+      return new ApiRequestError(message, typeof code === "string" ? code : undefined);
     }
   }
   return null;
 }
 
-export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomId: string }) {
+export function QuizRunner({
+  quizId,
+  classroomId,
+  userId,
+}: {
+  quizId: string;
+  classroomId: string;
+  userId: string;
+}) {
+  const t = useTranslations("Quiz.Runner");
+  const tReview = useTranslations("Quiz.QuestionReview");
+  const categoryT = useTranslations("Category");
+  const categoryLabel = (category: string) =>
+    CATEGORIES.includes(category as Category) ? categoryT(category as Category) : category;
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [attemptToken, setAttemptToken] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, LocalResponse>>({});
@@ -91,6 +100,8 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
   const questionStartedAt = useRef(0);
   const durations = useRef<Record<string, number>>({});
   const hasStarted = useRef(false);
+  const blankRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const focusFirstBlank = useRef(false);
 
   const startAttempt = useCallback(async () => {
     setPhase("loading");
@@ -101,9 +112,27 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
     setCurrent(0);
     durations.current = {};
     try {
+      const draft = loadQuizDraft(userId, quizId);
+      if (draft) {
+        const response = await fetch(`/api/quizzes/${quizId}`);
+        if (!response.ok) {
+          throw (await readError(response)) ?? new ApiRequestError(t("startError"));
+        }
+        const data = (await response.json()) as { quiz: { questions: QuizQuestion[] } };
+        const restoredQuestions = data.quiz.questions;
+        setAttemptToken(draft.attemptToken);
+        setQuestions(restoredQuestions);
+        setResponses(draft.responses);
+        setCurrent(Math.max(0, Math.min(draft.current, restoredQuestions.length - 1)));
+        durations.current = draft.durations;
+        startedAt.current = draft.startedAt;
+        questionStartedAt.current = draft.questionStartedAt;
+        setPhase("taking");
+        return;
+      }
       const response = await fetch(`/api/quizzes/${quizId}/attempts`, { method: "POST" });
       if (!response.ok) {
-        throw new Error((await readError(response)) ?? "Could not start the quiz.");
+        throw (await readError(response)) ?? new ApiRequestError(t("startError"));
       }
       const data = (await response.json()) as { attemptToken: string; questions: QuizQuestion[] };
       setAttemptToken(data.attemptToken);
@@ -113,10 +142,10 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
       questionStartedAt.current = now;
       setPhase("taking");
     } catch (startError) {
-      setError(startError instanceof Error ? startError.message : "Could not start the quiz.");
+      setError(startError instanceof Error ? startError.message : t("startError"));
       setPhase("error");
     }
-  }, [quizId]);
+  }, [quizId, userId, t]);
 
   useEffect(() => {
     if (hasStarted.current) {
@@ -142,7 +171,31 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
     setResponses((previous) => ({ ...previous, [questionId]: response }));
   };
 
-  const submit = async () => {
+  useEffect(() => {
+    if (phase !== "taking" || !attemptToken) {
+      return;
+    }
+    saveQuizDraft(userId, quizId, {
+      version: 1,
+      attemptToken,
+      startedAt: startedAt.current,
+      questionStartedAt: questionStartedAt.current,
+      responses,
+      current,
+      durations: durations.current,
+      savedAt: Date.now(),
+    });
+  }, [attemptToken, current, phase, quizId, responses, userId]);
+
+  useEffect(() => {
+    if (phase !== "taking" || !focusFirstBlank.current) {
+      return;
+    }
+    focusFirstBlank.current = false;
+    blankRefs.current[0]?.focus();
+  }, [current, phase]);
+
+  const submit = useCallback(async () => {
     if (!attemptToken || questions.length === 0) {
       return;
     }
@@ -167,21 +220,26 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
         }),
       });
       if (!response.ok) {
-        throw new Error((await readError(response)) ?? "Could not submit the quiz.");
+        throw (await readError(response)) ?? new ApiRequestError(t("submitError"));
       }
       const data = (await response.json()) as SubmitResult;
+      clearQuizDraft(userId, quizId);
       setResult(data);
       setPhase("results");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Could not submit the quiz.");
+      const message = submitError instanceof Error ? submitError.message : t("submitError");
+      if (submitError instanceof ApiRequestError && submitError.code === "attempt_invalid") {
+        clearQuizDraft(userId, quizId);
+      }
+      setError(message);
       setPhase("taking");
     }
-  };
+  }, [attemptToken, current, questions, quizId, responses, t, trackTime, userId]);
 
   if (phase === "loading") {
     return (
       <Card>
-        <p className="text-sm text-neutral-600">Preparing your quiz…</p>
+        <p className="text-sm text-neutral-600">{t("loading")}</p>
       </Card>
     );
   }
@@ -189,11 +247,11 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
   if (phase === "error") {
     return (
       <Card className="space-y-3">
-        <Alert tone="error">{error ?? "Could not start the quiz."}</Alert>
+        <Alert tone="error">{error ?? t("startError")}</Alert>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => void startAttempt()}>Try again</Button>
+          <Button onClick={() => void startAttempt()}>{t("tryAgain")}</Button>
           <Link href={`/classrooms/${classroomId}/quizzes`} className={linkButtonClass}>
-            Back to quizzes
+            {t("backToQuizzes")}
           </Link>
         </div>
       </Card>
@@ -213,25 +271,28 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
             <div>
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-semibold">
-                  {result.correctCount} / {result.questionCount} correct
+                  {t("score", {
+                    correct: result.correctCount,
+                    total: result.questionCount,
+                  })}
                 </h2>
                 <Badge tone={scoreTone}>{scorePercent}%</Badge>
               </div>
               <p className="mt-1 text-sm text-neutral-600">
                 {result.correctCount === result.questionCount
-                  ? "Every answer landed."
-                  : "Review the missed ones below, then try again."}
+                  ? t("everyAnswerLanded")
+                  : t("reviewMissed")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" onClick={() => void startAttempt()}>
-                Retake
+                {t("retake")}
               </Button>
               <Link
                 href={`/classrooms/${classroomId}/attempts/${result.attemptId}`}
                 className={linkButtonClass}
               >
-                Full review
+                {t("fullReview")}
               </Link>
             </div>
           </div>
@@ -270,10 +331,10 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
       <div>
         <div className="flex items-center justify-between text-sm text-neutral-600">
           <span>
-            Question {current + 1} of {questions.length}
+            {t("questionProgress", { current: current + 1, total: questions.length })}
           </span>
           <span>
-            {answeredCount} of {questions.length} answered
+            {t("answeredProgress", { answered: answeredCount, total: questions.length })}
           </span>
         </div>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-neutral-200">
@@ -286,14 +347,14 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
       {error ? <Alert tone="error">{error}</Alert> : null}
       <Card>
         <div className="flex items-center gap-2">
-          <Badge>{currentQuestion.category}</Badge>
+          <Badge>{categoryLabel(currentQuestion.category)}</Badge>
         </div>
         <p className="mt-3 whitespace-pre-wrap text-base font-medium">{currentQuestion.stem}</p>
         {currentQuestion.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={currentQuestion.imageUrl}
-            alt="Handwritten note"
+            alt={tReview("handwritten")}
             className="mt-3 max-h-72 rounded-lg border border-neutral-200 object-contain"
           />
         ) : null}
@@ -335,7 +396,7 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
                   variant={selected ? "primary" : "secondary"}
                   onClick={() => setAnswer(currentQuestion.id, { value })}
                 >
-                  {value ? "True" : "False"}
+                  {value ? tReview("true") : tReview("false")}
                 </Button>
               );
             })}
@@ -345,9 +406,38 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
           <div className="mt-4 space-y-3">
             {Array.from({ length: blankCount(currentQuestion.stem) }).map((_, index) => (
               <div key={index}>
-                <Label>Blank {index + 1}</Label>
+                <Label>{t("blank", { number: index + 1 })}</Label>
                 <Input
+                  ref={(element) => {
+                    blankRefs.current[index] = element;
+                  }}
                   value={response?.blanks?.[index] ?? ""}
+                  enterKeyHint={
+                    index < blankCount(currentQuestion.stem) - 1 ||
+                    current < questions.length - 1
+                      ? "next"
+                      : "go"
+                  }
+                  onKeyDown={(event) => {
+                    if (
+                      event.key !== "Enter" ||
+                      event.nativeEvent.isComposing ||
+                      phase === "submitting"
+                    ) {
+                      return;
+                    }
+                    event.preventDefault();
+                    if (index < blankCount(currentQuestion.stem) - 1) {
+                      blankRefs.current[index + 1]?.focus();
+                      return;
+                    }
+                    if (current < questions.length - 1) {
+                      focusFirstBlank.current = true;
+                      goTo(current + 1, currentQuestion.id);
+                      return;
+                    }
+                    void submit();
+                  }}
                   onChange={(event) => {
                     const count = blankCount(currentQuestion.stem);
                     const blanks = Array.from(
@@ -369,7 +459,7 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
           onClick={() => goTo(current - 1, currentQuestion.id)}
           disabled={current === 0}
         >
-          Back
+          {t("back")}
         </Button>
         <div className="flex gap-2">
           <Button
@@ -377,10 +467,10 @@ export function QuizRunner({ quizId, classroomId }: { quizId: string; classroomI
             onClick={() => goTo(current + 1, currentQuestion.id)}
             disabled={current === questions.length - 1}
           >
-            Next
+            {t("next")}
           </Button>
           <Button onClick={() => void submit()} disabled={phase === "submitting"}>
-            {phase === "submitting" ? "Submitting…" : "Submit quiz"}
+            {phase === "submitting" ? t("submitting") : t("submit")}
           </Button>
         </div>
       </div>

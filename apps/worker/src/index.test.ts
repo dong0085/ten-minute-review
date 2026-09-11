@@ -188,6 +188,7 @@ describe("send email helpers", () => {
       "<p>Body</p>",
       "Body\n",
       "http://localhost:3000/unsubscribe?token=abc",
+      "en",
     );
     expect(footer.html).toContain("http://localhost:3000/unsubscribe?token=abc");
     expect(footer.html).toContain("Unsubscribe");

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { MAX_IMAGE_BYTES } from "@tmr/core";
 import { Alert, Badge, Button, Card, Label, Textarea } from "@/components/ui";
 
@@ -39,25 +40,28 @@ async function readError(response: Response): Promise<string | null> {
   return null;
 }
 
-function firstLine(value: string | null): string {
+function firstLine(value: string | null, fallback: string): string {
   const line = (value ?? "").split("\n").find((entry) => entry.trim() !== "");
-  return line?.trim() ?? "Text notes";
+  return line?.trim() ?? fallback;
 }
 
 function StatusBadge({ status }: { status: ExtractionStatus }) {
+  const t = useTranslations("Upload.Panel");
   if (status === "done") {
-    return <Badge tone="green">Processed</Badge>;
+    return <Badge tone="green">{t("processed")}</Badge>;
   }
   if (status === "failed") {
-    return <Badge tone="red">Failed</Badge>;
+    return <Badge tone="red">{t("failed")}</Badge>;
   }
   if (status === "running") {
-    return <Badge tone="amber">Reading</Badge>;
+    return <Badge tone="amber">{t("reading")}</Badge>;
   }
-  return <Badge tone="amber">Queued</Badge>;
+  return <Badge tone="amber">{t("queued")}</Badge>;
 }
 
 export function UploadPanel({ classroomId }: { classroomId: string }) {
+  const t = useTranslations("Upload.Panel");
+  const tCommon = useTranslations("Common");
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -140,15 +144,15 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
     const next = [...files];
     for (const file of selected) {
       if (!file.type.startsWith("image/")) {
-        setFileError(`${file.name} is not an image file.`);
+        setFileError(t("notImage", { name: file.name }));
         continue;
       }
       if (file.size > MAX_IMAGE_BYTES) {
-        setFileError(`${file.name} is larger than 10 MB.`);
+        setFileError(t("tooLarge", { name: file.name }));
         continue;
       }
       if (next.length >= MAX_FILES) {
-        setFileError(`You can attach up to ${MAX_FILES} images at once.`);
+        setFileError(t("tooMany", { max: MAX_FILES }));
         break;
       }
       next.push(file);
@@ -161,7 +165,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
     setFormError(null);
     const trimmed = text.trim();
     if (!trimmed && files.length === 0) {
-      setFormError("Paste some notes or attach at least one image.");
+      setFormError(t("emptyForm"));
       return;
     }
     setSubmitting(true);
@@ -179,7 +183,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
           body: JSON.stringify({ text: trimmed }),
         });
         if (!response.ok) {
-          throw new Error((await readError(response)) ?? "Could not save your notes.");
+          throw new Error((await readError(response)) ?? t("couldNotSaveNotes"));
         }
         const data = (await response.json()) as { uploadIds: string[] };
         ids.push(...data.uploadIds);
@@ -194,7 +198,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
           body: formData,
         });
         if (!response.ok) {
-          throw new Error((await readError(response)) ?? "Could not save your images.");
+          throw new Error((await readError(response)) ?? t("couldNotSaveImages"));
         }
         const data = (await response.json()) as { uploadIds: string[] };
         ids.push(...data.uploadIds);
@@ -206,7 +210,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
       const rows = await loadUploads();
       setUploads(rows ?? []);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Something went wrong.");
+      setFormError(error instanceof Error ? error.message : tCommon("genericError"));
     } finally {
       setSubmitting(false);
     }
@@ -217,16 +221,16 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
       <Card>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <Label>Paste or type your notes</Label>
+            <Label>{t("pasteLabel")}</Label>
             <Textarea
               rows={8}
               value={text}
               onChange={(event) => setText(event.target.value)}
-              placeholder={"Paste your session notes here"}
+              placeholder={t("pastePlaceholder")}
             />
           </div>
           <div>
-            <Label>Attach images</Label>
+            <Label>{t("attachImages")}</Label>
             <input
               key={fileInputKey}
               type="file"
@@ -235,7 +239,9 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
               onChange={handleFiles}
               className={fileInputClass}
             />
-            <p className="mt-1 text-xs text-neutral-500">Up to {MAX_FILES} images, 10 MB each.</p>
+            <p className="mt-1 text-xs text-neutral-500">
+              {t("upToImages", { max: MAX_FILES })}
+            </p>
             {fileError ? <p className="mt-2 text-sm text-red-700">{fileError}</p> : null}
             {files.length > 0 ? (
               <ul className="mt-3 space-y-1">
@@ -254,7 +260,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
                         )
                       }
                     >
-                      Remove
+                      {t("remove")}
                     </button>
                   </li>
                 ))}
@@ -263,7 +269,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
           </div>
           {formError ? <Alert tone="error">{formError}</Alert> : null}
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Saving notes…" : "Upload notes"}
+            {submitting ? t("savingNotes") : t("uploadNotes")}
           </Button>
         </form>
       </Card>
@@ -272,21 +278,19 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold">
-                {processing ? "Reading your notes…" : "Processing finished"}
+                {processing ? t("readingNotes") : t("processingFinished")}
               </h2>
               <p className="mt-1 text-sm text-neutral-600">
-                {processing
-                  ? "Extraction runs in the background. You can leave this page or add more notes."
-                  : "The upload stays in this classroom for good."}
+                {processing ? t("processingBlurb") : t("finishedBlurb")}
               </p>
             </div>
             <Button variant="secondary" size="sm" onClick={() => void refresh()}>
-              Check status
+              {t("checkStatus")}
             </Button>
           </div>
           <ul className="mt-4 space-y-3">
             {sessionUploads.length === 0 ? (
-              <li className="text-sm text-neutral-500">Waiting for the upload to appear…</li>
+              <li className="text-sm text-neutral-500">{t("waiting")}</li>
             ) : null}
             {sessionUploads.map((upload) => {
               const showPoints =
@@ -299,27 +303,23 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
                     <p className="min-w-0 truncate text-sm">
                       {upload.subject ??
                         (upload.kind === "image"
-                          ? (upload.originalFilename ?? "Image")
-                          : firstLine(upload.textContent))}
+                          ? (upload.originalFilename ?? t("image"))
+                          : firstLine(upload.textContent, t("textNotes")))}
                     </p>
                     <StatusBadge status={upload.extractionStatus} />
                   </div>
                   {upload.extractionStatus === "done" ? (
                     <p className="mt-2 text-sm text-green-800">
-                      {showPoints ? `+${pointsDelta} points, ` : ""}
-                      {upload.discardedCount}{" "}
-                      {upload.discardedCount === 1 ? "line" : "lines"} skipped
+                      {showPoints ? t("pointsPrefix", { points: pointsDelta }) : ""}
+                      {t("linesSkipped", { count: upload.discardedCount })}
                     </p>
                   ) : null}
                   {upload.extractionStatus === "failed" ? (
                     <div className="mt-2 space-y-1">
                       <p className="text-sm text-red-700">
-                        {upload.extractionError ?? "Extraction failed."}
+                        {upload.extractionError ?? t("extractionFailed")}
                       </p>
-                      <p className="text-xs text-neutral-500">
-                        Your upload is kept. A retry is automatic, and you can read the material
-                        any time in History.
-                      </p>
+                      <p className="text-xs text-neutral-500">{t("keptBlurb")}</p>
                     </div>
                   ) : null}
                 </li>
@@ -328,7 +328,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
           </ul>
           {!processing && pointsDelta !== null && sessionUploads.length > 1 ? (
             <p className="mt-3 text-sm text-green-800">
-              +{pointsDelta} knowledge points added from these uploads.
+              {t("pointsAdded", { count: pointsDelta })}
             </p>
           ) : null}
           <div className="mt-4 text-sm">
@@ -336,7 +336,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
               className="text-neutral-600 underline hover:text-neutral-900"
               href={`/classrooms/${classroomId}/history`}
             >
-              View upload history
+              {t("viewHistory")}
             </Link>
           </div>
         </Card>

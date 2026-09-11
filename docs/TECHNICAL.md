@@ -19,6 +19,16 @@ The build blueprint. The data model is the centerpiece — it is the one part th
 
 The web app never calls the LLM inline. It writes a row and returns. The worker picks it up. That keeps request latency predictable and lets a slow extraction retry without the user waiting.
 
+### Localization
+
+The UI ships in English and French. `apps/web/i18n/request.ts` resolves the locale per request: a signed-in user's `ui_language`, otherwise the `NEXT_LOCALE` cookie (set by the header language switch for signed-out visitors), otherwise the `Accept-Language` header, falling back to `en`. There is no locale segment in the URL — next-intl runs without i18n routing, so every route keeps its current path.
+
+Message catalogs live in `packages/core/src/messages` (`en/` and `fr/`, namespaces `Common`, `Layout`, `Home`, `Auth`, `Account`, `Classroom`, `Quiz`, `Category`, `Upload`, `Email`, `Api`). `getMessages`, `formatMessage`, and `toUiLocale` are shared by the web app and the worker.
+
+- API error messages are localized centrally in `apps/web/lib/api.ts`: routes keep their English literals, which map to `Api` catalog keys before the response leaves the server.
+- Transactional emails (`packages/core/src/email-templates.ts`) take a `UiLocale`; call sites pass the recipient's `ui_language`.
+- Quiz stems, options, and explanations are generated in the target language and stored as content. Only UI chrome is translated; a question authored in French stays French in an English interface.
+
 ---
 
 ## 2. Data model
@@ -141,11 +151,15 @@ Long text that several questions can hang off: `id`, `classroom_id`, `source_upl
 
 Attempts are unlimited and never deleted. Every answer is kept.
 
+An attempt row is written at submit. Until then, answers and progress live in a browser-local draft keyed by user and quiz; a refresh restores the draft rather than starting a new attempt. The draft expires with the attempt token after two hours.
+
+Usage stats are computed live from `attempts` and `attempt_answers` in `packages/db/src/repos/stats.ts` (`getActivityStats`, `getLearningStats`, `listRecentAttemptScores`, `listRecentMissesForUser`). Nothing is denormalized or stored, and no API route or schema change is involved: the account server component calls the repository directly.
+
 ### email_preferences, email_sends
 
 `email_preferences`: `user_id` pk, `daily_enabled` (default true), `send_hour_local` (default 7), `unsubscribed_at`.
 
-`email_sends`: `id`, `user_id`, `sent_on` date, `classroom_ids` jsonb, `provider_message_id`, `created_at`. **Unique on `(user_id, sent_on)`** — one email per user per morning.
+`email_sends`: `id`, `user_id`, `sent_on` date, `kind` (`daily` or `manual`), `quiz_id` nullable, `classroom_ids` jsonb, `provider_message_id`, `created_at`. **Partial unique on `(user_id, sent_on) WHERE kind = 'daily'`** — one daily email per user per morning. **Unique on `(user_id, quiz_id)`** — one email per on-demand quiz.
 
 ### subscriptions, referrals
 
@@ -235,6 +249,8 @@ On-demand quizzes use the same compose job and the same selection rules, enqueue
 
 The worker builds one email per user per day containing every classroom quiz composed that morning, questions inline, each with a link to the web quiz. Sends through Brevo (or Resend), then writes `email_sends`. The unique constraint absorbs a duplicate run.
 
+On-demand composition enqueues its own `send_email` job carrying `kind: "manual"` and the new `quizId`. That email contains just that quiz and dedupes per quiz, so it can be sent the same day the morning email already went out. Both kinds respect `email_preferences`.
+
 ### Billing
 
 Stripe stays dark. The webhook route, the `subscriptions` table, and the plan checks exist; the UI that starts a checkout renders only in debug builds.
@@ -268,7 +284,7 @@ Next.js route handlers, all session-scoped.
 | `POST` | `/api/webhooks/stripe` | |
 | `GET` | `/unsubscribe?token=` | One click, no login |
 
-Answers and explanations never leave the server before a submission. The quiz payload carries stems and options only.
+Answers and explanations never leave the server before a submission. The quiz payload carries stems and options only. A browser-local draft holds the learner's own responses and position between refreshes.
 
 ---
 

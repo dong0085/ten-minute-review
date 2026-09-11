@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import type { QuizKind } from "@tmr/core";
 import type { Db } from "../client";
 import { emailPreferences, emailSends } from "../schema/email";
 
@@ -43,6 +44,8 @@ export async function recordEmailSend(
   input: {
     userId: string;
     sentOn: string;
+    kind: QuizKind;
+    quizId?: string | null;
     classroomIds: string[];
     providerMessageId?: string | null;
   },
@@ -52,19 +55,41 @@ export async function recordEmailSend(
     .values({
       userId: input.userId,
       sentOn: input.sentOn,
+      kind: input.kind,
+      quizId: input.quizId ?? null,
       classroomIds: input.classroomIds,
       providerMessageId: input.providerMessageId ?? null,
     })
-    .onConflictDoNothing({ target: [emailSends.userId, emailSends.sentOn] })
+    .onConflictDoNothing()
     .returning();
   return rows[0] ?? null;
 }
 
-export async function getEmailSend(db: Db, userId: string, sentOn: string) {
+export async function getEmailSend(
+  db: Db,
+  userId: string,
+  sentOn: string,
+  kind: QuizKind = "daily",
+) {
   const [row] = await db
     .select()
     .from(emailSends)
-    .where(and(eq(emailSends.userId, userId), eq(emailSends.sentOn, sentOn)))
+    .where(
+      and(
+        eq(emailSends.userId, userId),
+        eq(emailSends.sentOn, sentOn),
+        eq(emailSends.kind, kind),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+export async function getEmailSendByQuiz(db: Db, userId: string, quizId: string) {
+  const [row] = await db
+    .select()
+    .from(emailSends)
+    .where(and(eq(emailSends.userId, userId), eq(emailSends.quizId, quizId)))
     .limit(1);
   return row ?? null;
 }

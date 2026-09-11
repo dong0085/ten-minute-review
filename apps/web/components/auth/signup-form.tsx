@@ -7,8 +7,10 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
-import { LANGUAGES } from "@tmr/core";
+import { useLocale, useTranslations } from "next-intl";
+import { UI_LOCALES } from "@tmr/core";
 import { Alert, Button, Card, Input, Label } from "@/components/ui";
+import { languageLabel } from "@/lib/language-label";
 import { GoogleButton } from "./google-button";
 
 const selectClass =
@@ -22,7 +24,7 @@ function browserTimezone() {
 
 function browserLanguage() {
   const code = navigator.language.slice(0, 2).toLowerCase();
-  return LANGUAGES.some((language) => language.code === code) ? code : "";
+  return UI_LOCALES.some((locale) => locale === code) ? code : "";
 }
 
 function writeInviteCookie(code: string) {
@@ -34,6 +36,8 @@ function writeInviteCookie(code: string) {
 }
 
 export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
+  const t = useTranslations("Auth.SignUpForm");
+  const locale = useLocale();
   const [inviteCode, setInviteCode] = useState(initialCode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -75,16 +79,16 @@ export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
       }
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
       if (response.status === 403) {
-        setError("That invite code is not valid.");
+        setError(t("inviteInvalid"));
       } else if (response.status === 409) {
-        setError("An account with that email already exists.");
+        setError(t("emailTaken"));
       } else if (body?.error) {
         setError(body.error);
       } else {
-        setError("Something went wrong. Please try again.");
+        setError(t("genericError"));
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("genericError"));
     } finally {
       setPending(false);
     }
@@ -93,12 +97,10 @@ export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
   if (done) {
     return (
       <Card className="space-y-3">
-        <h2 className="text-lg font-semibold">Check your email</h2>
-        <p className="text-sm text-neutral-600">
-          We sent a verification link to {email}. Open it to finish setting up your account.
-        </p>
+        <h2 className="text-lg font-semibold">{t("checkEmailTitle")}</h2>
+        <p className="text-sm text-neutral-600">{t("checkEmailBody", { email })}</p>
         <Link className="text-sm font-medium underline" href="/signin">
-          Go to sign in
+          {t("goToSignIn")}
         </Link>
       </Card>
     );
@@ -108,19 +110,19 @@ export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
     <Card className="space-y-5">
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
-          <Label>Invite code</Label>
+          <Label>{t("inviteCode")}</Label>
           <Input
             value={inviteCode}
             onChange={(event) => {
               setInviteCode(event.target.value);
               writeInviteCookie(event.target.value);
             }}
-            placeholder="From your invitation"
+            placeholder={t("invitePlaceholder")}
             autoComplete="off"
           />
         </div>
         <div>
-          <Label>Email</Label>
+          <Label>{t("email")}</Label>
           <Input
             type="email"
             required
@@ -129,7 +131,7 @@ export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
           />
         </div>
         <div>
-          <Label>Password</Label>
+          <Label>{t("password")}</Label>
           <Input
             type="password"
             required
@@ -140,22 +142,22 @@ export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <Label>Language (optional)</Label>
+            <Label>{t("language")}</Label>
             <select
               className={selectClass}
               value={uiLanguage}
               onChange={(event) => setLanguageOverride(event.target.value)}
             >
-              <option value="">Browser default</option>
-              {LANGUAGES.map((language) => (
-                <option key={language.code} value={language.code}>
-                  {language.name}
+              <option value="">{t("browserDefault")}</option>
+              {UI_LOCALES.map((code) => (
+                <option key={code} value={code}>
+                  {languageLabel(code, locale)}
                 </option>
               ))}
             </select>
           </div>
           <div>
-            <Label>Timezone (optional)</Label>
+            <Label>{t("timezone")}</Label>
             <Input
               value={timezone}
               onChange={(event) => setTimezoneOverride(event.target.value)}
@@ -165,20 +167,20 @@ export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
         </div>
         {error ? <Alert tone="error">{error}</Alert> : null}
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Creating account..." : "Create account"}
+          {pending ? t("creating") : t("createAccount")}
         </Button>
       </form>
 
       <div className="flex items-center gap-3 text-xs text-neutral-400">
         <span className="h-px flex-1 bg-neutral-200" />
-        or
+        {t("or")}
         <span className="h-px flex-1 bg-neutral-200" />
       </div>
-      <GoogleButton label="Sign up with Google" />
+      <GoogleButton label={t("google")} />
       <p className="text-center text-sm text-neutral-600">
-        Already have an account?{" "}
+        {t("alreadyHave")}{" "}
         <Link className="font-medium underline" href="/signin">
-          Sign in
+          {t("signIn")}
         </Link>
       </p>
     </Card>

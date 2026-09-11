@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Alert } from "@/components/ui";
 import { ResetForm } from "@/components/auth/reset-form";
 
@@ -13,19 +14,20 @@ export default async function ResetPage({
 }) {
   const params = await searchParams;
   const token = first(params.token) ?? "";
+  const t = await getTranslations("Auth.ResetPage");
 
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Choose a new password</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
       </div>
       {token ? (
         <ResetForm token={token} />
       ) : (
         <Alert tone="error">
-          This reset link is invalid or has expired.{" "}
+          {t("invalid")}{" "}
           <Link className="font-medium underline" href="/forgot">
-            Request a new one
+            {t("requestNew")}
           </Link>
         </Alert>
       )}

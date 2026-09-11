@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Alert, Button, Label } from "@/components/ui";
 
 const selectClass =
@@ -17,6 +18,10 @@ async function readError(response: Response): Promise<string | null> {
   return null;
 }
 
+function formatHour(hour: number): string {
+  return `${hour.toString().padStart(2, "0")}:00`;
+}
+
 export function EmailPreferencesForm({
   defaultDailyEnabled,
   defaultSendHourLocal,
@@ -26,11 +31,20 @@ export function EmailPreferencesForm({
   defaultSendHourLocal: number;
   unsubscribedAt: string | null;
 }) {
+  const t = useTranslations("Account.EmailPreferencesForm");
+  const tc = useTranslations("Common");
   const [dailyEnabled, setDailyEnabled] = useState(defaultDailyEnabled);
   const [sendHourLocal, setSendHourLocal] = useState(defaultSendHourLocal);
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const resetFields = () => {
+    setDailyEnabled(defaultDailyEnabled);
+    setSendHourLocal(defaultSendHourLocal);
+    setError(null);
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -44,23 +58,49 @@ export function EmailPreferencesForm({
         body: JSON.stringify({ dailyEnabled, sendHourLocal }),
       });
       if (!response.ok) {
-        throw new Error((await readError(response)) ?? "Could not save your preferences.");
+        throw new Error((await readError(response)) ?? t("error"));
       }
       setSaved(true);
+      setEditing(false);
     } catch (submitError) {
-      setError(
-        submitError instanceof Error ? submitError.message : "Could not save your preferences.",
-      );
+      setError(submitError instanceof Error ? submitError.message : t("error"));
     } finally {
       setSaving(false);
     }
   };
 
+  if (!editing) {
+    return (
+      <div className="mt-3 space-y-4">
+        {unsubscribedAt ? <Alert>{t("unsubscribed")}</Alert> : null}
+        <dl className="grid gap-4 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-xs text-neutral-500">{t("dailyLabel")}</dt>
+            <dd className="mt-0.5 font-medium">{dailyEnabled ? t("on") : t("off")}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-neutral-500">{t("sendHour")}</dt>
+            <dd className="mt-0.5 font-medium">{formatHour(sendHourLocal)}</dd>
+          </div>
+        </dl>
+        {saved ? <Alert tone="success">{t("saved")}</Alert> : null}
+        <Button
+          variant="secondary"
+          onClick={() => {
+            resetFields();
+            setSaved(false);
+            setEditing(true);
+          }}
+        >
+          {tc("edit")}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="mt-3 space-y-4">
-      {unsubscribedAt ? (
-        <Alert>This address is unsubscribed from all emails.</Alert>
-      ) : null}
+      {unsubscribedAt ? <Alert>{t("unsubscribed")}</Alert> : null}
       <label className="flex items-center gap-3 text-sm">
         <input
           type="checkbox"
@@ -68,10 +108,10 @@ export function EmailPreferencesForm({
           onChange={(event) => setDailyEnabled(event.target.checked)}
           className="h-4 w-4 accent-neutral-900"
         />
-        <span>Send me the daily quiz email</span>
+        <span>{t("dailyToggle")}</span>
       </label>
       <div className="max-w-xs">
-        <Label>Send hour (local time)</Label>
+        <Label>{t("sendHour")}</Label>
         <select
           value={sendHourLocal}
           onChange={(event) => setSendHourLocal(Number(event.target.value))}
@@ -80,16 +120,27 @@ export function EmailPreferencesForm({
         >
           {Array.from({ length: 24 }, (_, hour) => (
             <option key={hour} value={hour}>
-              {hour.toString().padStart(2, "0")}:00
+              {formatHour(hour)}
             </option>
           ))}
         </select>
       </div>
       {error ? <Alert tone="error">{error}</Alert> : null}
-      {saved ? <Alert tone="success">Email preferences saved.</Alert> : null}
-      <Button type="submit" disabled={saving}>
-        {saving ? "Saving…" : "Save preferences"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={saving}>
+          {saving ? tc("saving") : t("save")}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => {
+            resetFields();
+            setEditing(false);
+          }}
+        >
+          {tc("cancel")}
+        </Button>
+      </div>
     </form>
   );
 }

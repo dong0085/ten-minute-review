@@ -1,7 +1,11 @@
+import { formatMessage, getMessages, toUiLocale } from "@tmr/core";
+import type { QuizKind, UiLocale } from "@tmr/core";
 import { createUnsubscribeToken } from "@tmr/core/node";
 import {
+  getClassroom,
   getEmailPreferences,
   getEmailSend,
+  getEmailSendByQuiz,
   getQuizWithQuestionsForUser,
   getUserById,
   listQuizzesForUserOnDate,
@@ -9,7 +13,7 @@ import {
 } from "@tmr/db";
 import type { Db } from "@tmr/db";
 import { env } from "../env";
-import { renderDailyQuizEmail, sendEmail } from "../email";
+import { escapeHtml, renderDailyQuizEmail, sendEmail } from "../email";
 import type { DailyQuizEmailEntry } from "../email";
 
 const UNSUBSCRIBE_TOKEN_DAYS = 90;
@@ -50,9 +54,11 @@ export function withUnsubscribeFooter(
   html: string,
   text: string,
   unsubscribeUrl: string,
+  locale: UiLocale,
 ): { html: string; text: string } {
-  const htmlFooter = `<p style="color: #737373; font-size: 13px;">You receive this email because daily quizzes are on. <a href="${unsubscribeUrl}">Unsubscribe</a></p>`;
-  const textFooter = `\nYou receive this email because daily quizzes are on.\nUnsubscribe: ${unsubscribeUrl}\n`;
+  const messages = getMessages(locale).Email;
+  const htmlFooter = `<p style="color: #737373; font-size: 13px;">${escapeHtml(messages.unsubscribeWhy)} <a href="${escapeHtml(unsubscribeUrl)}">${escapeHtml(messages.unsubscribeAction)}</a></p>`;
+  const textFooter = `\n${messages.unsubscribeWhy}\n${messages.unsubscribeAction}: ${unsubscribeUrl}\n`;
   return { html: `${html}\n${htmlFooter}`, text: `${text}${textFooter}` };
 }
 
@@ -70,11 +76,7 @@ export async function handleSendEmailJob(
 ): Promise<void> {
   const userId = requireString(payload, "userId");
   const quizDate = requireString(payload, "quizDate");
-
-  const alreadySent = await getEmailSend(db, userId, quizDate);
-  if (alreadySent) {
-    return;
-  }
+  const kind: QuizKind = payload.kind === "manual" ? "manual" : "daily";
 
   const preferences = await getEmailPreferences(db, userId);
   if (preferences && (!preferences.dailyEnabled || preferences.unsubscribedAt !== null)) {
@@ -86,19 +88,25 @@ export async function handleSendEmailJob(
     throw new Error(`user ${userId} not found`);
   }
 
-  const rows = await listQuizzesForUserOnDate(db, userId, quizDate);
-  if (rows.length === 0) {
-    return;
-  }
-
   const quizzes: EmailQuizData[] = [];
-  for (const row of rows) {
-    const full = await getQuizWithQuestionsForUser(db, userId, row.quiz.id);
-    if (!full) {
-      continue;
+  let quizId: string | null = null;
+
+  if (kind === "manual") {
+    quizId = requireString(payload, "quizId");
+    const alreadySent = await getEmailSendByQuiz(db, userId, quizId);
+    if (alreadySent) {
+      return;
+    }
+    const full = await getQuizWithQuestionsForUser(db, userId, quizId);
+    if (!full || full.quiz.kind !== "manual") {
+      return;
+    }
+    const classroom = await getClassroom(db, userId, full.quiz.classroomId);
+    if (!classroom) {
+      return;
     }
     quizzes.push({
-      classroomName: row.classroomName,
+      classroomName: classroom.name,
       quiz: { id: full.quiz.id, classroomId: full.quiz.classroomId },
       questions: full.questions.map((question) => ({
         position: question.position,
@@ -108,19 +116,46 @@ export async function handleSendEmailJob(
         options: question.options,
       })),
     });
-  }
-  if (quizzes.length === 0) {
-    return;
+  } else {
+    const alreadySent = await getEmailSend(db, userId, quizDate, "daily");
+    if (alreadySent) {
+      return;
+    }
+    const rows = await listQuizzesForUserOnDate(db, userId, quizDate);
+    if (rows.length === 0) {
+      return;
+    }
+    for (const row of rows) {
+      const full = await getQuizWithQuestionsForUser(db, userId, row.quiz.id);
+      if (!full) {
+        continue;
+      }
+      quizzes.push({
+        classroomName: row.classroomName,
+        quiz: { id: full.quiz.id, classroomId: full.quiz.classroomId },
+        questions: full.questions.map((question) => ({
+          position: question.position,
+          category: question.category,
+          type: question.type,
+          stem: question.stem,
+          options: question.options,
+        })),
+      });
+    }
+    if (quizzes.length === 0) {
+      return;
+    }
   }
 
   const entries = buildEmailEntries(env.appUrl, quizzes);
-  const message = renderDailyQuizEmail({ username: user.username, entries });
+  const locale = toUiLocale(user.uiLanguage);
+  const message = renderDailyQuizEmail({ locale, username: user.username, entries });
   const unsubscribeUrl = `${env.appUrl}/unsubscribe?token=${createUnsubscribeToken(
     userId,
     env.authSecret,
     new Date(Date.now() + UNSUBSCRIBE_TOKEN_DAYS * DAY_MS),
   )}`;
-  const { html, text } = withUnsubscribeFooter(message.html, message.text, unsubscribeUrl);
+  const { html, text } = withUnsubscribeFooter(message.html, message.text, unsubscribeUrl, locale);
 
   const { id } = await sendEmail({
     to: user.email,
@@ -132,12 +167,18 @@ export async function handleSendEmailJob(
   const recorded = await recordEmailSend(db, {
     userId,
     sentOn: quizDate,
+    kind,
+    quizId,
     classroomIds: quizzes.map((quiz) => quiz.quiz.classroomId),
     providerMessageId: id,
   });
   if (!recorded) {
-    console.log(`[worker] send_email ${userId} ${quizDate}: already recorded, skipping`);
+    console.log(
+      `[worker] send_email ${kind} ${userId} ${quizDate}: already recorded, skipping`,
+    );
     return;
   }
-  console.log(`[worker] send_email ${userId} ${quizDate}: ${entries.length} classroom(s)`);
+  console.log(
+    `[worker] send_email ${kind} ${userId} ${quizDate}: ${entries.length} classroom(s)`,
+  );
 }

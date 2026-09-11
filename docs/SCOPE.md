@@ -48,7 +48,7 @@ A web app that turns a tutoring session's notes — text or images — into a da
 - **Composition:** newest material first within the 7-day window, plus light re-tests of knowledge points the user missed, reworded as a new question. Full spaced repetition stays out of MVP.
 - **Attempts:** unlimited for now. Every attempt is recorded — answers, correctness, time taken. The answer and explanation are revealed after submit.
 - On the web, the quiz stays available on demand after a classroom goes dormant. Emails stop; access continues. On-demand quizzes are unlimited for now. Each creation is counted over rolling 24-hour, 7-day, and 30-day windows so fair-use limits can be introduced later.
-- **On-demand quizzes** are created from the classroom home: a button opens a small progress modal (Queued → Writing your quiz → Ready) that can be minimized into the card or cancelled. Cancelling never counts and writes no quiz. On-demand quizzes never send an email; they appear in the quizzes list tagged "On demand".
+- **On-demand quizzes** are created from the classroom home: a button opens a small progress modal (Queued → Writing your quiz → Ready) that can be minimized into the card or cancelled. Cancelling never counts and writes no quiz. Each generated on-demand quiz sends its own email with just that quiz, subject to the same email preferences. It appears in the quizzes list tagged "On demand".
 - **Validated:** one real session yields roughly 110–150 knowledge points and questions — comfortably 7 days of quizzes. The 7-day window matches one session per week. Evidence in `TRIAL-RUN.md`.
 
 ## Emails
@@ -57,13 +57,14 @@ A web app that turns a tutoring session's notes — text or images — into a da
 - With multiple classrooms, the email presents a **menu** of that day's classroom quizzes; the user picks one to enter.
 - The email **carries the questions inline** and links to the web for interactive answering. It is a portal, not just a notification. Answering mentally without clicking is a valid path; nothing is recorded in that case.
 - Sends are on by default and come with unsubscribe. Sending requires at least one active classroom.
+- **On-demand quizzes** send their own email when generated: just that quiz, with the same preferences and unsubscribe gate as the morning email.
 
 ## Accounts & auth
 
 - **Email is the identifier.** Username is display-only, shown beside the avatar.
 - Google OAuth plus email/password, with email verification and password reset.
 - **Sign-ups:** open to the public, invite-only for now.
-- **Account center:** profile (username, avatar, password, email), subscription status, classroom management, quiz history and results, referral stats and links, email preferences, data export, delete account.
+- **Account center:** usage stats (activity and learning insight from stored attempts), profile (username, avatar, password, email), subscription status, classroom management, quiz history and results, referral stats and links, email preferences, data export, delete account.
 
 ## Plans, limits & billing
 
@@ -100,3 +101,4 @@ A web app that turns a tutoring session's notes — text or images — into a da
 7. Target language is auto-detected from the notes and editable by the user; the UI language lives on the profile.
 8. Quiz size formula: `min(20, max(8, floor(bank_size / 8)))`, with the 10-minute budget overriding it.
 9. Image-based questions show the retained handwritten note image and only exist in classrooms with image uploads.
+10. The interface ships in English and French. The profile's UI language drives the web UI and transactional emails; signed-out visitors get the browser language.

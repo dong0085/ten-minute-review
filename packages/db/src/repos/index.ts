@@ -6,3 +6,4 @@ export * from "./email";
 export * from "./jobs";
 export * from "./account";
 export * from "./billing";
+export * from "./stats";

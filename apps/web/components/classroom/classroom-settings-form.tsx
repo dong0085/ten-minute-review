@@ -2,8 +2,10 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { LANGUAGES } from "@tmr/core";
 import { Alert, Button, Card, Input, Label } from "@/components/ui";
+import { languageLabel } from "@/lib/language-label";
 
 const selectClass =
   "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-neutral-900";
@@ -19,6 +21,9 @@ export function ClassroomSettingsForm({
     autoStopDays: number;
   };
 }) {
+  const t = useTranslations("Classroom.SettingsForm");
+  const tc = useTranslations("Common");
+  const locale = useLocale();
   const router = useRouter();
   const [name, setName] = useState(classroom.name);
   const [targetLanguage, setTargetLanguage] = useState(classroom.targetLanguage);
@@ -36,7 +41,7 @@ export function ClassroomSettingsForm({
     event.preventDefault();
     const days = Number(autoStopDays);
     if (!Number.isInteger(days) || days < 1 || days > 90) {
-      setError("Choose a number of days between 1 and 90.");
+      setError(t("daysRange"));
       return;
     }
     setPending(true);
@@ -50,13 +55,13 @@ export function ClassroomSettingsForm({
       });
       if (!response.ok) {
         const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(body?.error ?? "Something went wrong. Please try again.");
+        setError(body?.error ?? t("error"));
         return;
       }
       setSaved(true);
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("error"));
     } finally {
       setPending(false);
     }
@@ -65,9 +70,9 @@ export function ClassroomSettingsForm({
   return (
     <Card>
       <form className="space-y-4" onSubmit={onSubmit}>
-        <h2 className="text-lg font-semibold">Classroom settings</h2>
+        <h2 className="text-lg font-semibold">{t("title")}</h2>
         <div>
-          <Label>Name</Label>
+          <Label>{t("name")}</Label>
           <Input
             required
             value={name}
@@ -79,7 +84,7 @@ export function ClassroomSettingsForm({
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <Label>I&apos;m learning</Label>
+            <Label>{t("learning")}</Label>
             <select
               className={selectClass}
               value={targetLanguage}
@@ -90,13 +95,13 @@ export function ClassroomSettingsForm({
             >
               {LANGUAGES.map((language) => (
                 <option key={language.code} value={language.code}>
-                  {language.name}
+                  {languageLabel(language.code, locale)}
                 </option>
               ))}
             </select>
           </div>
           <div>
-            <Label>I speak</Label>
+            <Label>{t("speak")}</Label>
             <select
               className={selectClass}
               value={nativeLanguage}
@@ -107,14 +112,14 @@ export function ClassroomSettingsForm({
             >
               {LANGUAGES.map((language) => (
                 <option key={language.code} value={language.code}>
-                  {language.name}
+                  {languageLabel(language.code, locale)}
                 </option>
               ))}
             </select>
           </div>
         </div>
         <div>
-          <Label>Auto-stop after quiet days</Label>
+          <Label>{t("autoStop")}</Label>
           <Input
             type="number"
             min={1}
@@ -126,14 +131,12 @@ export function ClassroomSettingsForm({
               touch();
             }}
           />
-          <p className="mt-1 text-xs text-neutral-500">
-            Emails pause after this many days without notes. Opening the classroom resumes them.
-          </p>
+          <p className="mt-1 text-xs text-neutral-500">{t("autoStopHelp")}</p>
         </div>
         {error ? <Alert tone="error">{error}</Alert> : null}
-        {saved ? <Alert tone="success">Saved.</Alert> : null}
+        {saved ? <Alert tone="success">{t("saved")}</Alert> : null}
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving..." : "Save changes"}
+          {pending ? tc("saving") : t("saveChanges")}
         </Button>
       </form>
     </Card>

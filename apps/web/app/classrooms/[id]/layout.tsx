@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getClassroom } from "@tmr/db";
 import { Alert } from "@/components/ui";
 import { isClassroomDormant } from "@/components/classroom/classroom-card";
@@ -15,6 +16,7 @@ export default async function ClassroomLayout({
 }) {
   const { id } = await params;
   const user = await requireUser();
+  const t = await getTranslations("Classroom.Layout");
   const classroom = await getClassroom(getDb(), user.id, id);
   if (!classroom) {
     notFound();
@@ -24,11 +26,7 @@ export default async function ClassroomLayout({
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">{classroom.name}</h1>
-      {dormant ? (
-        <Alert tone="neutral">
-          Emails have stopped — add notes or open this page to resume.
-        </Alert>
-      ) : null}
+      {dormant ? <Alert tone="neutral">{t("dormant")}</Alert> : null}
       <ClassroomTabs classroomId={classroom.id} />
       {children}
     </div>

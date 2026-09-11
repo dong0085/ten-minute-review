@@ -1,0 +1,40 @@
+import type { en } from "../en";
+import type { MessageShape } from "../type";
+
+export const upload: MessageShape<(typeof en)["Upload"]> = {
+  Panel: {
+    textNotes: "Notes texte",
+    image: "Image",
+    processed: "Traité",
+    failed: "Échec",
+    reading: "Lecture",
+    queued: "En attente",
+    pasteLabel: "Colle ou écris tes notes",
+    pastePlaceholder: "Colle ici les notes de ta séance",
+    attachImages: "Joindre des images",
+    upToImages: "Jusqu'à {max} images, 10 Mo chacune.",
+    remove: "Retirer",
+    notImage: "{name} n'est pas un fichier image.",
+    tooLarge: "{name} dépasse 10 Mo.",
+    tooMany: "Tu peux joindre jusqu'à {max} images à la fois.",
+    emptyForm: "Colle des notes ou joins au moins une image.",
+    couldNotSaveNotes: "Impossible d'enregistrer tes notes.",
+    couldNotSaveImages: "Impossible d'enregistrer tes images.",
+    savingNotes: "Enregistrement des notes…",
+    uploadNotes: "Envoyer les notes",
+    readingNotes: "Lecture de tes notes…",
+    processingFinished: "Traitement terminé",
+    processingBlurb:
+      "L'extraction tourne en arrière-plan. Tu peux quitter cette page ou ajouter d'autres notes.",
+    finishedBlurb: "L'envoi reste dans cette classe pour de bon.",
+    checkStatus: "Vérifier l'état",
+    waiting: "En attente de l'apparition de l'envoi…",
+    pointsPrefix: "+{points} points, ",
+    linesSkipped: "{count, plural, one {# ligne ignorée} other {# lignes ignorées}}",
+    extractionFailed: "L'extraction a échoué.",
+    keptBlurb:
+      "Ton envoi est conservé. Une nouvelle tentative est automatique, et tu peux relire le contenu à tout moment dans l'historique.",
+    pointsAdded: "+{count} points de connaissance ajoutés par ces envois.",
+    viewHistory: "Voir l'historique des envois",
+  },
+};

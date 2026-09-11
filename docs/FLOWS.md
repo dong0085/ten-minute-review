@@ -88,7 +88,7 @@ This is the classroom's memory. Everything the user ever fed in stays readable h
 - **From the email.** The email carries the questions inline, plus a link. The link opens the web quiz. If the user is signed out, it routes through sign-in and returns them to the quiz.
 - **From the site.** The classroom home shows today's quiz. A list of classrooms, each showing whether today's quiz is ready.
 
-**On demand.** The classroom home can create a quiz at any time. A small modal shows progress (Queued → Writing your quiz → Ready), can be minimized back into the card, and can be cancelled. A ready quiz never redirects on its own — the user taps Take quiz. On-demand quizzes arrive without an email and stay tagged On demand everywhere.
+**On demand.** The classroom home can create a quiz at any time. A small modal shows progress (Queued → Writing your quiz → Ready), can be minimized back into the card, and can be cancelled. A ready quiz never redirects on its own — the user taps Take quiz. Each on-demand quiz also sends an email carrying just that quiz, subject to the user's email preferences, and stays tagged On demand everywhere.
 
 **With several classrooms:** the site shows a menu, one entry per classroom with today's quiz available. The user picks one. One classroom per day is the intended rhythm — the others stay available, and their quizzes keep accumulating.
 
@@ -97,9 +97,11 @@ This is the classroom's memory. Everything the user ever fed in stays readable h
 - Questions are presented one at a time, with progress shown.
 - Each question is answerable and changeable until the whole quiz is submitted. Nothing is revealed along the way.
 - **Submit** is the commit point. An attempt row is created, answers are written, and grading runs server-side.
-- The timer records how long the attempt took, per question and overall.
+- The timer records how long the attempt took, per question and overall. A refresh keeps it running.
+- Answers and the current question live in a local draft, so a refresh or a same-browser reopen resumes where the quiz left off.
+- In fill-in-the-blank questions, Enter moves to the next blank, then to the next question; on the final blank it submits the quiz.
 
-Attempts are unlimited. Leaving mid-quiz discards that attempt rather than half-recording it.
+Attempts are unlimited. The server records an attempt only at submit, so a quiz is never half-recorded; the local draft expires two hours after it starts.
 
 ## 11. Results and review
 
@@ -128,9 +130,12 @@ Nothing is deleted. The bank, the uploads, and the history all stay.
 
 ## 14. Account center
 
-One page, with sections:
+One page, read-first: account details, usage stats, and history are visible at a glance, and each editable section shows an **Edit** control that expands its form in place.
 
-- **Profile** — username, avatar, email, password, UI language, timezone.
+Sections:
+
+- **Activity and learning** — quizzes taken, questions answered, accuracy, time studied, active days in the last 30, accuracy by category (weakest first), recent misses, and a sparkline of the last ten attempts. Computed live from stored attempts, free for everyone.
+- **Profile** — username, avatar, email, password, UI language (English or French), timezone. Changing the UI language takes effect immediately across the interface and future emails.
 - **Subscription** — current plan and status. **Debug builds only** while billing is inactive.
 - **Classrooms** — the list, with archive and delete.
 - **Quiz history** — a cross-classroom view.

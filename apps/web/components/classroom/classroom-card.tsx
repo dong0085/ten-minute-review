@@ -1,14 +1,15 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { Classroom } from "@tmr/db";
-import { languageName } from "@tmr/core";
 import { Badge, Card } from "@/components/ui";
+import { languageLabel } from "@/lib/language-label";
 import { LinkButton } from "./link-button";
 
 export function isClassroomDormant(activeUntil: Date): boolean {
   return activeUntil.getTime() < Date.now();
 }
 
-export function ClassroomCard({
+export async function ClassroomCard({
   classroom,
   bankSize,
   todayQuizId,
@@ -19,8 +20,10 @@ export function ClassroomCard({
   todayQuizId: string | null;
   dormant: boolean;
 }) {
-  const target = languageName(classroom.targetLanguage) ?? classroom.targetLanguage;
-  const native = languageName(classroom.nativeLanguage) ?? classroom.nativeLanguage;
+  const t = await getTranslations("Classroom.Card");
+  const locale = await getLocale();
+  const target = languageLabel(classroom.targetLanguage, locale);
+  const native = languageLabel(classroom.nativeLanguage, locale);
 
   return (
     <Card className="flex flex-col gap-4">
@@ -37,20 +40,18 @@ export function ClassroomCard({
           </p>
         </div>
         <Badge tone={dormant ? "amber" : "green"}>
-          {dormant ? "Dormant" : "Active"}
+          {dormant ? t("dormant") : t("active")}
         </Badge>
       </div>
-      <p className="text-sm text-neutral-600">
-        {bankSize} knowledge point{bankSize === 1 ? "" : "s"} in the bank
-      </p>
+      <p className="text-sm text-neutral-600">{t("knowledgePoints", { count: bankSize })}</p>
       <div>
         {todayQuizId ? (
           <LinkButton href={`/classrooms/${classroom.id}/quiz/${todayQuizId}`}>
-            Take today&apos;s quiz
+            {t("takeToday")}
           </LinkButton>
         ) : (
           <LinkButton href={`/classrooms/${classroom.id}/upload`} variant="secondary">
-            Add notes
+            {t("addNotes")}
           </LinkButton>
         )}
       </div>

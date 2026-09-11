@@ -114,6 +114,28 @@ export const attemptAnswers = pgTable(
   (table) => [index("attempt_answers_attempt_idx").on(table.attemptId)],
 );
 
+export const deletedDailyQuizzes = pgTable(
+  "deleted_daily_quizzes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    classroomId: uuid("classroom_id")
+      .notNull()
+      .references(() => classrooms.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    quizDate: date("quiz_date", { mode: "string" }).notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("deleted_daily_quizzes_classroom_date_idx").on(
+      table.classroomId,
+      table.quizDate,
+    ),
+    index("deleted_daily_quizzes_user_idx").on(table.userId),
+  ],
+);
+
 export type Quiz = typeof quizzes.$inferSelect;
 export type NewQuiz = typeof quizzes.$inferInsert;
 export type Question = typeof questions.$inferSelect;
@@ -122,3 +144,5 @@ export type Attempt = typeof attempts.$inferSelect;
 export type NewAttempt = typeof attempts.$inferInsert;
 export type AttemptAnswer = typeof attemptAnswers.$inferSelect;
 export type NewAttemptAnswer = typeof attemptAnswers.$inferInsert;
+export type DeletedDailyQuiz = typeof deletedDailyQuizzes.$inferSelect;
+export type NewDeletedDailyQuiz = typeof deletedDailyQuizzes.$inferInsert;

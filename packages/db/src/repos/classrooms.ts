@@ -152,6 +152,11 @@ export async function listDueClassrooms(db: Db) {
           AND q.quiz_date = (now() AT TIME ZONE u.timezone)::date
           AND q.kind = 'daily'
       )
+      AND NOT EXISTS (
+        SELECT 1 FROM deleted_daily_quizzes d
+        WHERE d.classroom_id = c.id
+          AND d.quiz_date = (now() AT TIME ZONE u.timezone)::date
+      )
   `);
   return Array.from(rows) as DueClassroom[];
 }

@@ -116,6 +116,8 @@ After submit:
 
 Per classroom: past quizzes by date, each tagged Daily or On demand and showing the best score and the attempt count. Tapping one opens its questions and every attempt made against it. This is where a learner sees a category they keep missing.
 
+Each row also carries a **Delete** control. Confirming removes the quiz, its questions, and every attempt made against it. A deleted daily quiz stays gone for that day — no replacement is composed.
+
 ## 13. Dormant classroom
 
 A classroom goes dormant 7 days after the last upload, or after the last login, whichever is later.
@@ -126,7 +128,7 @@ A classroom goes dormant 7 days after the last upload, or after the last login, 
 - The web quiz keeps working on demand, for free users once per day.
 - The classroom home shows the dormant state and two ways back: add notes, or just open the classroom — the act of opening it restarts the window.
 
-Nothing is deleted. The bank, the uploads, and the history all stay.
+Dormancy deletes nothing. The bank, the uploads, and the history all stay, apart from quizzes and classrooms the learner removes.
 
 ## 14. Account center
 

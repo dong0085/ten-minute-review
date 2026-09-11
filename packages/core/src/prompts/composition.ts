@@ -1,7 +1,7 @@
 import { parseCompositionResult } from "./schemas";
 import type { CompositionResult } from "../types";
 
-export const COMPOSITION_PROMPT_VERSION = "v1";
+export const COMPOSITION_PROMPT_VERSION = "v2";
 
 const COMPOSITION_SCHEMA = `{
   "quiz_date": "YYYY-MM-DD",
@@ -10,7 +10,7 @@ const COMPOSITION_SCHEMA = `{
       "knowledge_point_id": "the id of the knowledge point this question tests",
       "category": "vocabulary | phrase | grammar | expression | comprehension",
       "type": "mcq | fill_blank | true_false | image",
-      "stem": "the question, in the target language",
+      "stem": "the question, in the target language; a production fill_blank carries the native cue in parentheses",
       "options": ["option A", "option B", "..."] or null,
       "answer": { "index": 0 } | { "blanks": ["..."] } | { "value": false } | { "index": 0 },
       "explanation": "one sentence, in the target language, on why the answer is right"
@@ -38,7 +38,9 @@ Rules:
 
 4. Vocabulary runs both directions. Ask production (native → target) more often
    than recognition (target → native). Recognition is easier and flatters the
-   learner.
+   learner. A production question must carry the native cue: in a fill_blank,
+   put the native word or phrase in parentheses right after the blank, as in
+   "Elle se met du ___ (lipstick) tous les matins avant de sortir."
 
 5. Pick the question type that serves each category best:
 
@@ -50,7 +52,8 @@ Rules:
 
    A grammar drill with several blanks is one fill_blank question, not several.
 
-6. Write questions and explanations in the target language.
+6. Write questions and explanations in the target language, except the native
+   cue that a production question carries.
 
 7. Every question carries a one-sentence explanation of why the answer is right.
 
@@ -61,7 +64,7 @@ Rules:
 Schema:
 ${COMPOSITION_SCHEMA}`;
 
-export const COMPOSITION_PROMPT_V1 = COMPOSITION_PROMPT_BODY;
+export const COMPOSITION_PROMPT_V2 = COMPOSITION_PROMPT_BODY;
 
 export function parseCompositionResponse(text: string): CompositionResult {
   return parseCompositionResult(JSON.parse(text));

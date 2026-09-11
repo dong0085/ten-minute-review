@@ -27,7 +27,7 @@ Message catalogs live in `packages/core/src/messages` (`en/` and `fr/`, namespac
 
 - API error messages are localized centrally in `apps/web/lib/api.ts`: routes keep their English literals, which map to `Api` catalog keys before the response leaves the server.
 - Transactional emails (`packages/core/src/email-templates.ts`) take a `UiLocale`; call sites pass the recipient's `ui_language`.
-- Quiz stems, options, and explanations are generated in the target language and stored as content. Only UI chrome is translated; a question authored in French stays French in an English interface.
+- Quiz stems, options, and explanations are generated in the target language and stored as content. Only UI chrome is translated; a question authored in French stays French in an English interface. A production fill_blank also carries the native cue in parentheses — see `PROMPTS.md`.
 
 ---
 
@@ -126,6 +126,12 @@ Long text that several questions can hang off: `id`, `classroom_id`, `source_upl
 
 **Partial unique index on `(classroom_id, quiz_date) WHERE kind = 'daily'`.** It keeps daily composition idempotent — a retry after a crash cannot double up. On-demand (`manual`) quizzes have no per-day limit. Index `(user_id, kind, composed_at)` supports usage counts over rolling windows.
 
+### deleted_daily_quizzes
+
+Tombstones for daily quizzes the learner deleted: `id`, `classroom_id` fk, `user_id` fk, `quiz_date`, `deleted_at`. Unique on `(classroom_id, quiz_date)`.
+
+Deleting a quiz removes its questions, attempts, and attempt answers by cascade. A deleted daily quiz leaves a tombstone so the scheduler and the compose handler skip that classroom for that date instead of composing a replacement. Manual quizzes need no tombstone — nothing recreates them automatically.
+
 ### questions
 
 | Column | Type | Note |
@@ -149,7 +155,7 @@ Long text that several questions can hang off: `id`, `classroom_id`, `source_upl
 
 `attempt_answers`: `id`, `attempt_id`, `question_id`, `response` jsonb, `is_correct`, `duration_ms`, `created_at`.
 
-Attempts are unlimited and never deleted. Every answer is kept.
+Attempts are unlimited. Every answer is kept until the learner deletes the quiz; deleting a quiz removes its attempts and answers with it.
 
 An attempt row is written at submit. Until then, answers and progress live in a browser-local draft keyed by user and quiz; a refresh restores the draft rather than starting a new attempt. The draft expires with the attempt token after two hours.
 
@@ -238,6 +244,11 @@ WHERE c.archived_at IS NULL
     WHERE q.classroom_id = c.id
       AND q.kind = 'daily'
       AND q.quiz_date = (now() AT TIME ZONE u.timezone)::date
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM deleted_daily_quizzes d
+    WHERE d.classroom_id = c.id
+      AND d.quiz_date = (now() AT TIME ZONE u.timezone)::date
   );
 ```
 
@@ -272,7 +283,7 @@ Next.js route handlers, all session-scoped.
 | `GET` | `/api/classrooms/:id/quizzes/today` | Today's daily quiz plus any in-flight compose job, answers withheld |
 | `POST` | `/api/classrooms/:id/quizzes` | Create an on-demand quiz (enqueues a compose job) |
 | `POST` | `/api/classrooms/:id/quizzes/cancel` | Cancel the in-flight compose job |
-| `GET` | `/api/quizzes/:id` | Quiz, answers withheld |
+| `GET` `DELETE` | `/api/quizzes/:id` | Read the quiz (answers withheld) or delete it with its attempts and answers |
 | `POST` | `/api/quizzes/:id/attempts` | Start an attempt |
 | `POST` | `/api/attempts/:id/submit` | Submit answers, receive correctness and explanations |
 | `GET` | `/api/attempts/:id` | Full review |

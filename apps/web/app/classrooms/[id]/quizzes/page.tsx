@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getClassroom, listQuizzesForClassroom } from "@tmr/db";
 import { Card, Badge } from "@/components/ui";
+import { DeleteQuizButton } from "@/components/classroom/delete-quiz-button";
 import { formatQuizDate } from "@/lib/format";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
@@ -44,33 +45,38 @@ export default async function QuizzesPage({ params }: { params: Promise<{ id: st
       ) : (
         <div className="space-y-3">
           {quizzes.map((quiz) => (
-            <Link
+            <div
               key={quiz.id}
-              href={`/classrooms/${id}/quiz/${quiz.id}`}
-              className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-4 transition hover:bg-neutral-50"
+              className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white p-4 transition hover:bg-neutral-50"
             >
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">{formatQuizDate(quiz.quizDate, locale)}</p>
-                  <Badge tone={quiz.kind === "manual" ? "amber" : "neutral"}>
-                    {quiz.kind === "manual" ? t("onDemand") : t("daily")}
-                  </Badge>
-                </div>
-                <p className="mt-0.5 text-xs text-neutral-500">
-                  {t("questions", { count: quiz.size })}
-                </p>
-              </div>
-              <div className="text-right text-xs text-neutral-500">
-                {quiz.bestScore !== null ? (
-                  <p className="font-medium text-neutral-800">
-                    {t("best", { score: quiz.bestScore, size: quiz.size })}
+              <Link
+                href={`/classrooms/${id}/quiz/${quiz.id}`}
+                className="flex flex-1 items-center justify-between gap-3"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{formatQuizDate(quiz.quizDate, locale)}</p>
+                    <Badge tone={quiz.kind === "manual" ? "amber" : "neutral"}>
+                      {quiz.kind === "manual" ? t("onDemand") : t("daily")}
+                    </Badge>
+                  </div>
+                  <p className="mt-0.5 text-xs text-neutral-500">
+                    {t("questions", { count: quiz.size })}
                   </p>
-                ) : (
-                  <p>{t("notAttempted")}</p>
-                )}
-                <p>{t("attempts", { count: quiz.attemptCount })}</p>
-              </div>
-            </Link>
+                </div>
+                <div className="text-right text-xs text-neutral-500">
+                  {quiz.bestScore !== null ? (
+                    <p className="font-medium text-neutral-800">
+                      {t("best", { score: quiz.bestScore, size: quiz.size })}
+                    </p>
+                  ) : (
+                    <p>{t("notAttempted")}</p>
+                  )}
+                  <p>{t("attempts", { count: quiz.attemptCount })}</p>
+                </div>
+              </Link>
+              <DeleteQuizButton quizId={quiz.id} />
+            </div>
           ))}
         </div>
       )}

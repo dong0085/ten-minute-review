@@ -11,6 +11,7 @@ import { classrooms } from "../schema/classrooms";
 import {
   attempts,
   attemptAnswers,
+  deletedDailyQuizzes,
   questions,
   quizzes,
 } from "../schema/quizzes";
@@ -94,6 +95,43 @@ export async function getQuizForUser(db: Db, userId: string, quizId: string) {
     .where(and(eq(quizzes.id, quizId), eq(quizzes.userId, userId)))
     .limit(1);
   return quiz ?? null;
+}
+
+export async function hasDeletedDailyQuiz(db: Db, classroomId: string, quizDate: string) {
+  const [row] = await db
+    .select({ id: deletedDailyQuizzes.id })
+    .from(deletedDailyQuizzes)
+    .where(
+      and(
+        eq(deletedDailyQuizzes.classroomId, classroomId),
+        eq(deletedDailyQuizzes.quizDate, quizDate),
+      ),
+    )
+    .limit(1);
+  return row !== undefined;
+}
+
+export async function deleteQuizForUser(db: Db, userId: string, quizId: string) {
+  const quiz = await getQuizForUser(db, userId, quizId);
+  if (!quiz) {
+    return false;
+  }
+  await db.transaction(async (tx) => {
+    if (quiz.kind === "daily") {
+      await tx
+        .insert(deletedDailyQuizzes)
+        .values({
+          classroomId: quiz.classroomId,
+          userId: quiz.userId,
+          quizDate: quiz.quizDate,
+        })
+        .onConflictDoNothing();
+    }
+    await tx
+      .delete(quizzes)
+      .where(and(eq(quizzes.id, quizId), eq(quizzes.userId, userId)));
+  });
+  return true;
 }
 
 export async function getQuizWithQuestionsForUser(db: Db, userId: string, quizId: string) {

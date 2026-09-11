@@ -1,5 +1,5 @@
 import {
-  COMPOSITION_PROMPT_V1,
+  COMPOSITION_PROMPT_V2,
   COMPOSITION_PROMPT_VERSION,
   MIN_USABLE_QUESTIONS,
   parseCompositionResponse,
@@ -14,6 +14,7 @@ import {
   getClassroom,
   getDailyQuizByClassroomAndDate,
   getJobById,
+  hasDeletedDailyQuiz,
   listKnowledgePointsForComposition,
   listRecentMisses,
   listWeekQuestionStems,
@@ -75,6 +76,10 @@ export async function handleComposeJob(
     if (existing) {
       return;
     }
+    if (await hasDeletedDailyQuiz(db, classroomId, localDate)) {
+      console.log(`[worker] compose ${classroomId} ${localDate}: deleted by user, skipping`);
+      return;
+    }
   }
 
   const classroom = await getClassroom(db, userId, classroomId);
@@ -106,7 +111,7 @@ export async function handleComposeJob(
 
   const provider = getLlmProvider();
   const raw = await provider.compose({
-    systemPrompt: COMPOSITION_PROMPT_V1,
+    systemPrompt: COMPOSITION_PROMPT_V2,
     payload: compositionPayload,
   });
   const parsed = typeof raw === "string" ? parseCompositionResponse(raw) : parseCompositionResult(raw);

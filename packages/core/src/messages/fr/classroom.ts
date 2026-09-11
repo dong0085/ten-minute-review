@@ -157,6 +157,11 @@ export const classroom: MessageShape<(typeof en)["Classroom"]> = {
     best: "Meilleur : {score} / {size}",
     notAttempted: "Pas encore fait",
     attempts: "{count, plural, one {# tentative} other {# tentatives}}",
+    deleteQuiz: "Supprimer",
+    deleteConfirm:
+      "Supprimer ce quiz ? Ses tentatives et réponses seront supprimées aussi. Cette action est définitive.",
+    deleting: "Suppression…",
+    deleteError: "Impossible de supprimer ce quiz. Réessaie.",
   },
   UploadPage: {
     title: "Ajouter des notes",

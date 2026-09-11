@@ -182,7 +182,9 @@ Rules:
 
 4. Vocabulary runs both directions. Ask production (native → target) more often
    than recognition (target → native). Recognition is easier and flatters the
-   learner.
+   learner. A production question must carry the native cue: in a fill_blank,
+   put the native word or phrase in parentheses right after the blank, as in
+   "Elle se met du ___ (lipstick) tous les matins avant de sortir."
 
 5. Pick the question type that serves each category best:
 
@@ -194,7 +196,8 @@ Rules:
 
    A grammar drill with several blanks is one fill_blank question, not several.
 
-6. Write questions and explanations in the target language.
+6. Write questions and explanations in the target language, except the native
+   cue that a production question carries.
 
 7. Every question carries a one-sentence explanation of why the answer is right.
 
@@ -220,6 +223,15 @@ Schema:
       "options": ["the clothes line", "the ceiling", "the rent", "the hamstring"],
       "answer": { "index": 0 },
       "explanation": "Un étendoir est l'objet sur lequel on fait sécher le linge."
+    },
+    {
+      "knowledge_point_id": "a7d3...",
+      "category": "vocabulary",
+      "type": "fill_blank",
+      "stem": "Elle se met du ___ (lipstick) tous les matins avant de sortir.",
+      "options": null,
+      "answer": { "blanks": ["rouge à lèvres"] },
+      "explanation": "« Le rouge à lèvres » est le produit de maquillage des lèvres."
     },
     {
       "knowledge_point_id": "c9a4...",
@@ -265,6 +277,6 @@ Composition reads four things:
 
 ## 3. Versioning
 
-- Both prompts live in code as named constants: `EXTRACTION_PROMPT_V2`, `COMPOSITION_PROMPT_V1`.
+- Both prompts live in code as named constants: `EXTRACTION_PROMPT_V2`, `COMPOSITION_PROMPT_V2`.
 - Every `knowledge_point` and every `question` row stores the version that produced it.
 - Bumping a version affects new work only. Existing rows keep their original version, so old and new output can be compared side by side.

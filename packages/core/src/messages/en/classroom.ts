@@ -150,6 +150,11 @@ export const classroom = {
     best: "Best {score} / {size}",
     notAttempted: "Not attempted",
     attempts: "{count, plural, one {# attempt} other {# attempts}}",
+    deleteQuiz: "Delete",
+    deleteConfirm:
+      "Delete this quiz? Its attempts and answers are removed with it. This cannot be undone.",
+    deleting: "Deleting…",
+    deleteError: "Could not delete this quiz. Please try again.",
   },
   UploadPage: {
     title: "Add notes",

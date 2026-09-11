@@ -159,31 +159,34 @@ export default async function ClassroomHomePage({
           ) : (
             <ul className="divide-y divide-neutral-100">
               {recentQuizzes.map((quiz) => (
-                <li key={quiz.id} className="flex items-center justify-between gap-3 py-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">{formatQuizDate(quiz.quizDate)}</p>
-                      <Badge tone={quiz.kind === "manual" ? "amber" : "neutral"}>
-                        {quiz.kind === "manual" ? "On demand" : "Daily"}
-                      </Badge>
+                <li key={quiz.id}>
+                  <Link
+                    href={`/classrooms/${classroom.id}/quiz/${quiz.id}`}
+                    className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 transition hover:bg-neutral-50"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">
+                          {formatQuizDate(quiz.quizDate)}
+                        </p>
+                        <Badge tone={quiz.kind === "manual" ? "amber" : "neutral"}>
+                          {quiz.kind === "manual" ? "On demand" : "Daily"}
+                        </Badge>
+                      </div>
+                      <p className="mt-0.5 text-xs text-neutral-500">
+                        {quiz.size} {quiz.size === 1 ? "question" : "questions"}
+                      </p>
                     </div>
-                    <p className="mt-0.5 text-xs text-neutral-500">
-                      {quiz.size} {quiz.size === 1 ? "question" : "questions"}
-                    </p>
-                  </div>
-                  {quiz.attemptCount === 0 ? (
-                    <LinkButton
-                      href={`/classrooms/${classroom.id}/quiz/${quiz.id}`}
-                      size="sm"
-                      variant="secondary"
-                    >
-                      Take
-                    </LinkButton>
-                  ) : (
-                    <p className="text-xs text-neutral-500">
-                      Best {quiz.bestScore} / {quiz.size}
-                    </p>
-                  )}
+                    {quiz.attemptCount === 0 ? (
+                      <span className="inline-flex shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-900">
+                        Take
+                      </span>
+                    ) : (
+                      <p className="shrink-0 text-xs text-neutral-500">
+                        Best {quiz.bestScore} / {quiz.size}
+                      </p>
+                    )}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -200,20 +203,21 @@ export default async function ClassroomHomePage({
             </div>
             <ul className="divide-y divide-neutral-100">
               {unfinished.map((quiz) => (
-                <li key={quiz.id} className="flex items-center justify-between gap-3 py-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{formatQuizDate(quiz.quizDate)}</p>
-                    <p className="mt-0.5 text-xs text-neutral-500">
-                      {quiz.size} {quiz.size === 1 ? "question" : "questions"}
-                    </p>
-                  </div>
-                  <LinkButton
+                <li key={quiz.id}>
+                  <Link
                     href={`/classrooms/${classroom.id}/quiz/${quiz.id}`}
-                    size="sm"
-                    variant="secondary"
+                    className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 transition hover:bg-neutral-50"
                   >
-                    Take
-                  </LinkButton>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{formatQuizDate(quiz.quizDate)}</p>
+                      <p className="mt-0.5 text-xs text-neutral-500">
+                        {quiz.size} {quiz.size === 1 ? "question" : "questions"}
+                      </p>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-900">
+                      Take
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>

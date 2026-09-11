@@ -85,7 +85,7 @@ export function TodayQuizAction({
   const [closing, setClosing] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  const activeQuizId = readyQuizId ?? dailyQuizId;
+  const activeQuizId = dailyQuizId ?? readyQuizId;
   const showModal = phase !== "idle" && !minimized;
 
   const fetchToday = useCallback(async (): Promise<TodayResponse | null> => {
@@ -276,6 +276,32 @@ export function TodayQuizAction({
     { key: "ready", label: "Ready" },
   ];
 
+  const inlineProgress = (
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+      <button
+        type="button"
+        onClick={() => setMinimized(false)}
+        className="flex items-center gap-2 text-sm font-medium text-neutral-800 hover:text-neutral-950"
+      >
+        {phase === "posting" ? (
+          <Spinner className="h-3.5 w-3.5" />
+        ) : step === "running" ? (
+          <Spinner className="h-3.5 w-3.5" />
+        ) : (
+          <span className="h-2 w-2 rounded-full bg-neutral-400" />
+        )}
+        {phase === "posting" || step === "pending" ? "Queued" : "Writing your quiz"}
+      </button>
+      <button
+        type="button"
+        onClick={cancel}
+        className="ml-auto text-xs text-neutral-500 underline hover:text-neutral-900"
+      >
+        Cancel
+      </button>
+    </div>
+  );
+
   return (
     <>
       <div className="flex flex-col justify-between gap-4">
@@ -289,9 +315,17 @@ export function TodayQuizAction({
         </div>
         <div>
           {activeQuizId ? (
-            <LinkButton href={`/classrooms/${classroomId}/quiz/${activeQuizId}`}>
-              Take today&apos;s quiz
-            </LinkButton>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <LinkButton href={`/classrooms/${classroomId}/quiz/${activeQuizId}`}>
+                  Take today&apos;s quiz
+                </LinkButton>
+                <Button variant="secondary" onClick={start} disabled={composing}>
+                  Create a quiz now
+                </Button>
+              </div>
+              {composing && minimized ? inlineProgress : null}
+            </div>
           ) : bankSize === 0 ? (
             <div className="space-y-2">
               <Button disabled>Create a quiz now</Button>
@@ -306,31 +340,7 @@ export function TodayQuizAction({
               </p>
             </div>
           ) : composing && minimized ? (
-            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
-              <button
-                type="button"
-                onClick={() => setMinimized(false)}
-                className="flex items-center gap-2 text-sm font-medium text-neutral-800 hover:text-neutral-950"
-              >
-                {phase === "posting" ? (
-                  <Spinner className="h-3.5 w-3.5" />
-                ) : step === "running" ? (
-                  <Spinner className="h-3.5 w-3.5" />
-                ) : (
-                  <span className="h-2 w-2 rounded-full bg-neutral-400" />
-                )}
-                {phase === "posting" || step === "pending"
-                  ? "Queued"
-                  : "Writing your quiz"}
-              </button>
-              <button
-                type="button"
-                onClick={cancel}
-                className="ml-auto text-xs text-neutral-500 underline hover:text-neutral-900"
-              >
-                Cancel
-              </button>
-            </div>
+            inlineProgress
           ) : (
             <Button onClick={start} disabled={phase === "posting"}>
               Create a quiz now

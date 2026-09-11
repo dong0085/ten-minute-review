@@ -1,11 +1,6 @@
 import os from "node:os";
-import {
-  claimJob,
-  completeJob,
-  createDb,
-  failJob,
-  runMigrations,
-} from "@tmr/db";
+import { claimJob, completeJob, createDb, failJob } from "@tmr/db";
+import { runMigrations } from "@tmr/db/migrate";
 import type { Db, Job } from "@tmr/db";
 import { env } from "./env";
 import { handleComposeJob } from "./handlers/compose";

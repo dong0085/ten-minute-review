@@ -1,0 +1,157 @@
+# Flows
+
+Screen-by-screen behaviour. This is what each screen does, not how it looks.
+
+---
+
+## 1. Sign up
+
+**Entry:** the landing page, or an invite link.
+**Gate:** an invite code is required while the product is invite-only.
+
+1. The user enters an invite code, or arrives with one already in the link.
+2. They choose Google or email plus password.
+3. Email sign-up sends a verification link. Google sign-up arrives verified.
+4. First sign-in creates the user row. A referral row is written if the invite code belonged to an existing user.
+5. `ui_language` starts from the browser's `Accept-Language`. `timezone` starts from the browser. Both stay editable in the account center.
+
+An invite code that has already been fully redeemed still works — codes are unlimited-use while the product is invite-only. The code exists to gate access, and to credit referrals.
+
+## 2. Sign in
+
+Google or email plus password. Forgot-password sends a reset link. After sign-in the user lands on the classroom list, or on the last classroom they opened.
+
+---
+
+## 3. Empty state
+
+**Shown when:** the user owns no classrooms.
+
+Explains the product in one line and offers a single action: create a classroom. This is the only screen a new user sees with no quiz and no notes, so it carries the explanation.
+
+## 4. Create a classroom
+
+A form with two fields:
+
+- **Name** — free text, e.g. "French with Marie".
+- **I'm learning** — the target language, one of the eleven supported.
+- **I speak** — the native language, defaulted from `ui_language`.
+
+Both languages stay editable, and extraction corrects them if the notes disagree. On save the classroom opens to its empty home.
+
+## 5. Classroom home
+
+The default screen once a classroom exists. Shows:
+
+- **Bank summary** — a count of knowledge points per category. Empty before the first upload.
+- **Today's quiz** — a button to take it, or a note that it arrives in the morning email.
+- **Add notes** — the primary action.
+- **History** — a clock control that opens the upload timeline.
+- **Settings** — name, languages, the auto-stop window.
+
+A dormant classroom shows a banner here: emails have stopped, add notes or open the classroom to resume them.
+
+## 6. Upload notes
+
+Two inputs on one screen:
+
+- **Paste or type text.**
+- **Attach images** — photos of handwritten notes, up to 10 MB each.
+
+The user submits. The upload row is written immediately and the screen moves to the processing state. Nothing blocks on the LLM.
+
+## 7. Processing
+
+Shown while `extraction_status` is `pending` or `running`.
+
+- A short line: the notes are being read.
+- The user can leave, close the tab, or upload more. Extraction continues in the worker.
+- On completion the bank summary updates and a count appears: how many points were added, and how many lines were skipped.
+- The skipped count is shown, not hidden. It reassures the user that `au bibeau` was ignored on purpose.
+
+On failure the upload shows an error with a retry action. The uploaded material is never lost.
+
+## 8. Upload timeline
+
+Opened from the clock control on the classroom.
+
+One row per upload, newest first: date, kind (text or image), the first line of the text or a thumbnail of the image, the count of points extracted, and the discard count. Tapping a row shows the original material in full — for an image, the image itself.
+
+This is the classroom's memory. Everything the user ever fed in stays readable here.
+
+## 9. Daily quiz — entry
+
+**Two doors:**
+
+- **From the email.** The email carries the questions inline, plus a link. The link opens the web quiz. If the user is signed out, it routes through sign-in and returns them to the quiz.
+- **From the site.** The classroom home shows today's quiz. A list of classrooms, each showing whether today's quiz is ready.
+
+**With several classrooms:** the site shows a menu, one entry per classroom with today's quiz available. The user picks one. One classroom per day is the intended rhythm — the others stay available, and their quizzes keep accumulating.
+
+## 10. Taking the quiz
+
+- Questions are presented one at a time, with progress shown.
+- Each question is answerable and changeable until the whole quiz is submitted. Nothing is revealed along the way.
+- **Submit** is the commit point. An attempt row is created, answers are written, and grading runs server-side.
+- The timer records how long the attempt took, per question and overall.
+
+Attempts are unlimited. Leaving mid-quiz discards that attempt rather than half-recording it.
+
+## 11. Results and review
+
+After submit:
+
+- **Score** — correct out of total.
+- **Per question:** the user's answer, the correct answer, and a one-sentence explanation of why. Wrong answers are marked plainly, without scolding.
+- **Retake** — starts a fresh attempt on the same quiz. The previous attempt stays in history.
+- Every attempt is kept, so the same quiz can show three attempts with three scores.
+
+## 12. Quiz history
+
+Per classroom: past quizzes by date, each with the best score and the attempt count. Tapping one opens its questions and every attempt made against it. This is where a learner sees a category they keep missing.
+
+## 13. Dormant classroom
+
+A classroom goes dormant 7 days after the last upload, or after the last login, whichever is later.
+
+**While dormant:**
+
+- No daily email for that classroom.
+- The web quiz keeps working on demand, for free users once per day.
+- The classroom home shows the dormant state and two ways back: add notes, or just open the classroom — the act of opening it restarts the window.
+
+Nothing is deleted. The bank, the uploads, and the history all stay.
+
+## 14. Account center
+
+One page, with sections:
+
+- **Profile** — username, avatar, email, password, UI language, timezone.
+- **Subscription** — current plan and status. **Debug builds only** while billing is inactive.
+- **Classrooms** — the list, with archive and delete.
+- **Quiz history** — a cross-classroom view.
+- **Referrals** — the user's code, the share link, and who signed up with it.
+- **Email preferences** — daily email on or off, send hour, unsubscribe.
+- **Data** — export everything, or delete the account.
+
+Account deletion removes classrooms, uploads, knowledge points, quizzes, attempts, and stored images. A confirmation step names what will be lost.
+
+## 15. Email preferences and unsubscribe
+
+- The send hour is per user, in their local timezone. Default 7am.
+- Turning the daily email off is immediate and affects every classroom.
+- Every email carries a one-click unsubscribe link that needs no sign-in. It lands on a page confirming the change, with a link back to settings.
+
+---
+
+## Flow summary
+
+| Flow | Trigger | Ends when |
+|---|---|---|
+| Sign up | Invite code | User row exists, email verified |
+| Create classroom | Empty state or account center | Classroom opens |
+| Upload notes | Add notes action | Points appear in the bank |
+| Daily quiz | Morning email, or the site | Attempt recorded |
+| Review | After submit | Explanations shown |
+| Reactivate | Opening a dormant classroom | `active_until` moves forward |
+| Unsubscribe | Any email | `unsubscribed_at` set |

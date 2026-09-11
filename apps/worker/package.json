@@ -1,0 +1,27 @@
+{
+  "name": "worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tmr/core": "workspace:*",
+    "@tmr/db": "workspace:*",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.45.2",
+    "postgres": "^3.4.9",
+    "resend": "^6.27.0",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
+  }
+}

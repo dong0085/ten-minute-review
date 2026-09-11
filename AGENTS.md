@@ -1,0 +1,26 @@
+# ten-minute-review — agent notes
+
+Specs live in `docs/`: `SCOPE.md` (every product decision), `PROMPTS.md` (the two prompts), `TECHNICAL.md` (architecture, data model, API, pipelines), `FLOWS.md` (screen behaviour), `TRIAL-RUN.md` (field notes). Read `docs/TECHNICAL.md` before changing architecture.
+
+## Layout
+
+- `apps/web` — Next.js 16 App Router UI and API routes, deploys to Vercel.
+- `apps/worker` — job loop (`extract`, `compose`, `send_email`) plus the 15-minute scheduler, runs on Railway with `tsx`, applies migrations on boot.
+- `packages/core` — domain types, prompt constants (`EXTRACTION_PROMPT_V1`, `COMPOSITION_PROMPT_V1`), grading, quiz sizing, email templates.
+- `packages/db` — Drizzle schema, SQL migrations in `drizzle/`, repositories.
+
+## Commands
+
+- `pnpm dev:web`, `pnpm dev:worker`
+- `pnpm typecheck`, `pnpm test`, `pnpm --filter web lint`, `pnpm build`
+- `pnpm db:generate` after a schema edit; `pnpm db:migrate` to apply
+- Keep `CREATE EXTENSION IF NOT EXISTS citext;` at the top of the first migration file when it is regenerated.
+
+## Conventions
+
+- Relative imports inside `packages/**` and `apps/worker/**` stay extensionless (`./client`, never `./client.js`); Turbopack resolves only extensionless paths under `transpilePackages`.
+- Shared packages export TypeScript source directly. The worker runs via `tsx`. There is no package build step.
+- Answers and explanations stay server-side until an attempt is submitted.
+- LLM, email, and storage each sit behind one adapter chosen by `LLM_PROVIDER`, `EMAIL_PROVIDER`, `STORAGE_PROVIDER`. Defaults are `mock`, `console`, `local`.
+- Env lives in the repo-root `.env`: `@next/env` loads it for the web app, `dotenv` for the worker and drizzle-kit.
+- Tests use Vitest in `packages/core` and `apps/worker`.

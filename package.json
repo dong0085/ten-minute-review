@@ -1,0 +1,17 @@
+{
+  "name": "ten-minute-review",
+  "private": true,
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:worker": "pnpm --filter worker dev",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "build": "pnpm --filter web build",
+    "db:generate": "pnpm --filter @tmr/db db:generate",
+    "db:migrate": "pnpm --filter @tmr/db db:migrate"
+  }
+}

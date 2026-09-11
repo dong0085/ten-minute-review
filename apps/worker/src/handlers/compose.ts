@@ -12,10 +12,12 @@ import {
   createQuizWithQuestions,
   enqueueJob,
   getClassroom,
-  getQuizByClassroomAndDate,
+  getDailyQuizByClassroomAndDate,
+  getJobById,
   listKnowledgePointsForComposition,
   listRecentMisses,
   listWeekQuestionStems,
+  markJobCancelled,
 } from "@tmr/db";
 import type { Db, NewQuestion } from "@tmr/db";
 import { getLlmProvider } from "../llm";
@@ -35,17 +37,44 @@ export function passageIdFromDetail(detail: KnowledgePointDetail | null): string
   return typeof value === "string" ? value : null;
 }
 
+async function cancelIfRequested(db: Db, jobId: string | undefined): Promise<boolean> {
+  if (!jobId) {
+    return false;
+  }
+  const job = await getJobById(db, jobId);
+  if (!job) {
+    return false;
+  }
+  const cancelRequested = job.payload?.cancelRequested === true;
+  if (job.status === "cancelled" || cancelRequested) {
+    if (job.status !== "cancelled") {
+      await markJobCancelled(db, jobId);
+    }
+    return true;
+  }
+  return false;
+}
+
 export async function handleComposeJob(
   db: Db,
   payload: Record<string, unknown>,
+  jobId?: string,
 ): Promise<void> {
   const classroomId = requireString(payload, "classroomId");
   const userId = requireString(payload, "userId");
   const localDate = requireString(payload, "localDate");
+  const kind = payload.source === "manual" ? "manual" : "daily";
 
-  const existing = await getQuizByClassroomAndDate(db, classroomId, localDate);
-  if (existing) {
+  if (await cancelIfRequested(db, jobId)) {
+    console.log(`[worker] compose ${classroomId} ${localDate}: cancelled before start`);
     return;
+  }
+
+  if (kind === "daily") {
+    const existing = await getDailyQuizByClassroomAndDate(db, classroomId, localDate);
+    if (existing) {
+      return;
+    }
   }
 
   const classroom = await getClassroom(db, userId, classroomId);
@@ -103,10 +132,16 @@ export async function handleComposeJob(
     promptVersion: COMPOSITION_PROMPT_VERSION,
   }));
 
+  if (await cancelIfRequested(db, jobId)) {
+    console.log(`[worker] compose ${classroomId} ${localDate}: cancelled before save`);
+    return;
+  }
+
   const { quiz } = await createQuizWithQuestions(db, {
     classroomId,
     userId,
     quizDate: localDate,
+    kind,
     size: kept.length,
     promptVersion: COMPOSITION_PROMPT_VERSION,
     questions,
@@ -115,8 +150,10 @@ export async function handleComposeJob(
     throw new Error(`failed to create quiz for classroom ${classroomId} on ${localDate}`);
   }
 
-  await enqueueJob(db, { kind: "send_email", payload: { userId, quizDate: localDate } });
+  if (kind === "daily") {
+    await enqueueJob(db, { kind: "send_email", payload: { userId, quizDate: localDate } });
+  }
   console.log(
-    `[worker] compose ${classroomId} ${localDate}: ${kept.length} questions (${dropped.length} dropped)`,
+    `[worker] compose ${kind} ${classroomId} ${localDate}: ${kept.length} questions (${dropped.length} dropped)`,
   );
 }

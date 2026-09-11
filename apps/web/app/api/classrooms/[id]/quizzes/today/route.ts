@@ -1,10 +1,12 @@
-import { getClassroom, getQuizByClassroomAndDate } from "@tmr/db";
+import { getClassroom, getDailyQuizByClassroomAndDate, getLatestComposeJob } from "@tmr/db";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/api";
 import { getDb } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { buildQuizPayload, localDateFor } from "@/app/api/_lib/quiz";
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+const REHYDRATE_WINDOW_MS = 10 * 60 * 1000;
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
@@ -19,12 +21,16 @@ export async function GET(_request: Request, context: RouteContext) {
       return jsonError("Not found", 404);
     }
     const quizDate = localDateFor(user.timezone);
-    const quiz = await getQuizByClassroomAndDate(db, id, quizDate);
+    const quiz = await getDailyQuizByClassroomAndDate(db, id, quizDate);
     if (!quiz) {
-      return jsonOk({ quiz: null });
+      const job = await getLatestComposeJob(db, id, REHYDRATE_WINDOW_MS);
+      return jsonOk({
+        quiz: null,
+        job: job ? { status: job.status, requestedAt: job.createdAt } : null,
+      });
     }
     const payload = await buildQuizPayload(user.id, quiz.id);
-    return jsonOk({ quiz: payload });
+    return jsonOk({ quiz: payload, job: null });
   } catch (error) {
     return handleRouteError(error);
   }

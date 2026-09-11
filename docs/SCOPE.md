@@ -42,12 +42,13 @@ A web app that turns a tutoring session's notes — text or images — into a da
 
 ## The daily quiz
 
-- **One quiz per classroom per day.**
+- **One *daily* quiz per classroom per day**, plus on-demand quizzes the user creates whenever they like. Several on-demand quizzes can exist on one day.
 - **Length scales with the bank, capped at 20 questions.** *(my call on the formula: `min(20, max(8, floor(bank_size / 8)))` — a 60-question bank gives 8, a 100-question bank gives 12, and the cap holds from 160 up.)*
 - **The 10-minute promise is the binding constraint.** 20 is a ceiling, not a target; a quiz heavy on fill-in-the-blank questions stays shorter than one made of quick MCQs.
 - **Composition:** newest material first within the 7-day window, plus light re-tests of knowledge points the user missed, reworded as a new question. Full spaced repetition stays out of MVP.
 - **Attempts:** unlimited for now. Every attempt is recorded — answers, correctness, time taken. The answer and explanation are revealed after submit.
-- On the web, the quiz stays available on demand after a classroom goes dormant. Emails stop; access continues. Free users get one on-demand quiz per day.
+- On the web, the quiz stays available on demand after a classroom goes dormant. Emails stop; access continues. On-demand quizzes are unlimited for now. Each creation is counted over rolling 24-hour, 7-day, and 30-day windows so fair-use limits can be introduced later.
+- **On-demand quizzes** are created from the classroom home: a button opens a small progress modal (Queued → Writing your quiz → Ready) that can be minimized into the card or cancelled. Cancelling never counts and writes no quiz. On-demand quizzes never send an email; they appear in the quizzes list tagged "On demand".
 - **Validated:** one real session yields roughly 110–150 knowledge points and questions — comfortably 7 days of quizzes. The 7-day window matches one session per week. Evidence in `TRIAL-RUN.md`.
 
 ## Emails
@@ -83,7 +84,7 @@ A web app that turns a tutoring session's notes — text or images — into a da
 
 ## MVP vs deferred
 
-- **MVP:** auth, classrooms, note upload (text + images), question bank + generation, daily quiz on web and by email, attempt recording, answer review, upload history.
+- **MVP:** auth, classrooms, note upload (text + images), question bank + generation, daily quiz on web and by email, on-demand quizzes from the classroom home, attempt recording, answer review, upload history.
 - **Deferred, modeled but unbuilt:** payment UI, referral UI, tier-cap enforcement, quiz-type selection, full spaced repetition.
 
 ---

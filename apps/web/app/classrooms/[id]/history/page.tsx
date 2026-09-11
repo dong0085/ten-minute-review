@@ -94,9 +94,10 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
                     ) : null}
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">
-                        {upload.kind === "image"
-                          ? (upload.originalFilename ?? "Image")
-                          : firstLine(upload.textContent)}
+                        {upload.subject ??
+                          (upload.kind === "image"
+                            ? (upload.originalFilename ?? "Image")
+                            : firstLine(upload.textContent))}
                       </p>
                       <p className="text-xs text-neutral-500">
                         {formatWhen(upload.createdAt)} ·{" "}

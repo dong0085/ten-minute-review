@@ -76,6 +76,9 @@ export default async function AttemptPage({
             <Link href={`/classrooms/${id}/quiz/${quiz.id}`} className={linkButtonClass}>
               Retake
             </Link>
+            <Link href={`/classrooms/${id}?create=1`} className={linkButtonClass}>
+              Create another quiz
+            </Link>
             <Link href={`/classrooms/${id}/quizzes`} className={linkButtonClass}>
               All quizzes
             </Link>

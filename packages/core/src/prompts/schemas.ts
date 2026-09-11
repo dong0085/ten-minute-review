@@ -19,6 +19,7 @@ const grammarDetailSchema = z.object({
 });
 
 export const extractionResultSchema = z.object({
+  subject: z.string().nullable().optional().default(null),
   target_language: z.string(),
   native_language: z.string(),
   knowledge_points: z
@@ -78,6 +79,7 @@ export const compositionResultSchema = z.object({
 export function parseExtractionResult(json: unknown): ExtractionResult {
   const parsed = extractionResultSchema.parse(json);
   return {
+    subject: parsed.subject,
     target_language: parsed.target_language,
     native_language: parsed.native_language,
     knowledge_points: parsed.knowledge_points.map((point) => ({

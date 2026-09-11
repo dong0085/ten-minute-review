@@ -150,6 +150,7 @@ export async function listDueClassrooms(db: Db) {
         SELECT 1 FROM quizzes q
         WHERE q.classroom_id = c.id
           AND q.quiz_date = (now() AT TIME ZONE u.timezone)::date
+          AND q.kind = 'daily'
       )
   `);
   return Array.from(rows) as DueClassroom[];
@@ -216,6 +217,7 @@ export async function completeUploadExtraction(
   db: Db,
   uploadId: string,
   discarded: ExtractionDiscard[],
+  subject: string | null,
 ) {
   await db
     .update(uploads)
@@ -224,6 +226,7 @@ export async function completeUploadExtraction(
       extractedAt: new Date(),
       extractionError: null,
       discarded,
+      subject,
     })
     .where(eq(uploads.id, uploadId));
 }

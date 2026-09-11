@@ -44,7 +44,9 @@ Both languages stay editable, and extraction corrects them if the notes disagree
 The default screen once a classroom exists. Shows:
 
 - **Bank summary** — a count of knowledge points per category. Empty before the first upload.
-- **Today's quiz** — a button to take it, or a note that it arrives in the morning email.
+- **Today's quiz** — take the daily quiz, or create one on demand. While a quiz is being written, the card shows live progress with Minimize and Cancel; when it is ready, it offers Take quiz. With an empty bank the button explains what to add first.
+- **Recent quizzes** — the five latest quizzes, each tagged Daily or On demand, with Take on ones not yet attempted.
+- **Unfinished** — up to three on-demand quizzes not taken yet, each one tap away.
 - **Add notes** — the primary action.
 - **History** — a clock control that opens the upload timeline.
 - **Settings** — name, languages, the auto-stop window.
@@ -75,7 +77,7 @@ On failure the upload shows an error with a retry action. The uploaded material 
 
 Opened from the clock control on the classroom.
 
-One row per upload, newest first: date, kind (text or image), the first line of the text or a thumbnail of the image, the count of points extracted, and the discard count. Tapping a row shows the original material in full — for an image, the image itself.
+One row per upload, newest first: date, kind (text or image), the AI-written subject line naming the topic (falling back to the first line of the text or a thumbnail of the image until extraction finishes), the count of points extracted, and the discard count. Tapping a row shows the original material in full — for an image, the image itself.
 
 This is the classroom's memory. Everything the user ever fed in stays readable here.
 
@@ -85,6 +87,8 @@ This is the classroom's memory. Everything the user ever fed in stays readable h
 
 - **From the email.** The email carries the questions inline, plus a link. The link opens the web quiz. If the user is signed out, it routes through sign-in and returns them to the quiz.
 - **From the site.** The classroom home shows today's quiz. A list of classrooms, each showing whether today's quiz is ready.
+
+**On demand.** The classroom home can create a quiz at any time. A small modal shows progress (Queued → Writing your quiz → Ready), can be minimized back into the card, and can be cancelled. A ready quiz never redirects on its own — the user taps Take quiz. On-demand quizzes arrive without an email and stay tagged On demand everywhere.
 
 **With several classrooms:** the site shows a menu, one entry per classroom with today's quiz available. The user picks one. One classroom per day is the intended rhythm — the others stay available, and their quizzes keep accumulating.
 
@@ -108,7 +112,7 @@ After submit:
 
 ## 12. Quiz history
 
-Per classroom: past quizzes by date, each with the best score and the attempt count. Tapping one opens its questions and every attempt made against it. This is where a learner sees a category they keep missing.
+Per classroom: past quizzes by date, each tagged Daily or On demand and showing the best score and the attempt count. Tapping one opens its questions and every attempt made against it. This is where a learner sees a category they keep missing.
 
 ## 13. Dormant classroom
 

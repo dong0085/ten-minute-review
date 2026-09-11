@@ -1,4 +1,4 @@
-import { bankSize, getQuizByClassroomAndDate, listClassrooms } from "@tmr/db";
+import { bankSize, getDailyQuizByClassroomAndDate, listClassrooms } from "@tmr/db";
 import {
   ClassroomCard,
   isClassroomDormant,
@@ -25,7 +25,7 @@ export default async function ClassroomsPage() {
     classrooms.map(async (classroom) => {
       const [size, quiz] = await Promise.all([
         bankSize(db, classroom.id),
-        getQuizByClassroomAndDate(db, classroom.id, today),
+        getDailyQuizByClassroomAndDate(db, classroom.id, today),
       ]);
       return { classroom, bankSize: size, todayQuizId: quiz?.id ?? null };
     }),

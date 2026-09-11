@@ -71,6 +71,7 @@ Auth.js tables. `verification_tokens` carries a `purpose` column: `verify_email`
 | `original_filename` / `mime_type` / `byte_size` | | |
 | `extraction_status` | text | `pending`, `running`, `done`, `failed` |
 | `extracted_at` / `extraction_error` | | |
+| `subject` | text | Short AI-written title for the upload, null until extraction completes |
 | `discarded` | jsonb | The discard list the extraction returned |
 | `created_at` | timestamptz | |
 
@@ -108,11 +109,12 @@ Long text that several questions can hang off: `id`, `classroom_id`, `source_upl
 | `classroom_id` | uuid fk | |
 | `user_id` | uuid fk | |
 | `quiz_date` | date | The user's local date |
+| `kind` | text | `daily` or `manual` (default `daily`) |
 | `size` | int | |
 | `prompt_version` | text | |
 | `composed_at` | timestamptz | |
 
-**Unique on `(classroom_id, quiz_date)`.** That single constraint makes composition idempotent — a retry after a crash cannot double up.
+**Partial unique index on `(classroom_id, quiz_date) WHERE kind = 'daily'`.** It keeps daily composition idempotent — a retry after a crash cannot double up. On-demand (`manual`) quizzes have no per-day limit. Index `(user_id, kind, composed_at)` supports usage counts over rolling windows.
 
 ### questions
 
@@ -159,7 +161,7 @@ Attempts are unlimited and never deleted. Every answer is kept.
 | `kind` | text | `extract`, `compose`, `send_email` |
 | `payload` | jsonb | |
 | `run_at` | timestamptz | |
-| `status` | text | `pending`, `running`, `done`, `failed` |
+| `status` | text | `pending`, `running`, `done`, `failed`, `cancelled` |
 | `attempts` | int | |
 | `locked_at` / `locked_by` | | |
 | `last_error` | text | |
@@ -184,6 +186,8 @@ RETURNING *;
 
 A job that has been `running` for over 10 minutes returns to `pending`, up to 3 attempts, then lands in `failed` with the error stored.
 
+Compose jobs carry `classroomId`, `userId`, `localDate`, and `source` (`daily` or `manual`). Cancelling a `pending` job sets its status to `cancelled`; cancelling a `running` job adds `cancelRequested: true` to the payload, and the worker re-reads that flag just before saving the quiz. A cancelled job writes no quiz.
+
 ---
 
 ## 3. Pipelines
@@ -194,8 +198,8 @@ A job that has been `running` for over 10 minutes returns to `pending`, up to 3 
 upload stored
   → enqueue job(extract, { upload_id })
   → worker: load text + images
-  → LLM extraction (EXTRACTION_PROMPT_V1)
-  → write knowledge_points, passages, uploads.discarded
+  → LLM extraction (EXTRACTION_PROMPT_V2)
+  → write knowledge_points, passages, uploads.discarded, uploads.subject
   → uploads.extraction_status = 'done'
 ```
 
@@ -218,11 +222,14 @@ WHERE c.archived_at IS NULL
   AND NOT EXISTS (
     SELECT 1 FROM quizzes q
     WHERE q.classroom_id = c.id
+      AND q.kind = 'daily'
       AND q.quiz_date = (now() AT TIME ZONE u.timezone)::date
   );
 ```
 
 Each match gets a `compose` job. The worker writes the quiz and its questions, then enqueues one `send_email` job per **user** — not per classroom, because the email is a single menu.
+
+On-demand quizzes use the same compose job and the same selection rules, enqueued directly by `POST /api/classrooms/:id/quizzes` with `source: "manual"`. They skip the daily existence check and never enqueue an email.
 
 ### Email
 
@@ -246,7 +253,9 @@ Next.js route handlers, all session-scoped.
 | `POST` | `/api/classrooms/:id/uploads` | Text body or multipart image |
 | `GET` | `/api/classrooms/:id/uploads` | Timeline |
 | `GET` | `/api/classrooms/:id/bank` | Counts per category |
-| `GET` | `/api/classrooms/:id/quizzes/today` | Today's quiz, answers withheld |
+| `GET` | `/api/classrooms/:id/quizzes/today` | Today's daily quiz plus any in-flight compose job, answers withheld |
+| `POST` | `/api/classrooms/:id/quizzes` | Create an on-demand quiz (enqueues a compose job) |
+| `POST` | `/api/classrooms/:id/quizzes/cancel` | Cancel the in-flight compose job |
 | `GET` | `/api/quizzes/:id` | Quiz, answers withheld |
 | `POST` | `/api/quizzes/:id/attempts` | Start an attempt |
 | `POST` | `/api/attempts/:id/submit` | Submit answers, receive correctness and explanations |
@@ -314,6 +323,7 @@ Modeled in the schema, unbuilt:
 - Referral UI and reward granting
 - Tier-cap enforcement (3 classrooms, 5 attempts per quiz per day, quiz-type selection)
 - Full spaced repetition
+- On-demand quiz quotas (creation counts are tracked over rolling windows; no limit enforced)
 - The account center's export and deletion jobs
 
 ---

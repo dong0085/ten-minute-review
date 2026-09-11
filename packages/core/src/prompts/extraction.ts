@@ -1,9 +1,10 @@
 import { parseExtractionResult } from "./schemas";
 import type { ExtractionResult } from "../types";
 
-export const EXTRACTION_PROMPT_VERSION = "v1";
+export const EXTRACTION_PROMPT_VERSION = "v2";
 
 const EXTRACTION_SCHEMA = `{
+  "subject": "a short subject line naming what the notes cover, in the native language",
   "target_language": "ISO 639-1 code of the language being learned",
   "native_language": "ISO 639-1 code of the language the glosses are in",
   "knowledge_points": [
@@ -65,12 +66,15 @@ Rules:
 
 8. Write explanations in the target language.
 
-9. Output JSON only, matching the schema below. No prose, no markdown fence.
+9. Write "subject": a short subject line, three to eight words, naming the topic
+   the notes cover, in the native language. Name the theme, not the first line.
+
+10. Output JSON only, matching the schema below. No prose, no markdown fence.
 
 Schema:
 ${EXTRACTION_SCHEMA}`;
 
-export const EXTRACTION_PROMPT_V1 = EXTRACTION_PROMPT_BODY;
+export const EXTRACTION_PROMPT_V2 = EXTRACTION_PROMPT_BODY;
 
 export function parseExtractionResponse(text: string): ExtractionResult {
   return parseExtractionResult(JSON.parse(text));

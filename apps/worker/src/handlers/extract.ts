@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import {
-  EXTRACTION_PROMPT_V1,
+  EXTRACTION_PROMPT_V2,
   EXTRACTION_PROMPT_VERSION,
   parseExtractionResponse,
   parseExtractionResult,
@@ -30,6 +30,11 @@ function requireUploadId(payload: Record<string, unknown>): string {
 
 function passageDetail(passageId: string): KnowledgePointDetail {
   return { passage_ref: passageId } as unknown as KnowledgePointDetail;
+}
+
+function normalizeSubject(value: string | null): string | null {
+  const subject = value?.replace(/\s+/g, " ").trim();
+  return subject ? subject.slice(0, 120) : null;
 }
 
 export async function handleExtractJob(
@@ -62,7 +67,7 @@ export async function handleExtractJob(
 
     const provider = getLlmProvider();
     const raw = await provider.extract({
-      systemPrompt: EXTRACTION_PROMPT_V1,
+      systemPrompt: EXTRACTION_PROMPT_V2,
       text: upload.kind === "text" ? upload.textContent : null,
       images,
       targetHint: classroom?.targetLanguage ?? null,
@@ -116,7 +121,7 @@ export async function handleExtractJob(
     }
 
     const inserted = await insertKnowledgePoints(db, rows);
-    await completeUploadExtraction(db, uploadId, result.discarded);
+    await completeUploadExtraction(db, uploadId, result.discarded, normalizeSubject(result.subject));
     console.log(
       `[worker] extract ${uploadId}: ${inserted.length} knowledge points, ${result.discarded.length} discarded`,
     );

@@ -16,7 +16,7 @@ export function ClassroomTabs({ classroomId }: { classroomId: string }) {
   ];
 
   return (
-    <nav className="flex gap-1 overflow-x-auto border-b border-neutral-200">
+    <nav className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-neutral-200">
       {tabs.map((tab) => {
         const active = tab.href === base ? pathname === base : pathname.startsWith(tab.href);
         return (

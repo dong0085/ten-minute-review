@@ -1,5 +1,11 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
-import type { Category, QuestionAnswer, QuestionResponse, QuestionType } from "@tmr/core";
+import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
+import type {
+  Category,
+  QuestionAnswer,
+  QuestionResponse,
+  QuestionType,
+  QuizKind,
+} from "@tmr/core";
 import type { Db } from "../client";
 import { classrooms } from "../schema/classrooms";
 import {
@@ -14,12 +20,13 @@ export type NewQuizInput = {
   classroomId: string;
   userId: string;
   quizDate: string;
+  kind: QuizKind;
   size: number;
   promptVersion: string;
   questions: Omit<NewQuestion, "quizId">[];
 };
 
-export async function getQuizByClassroomAndDate(
+export async function getDailyQuizByClassroomAndDate(
   db: Db,
   classroomId: string,
   quizDate: string,
@@ -27,7 +34,13 @@ export async function getQuizByClassroomAndDate(
   const [quiz] = await db
     .select()
     .from(quizzes)
-    .where(and(eq(quizzes.classroomId, classroomId), eq(quizzes.quizDate, quizDate)))
+    .where(
+      and(
+        eq(quizzes.classroomId, classroomId),
+        eq(quizzes.quizDate, quizDate),
+        eq(quizzes.kind, "daily"),
+      ),
+    )
     .limit(1);
   return quiz ?? null;
 }
@@ -40,17 +53,24 @@ export async function createQuizWithQuestions(db: Db, input: NewQuizInput) {
         classroomId: input.classroomId,
         userId: input.userId,
         quizDate: input.quizDate,
+        kind: input.kind,
         size: input.size,
         promptVersion: input.promptVersion,
       })
-      .onConflictDoNothing({ target: [quizzes.classroomId, quizzes.quizDate] })
+      .onConflictDoNothing()
       .returning();
     const quiz = inserted[0];
     if (!quiz) {
       const [existing] = await tx
         .select()
         .from(quizzes)
-        .where(and(eq(quizzes.classroomId, input.classroomId), eq(quizzes.quizDate, input.quizDate)))
+        .where(
+          and(
+            eq(quizzes.classroomId, input.classroomId),
+            eq(quizzes.quizDate, input.quizDate),
+            eq(quizzes.kind, "daily"),
+          ),
+        )
         .limit(1);
       return { quiz: existing ?? null, created: false };
     }
@@ -98,6 +118,7 @@ export async function listQuizzesForClassroom(
     .select({
       id: quizzes.id,
       quizDate: quizzes.quizDate,
+      kind: quizzes.kind,
       size: quizzes.size,
       composedAt: quizzes.composedAt,
       bestScore: sql<number | null>`max(${attempts.correctCount})::int`,
@@ -107,7 +128,55 @@ export async function listQuizzesForClassroom(
     .leftJoin(attempts, eq(attempts.quizId, quizzes.id))
     .where(and(eq(quizzes.classroomId, classroomId), eq(quizzes.userId, userId)))
     .groupBy(quizzes.id)
-    .orderBy(desc(quizzes.quizDate));
+    .orderBy(desc(quizzes.composedAt));
+}
+
+export async function listUntakenOnDemandQuizzes(
+  db: Db,
+  classroomId: string,
+  limit = 3,
+) {
+  return db
+    .select({
+      id: quizzes.id,
+      quizDate: quizzes.quizDate,
+      kind: quizzes.kind,
+      size: quizzes.size,
+      composedAt: quizzes.composedAt,
+    })
+    .from(quizzes)
+    .leftJoin(attempts, eq(attempts.quizId, quizzes.id))
+    .where(
+      and(
+        eq(quizzes.classroomId, classroomId),
+        eq(quizzes.kind, "manual"),
+      ),
+    )
+    .groupBy(quizzes.id)
+    .having(sql`count(${attempts.id}) = 0`)
+    .orderBy(desc(quizzes.composedAt))
+    .limit(limit);
+}
+
+export async function countManualQuizzes(
+  db: Db,
+  userId: string,
+  since: Date,
+  classroomId?: string,
+) {
+  const conditions = [
+    eq(quizzes.userId, userId),
+    eq(quizzes.kind, "manual"),
+    gte(quizzes.composedAt, since),
+  ];
+  if (classroomId) {
+    conditions.push(eq(quizzes.classroomId, classroomId));
+  }
+  const [row] = await db
+    .select({ value: sql<number>`count(*)::int` })
+    .from(quizzes)
+    .where(and(...conditions));
+  return Number(row?.value ?? 0);
 }
 
 export async function listQuizzesForUser(db: Db, userId: string, limit = 100) {
@@ -260,7 +329,13 @@ export async function listQuizzesForUserOnDate(
     .select({ quiz: quizzes, classroomName: classrooms.name })
     .from(quizzes)
     .innerJoin(classrooms, eq(quizzes.classroomId, classrooms.id))
-    .where(and(eq(quizzes.userId, userId), eq(quizzes.quizDate, quizDate)))
+    .where(
+      and(
+        eq(quizzes.userId, userId),
+        eq(quizzes.quizDate, quizDate),
+        eq(quizzes.kind, "daily"),
+      ),
+    )
     .orderBy(asc(classrooms.name));
 }
 

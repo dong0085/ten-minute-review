@@ -29,7 +29,7 @@ async function runJob(db: Db, job: Job): Promise<void> {
     case "extract":
       return handleExtractJob(db, job.payload);
     case "compose":
-      return handleComposeJob(db, job.payload);
+      return handleComposeJob(db, job.payload, job.id);
     case "send_email":
       return handleSendEmailJob(db, job.payload);
     default:

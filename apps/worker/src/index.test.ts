@@ -69,6 +69,7 @@ describe("mock llm provider", () => {
     const result = parseExtractionResult(raw);
     expect(result.target_language).toBe("fr");
     expect(result.native_language).toBe("en");
+    expect(result.subject).toBeTruthy();
     expect(result.passages).toHaveLength(1);
 
     const categories = new Set(result.knowledge_points.map((point) => point.category));

@@ -8,6 +8,20 @@
       "when": 1789143595410,
       "tag": "0000_icy_white_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789155079831,
+      "tag": "0001_ordinary_sabra",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789156519828,
+      "tag": "0002_outstanding_swordsman",
+      "breakpoints": true
     }
   ]
 }

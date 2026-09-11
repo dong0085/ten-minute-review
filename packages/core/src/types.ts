@@ -24,9 +24,13 @@ export const JOB_KINDS = ["extract", "compose", "send_email"] as const;
 
 export type JobKind = (typeof JOB_KINDS)[number];
 
-export const JOB_STATUSES = ["pending", "running", "done", "failed"] as const;
+export const JOB_STATUSES = ["pending", "running", "done", "failed", "cancelled"] as const;
 
 export type JobStatus = (typeof JOB_STATUSES)[number];
+
+export const QUIZ_KINDS = ["daily", "manual"] as const;
+
+export type QuizKind = (typeof QUIZ_KINDS)[number];
 
 export const TOKEN_PURPOSES = ["verify_email", "reset_password", "invite"] as const;
 
@@ -88,6 +92,7 @@ export type ExtractionDiscard = {
 };
 
 export type ExtractionResult = {
+  subject: string | null;
   target_language: string;
   native_language: string;
   knowledge_points: ExtractionKnowledgePoint[];

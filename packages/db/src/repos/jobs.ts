@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { JOB_MAX_ATTEMPTS, JOB_STALE_MINUTES } from "@tmr/core";
 import type { JobKind } from "@tmr/core";
 import type { Db } from "../client";
@@ -92,4 +92,78 @@ export async function reapStaleJobs(db: Db) {
 export async function getJobById(db: Db, jobId: string) {
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
   return job ?? null;
+}
+
+export async function hasPendingComposeJob(db: Db, classroomId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: jobs.id })
+    .from(jobs)
+    .where(
+      and(
+        eq(jobs.kind, "compose"),
+        inArray(jobs.status, ["pending", "running"]),
+        sql`${jobs.payload}->>'classroomId' = ${classroomId}`,
+        sql`${jobs.payload}->>'cancelRequested' IS DISTINCT FROM 'true'`,
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
+}
+
+export async function getActiveComposeJob(db: Db, classroomId: string) {
+  const [job] = await db
+    .select()
+    .from(jobs)
+    .where(
+      and(
+        eq(jobs.kind, "compose"),
+        inArray(jobs.status, ["pending", "running"]),
+        sql`${jobs.payload}->>'classroomId' = ${classroomId}`,
+        sql`${jobs.payload}->>'cancelRequested' IS DISTINCT FROM 'true'`,
+      ),
+    )
+    .orderBy(sql`${jobs.createdAt} desc`)
+    .limit(1);
+  return job ?? null;
+}
+
+export async function getLatestComposeJob(db: Db, classroomId: string, windowMs: number) {
+  const since = new Date(Date.now() - windowMs);
+  const [job] = await db
+    .select()
+    .from(jobs)
+    .where(
+      and(
+        eq(jobs.kind, "compose"),
+        inArray(jobs.status, ["pending", "running"]),
+        sql`${jobs.payload}->>'classroomId' = ${classroomId}`,
+        sql`${jobs.payload}->>'cancelRequested' IS DISTINCT FROM 'true'`,
+        gte(jobs.createdAt, since),
+      ),
+    )
+    .orderBy(sql`${jobs.createdAt} desc`)
+    .limit(1);
+  return job ?? null;
+}
+
+export async function markJobCancelled(db: Db, jobId: string) {
+  await db
+    .update(jobs)
+    .set({
+      status: "cancelled",
+      lastError: "cancelled",
+      finishedAt: new Date(),
+      lockedAt: null,
+      lockedBy: null,
+    })
+    .where(eq(jobs.id, jobId));
+}
+
+export async function requestJobCancel(db: Db, jobId: string) {
+  await db
+    .update(jobs)
+    .set({
+      payload: sql`${jobs.payload} || '{"cancelRequested": true}'::jsonb`,
+    })
+    .where(eq(jobs.id, jobId));
 }

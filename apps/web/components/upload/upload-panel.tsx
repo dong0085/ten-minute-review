@@ -19,6 +19,7 @@ type UploadRow = {
   extractionStatus: ExtractionStatus;
   extractedAt: string | null;
   extractionError: string | null;
+  subject: string | null;
   discardedCount: number;
   createdAt: string;
   imageUrl: string | null;
@@ -221,7 +222,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
               rows={8}
               value={text}
               onChange={(event) => setText(event.target.value)}
-              placeholder={"étendoir - the clothes line\napprendre à lâcher prise - learn to let go"}
+              placeholder={"Paste your session notes here"}
             />
           </div>
           <div>
@@ -296,9 +297,10 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
                 <li key={upload.id} className="rounded-lg border border-neutral-200 p-3">
                   <div className="flex items-center justify-between gap-3">
                     <p className="min-w-0 truncate text-sm">
-                      {upload.kind === "image"
-                        ? (upload.originalFilename ?? "Image")
-                        : firstLine(upload.textContent)}
+                      {upload.subject ??
+                        (upload.kind === "image"
+                          ? (upload.originalFilename ?? "Image")
+                          : firstLine(upload.textContent))}
                     </p>
                     <StatusBadge status={upload.extractionStatus} />
                   </div>

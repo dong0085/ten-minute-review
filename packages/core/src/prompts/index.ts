@@ -1,5 +1,5 @@
 export {
-  EXTRACTION_PROMPT_V1,
+  EXTRACTION_PROMPT_V2,
   EXTRACTION_PROMPT_VERSION,
   parseExtractionResponse,
 } from "./extraction";

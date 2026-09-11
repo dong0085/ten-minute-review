@@ -13,7 +13,7 @@ Both are versioned. Every question row stores the `prompt_version` that produced
 
 **Runs:** once per upload, in the worker, right after the upload is stored.
 **Input:** the upload's text, plus any attached images.
-**Output:** knowledge points, passages, and an explicit list of discarded lines.
+**Output:** a short subject line, knowledge points, passages, and an explicit list of discarded lines.
 
 ### The five categories
 
@@ -65,7 +65,10 @@ Rules:
 
 8. Write explanations in the target language.
 
-9. Output JSON only, matching the schema below. No prose, no markdown fence.
+9. Write "subject": a short subject line, three to eight words, naming the topic
+   the notes cover, in the native language. Name the theme, not the first line.
+
+10. Output JSON only, matching the schema below. No prose, no markdown fence.
 
 Schema:
 <schema>
@@ -75,6 +78,7 @@ Schema:
 
 ```json
 {
+  "subject": "Home vocabulary, emotions, and a Buddhist passage",
   "target_language": "fr",
   "native_language": "en",
   "knowledge_points": [
@@ -118,6 +122,8 @@ Schema:
 ```
 
 `note` carries a correction or a caveat. It is `null` on a clean extraction.
+
+`subject` is the short native-language title the upload lists show as the row title.
 
 ### Category-specific payloads
 
@@ -252,13 +258,13 @@ Composition reads four things:
 
 - A question referencing an unknown `knowledge_point_id` is dropped and backfilled from the next-best point.
 - An `mcq` whose `answer.index` falls outside `options` is dropped.
-- Fewer than 5 usable questions → the quiz is not sent; the classroom is flagged for review.
-- A quiz is composed once per classroom per day. The unique constraint on `(classroom_id, quiz_date)` makes a retry safe.
+- Fewer than 5 usable questions → the quiz is not sent; the classroom is flagged for review. For an on-demand quiz the compose job fails and the user can retry.
+- A daily quiz is composed once per classroom per day. The partial unique index on `(classroom_id, quiz_date) WHERE kind = 'daily'` makes a retry safe. On-demand quizzes share the same prompt and selection rules and can be composed at any time.
 
 ---
 
 ## 3. Versioning
 
-- Both prompts live in code as named constants: `EXTRACTION_PROMPT_V1`, `COMPOSITION_PROMPT_V1`.
+- Both prompts live in code as named constants: `EXTRACTION_PROMPT_V2`, `COMPOSITION_PROMPT_V1`.
 - Every `knowledge_point` and every `question` row stores the version that produced it.
 - Bumping a version affects new work only. Existing rows keep their original version, so old and new output can be compared side by side.

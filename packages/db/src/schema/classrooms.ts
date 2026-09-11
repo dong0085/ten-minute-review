@@ -48,6 +48,7 @@ export const uploads = pgTable(
       .default("pending"),
     extractedAt: timestamp("extracted_at", { withTimezone: true }),
     extractionError: text("extraction_error"),
+    subject: text("subject"),
     discarded: jsonb("discarded").$type<ExtractionDiscard[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

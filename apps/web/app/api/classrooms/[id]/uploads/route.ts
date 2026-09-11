@@ -75,6 +75,7 @@ export async function GET(_request: Request, context: RouteContext) {
         extractionStatus: upload.extractionStatus,
         extractedAt: upload.extractedAt,
         extractionError: upload.extractionError,
+        subject: upload.subject,
         discardedCount: upload.discarded.length,
         createdAt: upload.createdAt,
         imageUrl:

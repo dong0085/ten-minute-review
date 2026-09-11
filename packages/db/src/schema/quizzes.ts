@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -10,7 +11,13 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import type { Category, QuestionAnswer, QuestionResponse, QuestionType } from "@tmr/core";
+import type {
+  Category,
+  QuestionAnswer,
+  QuestionResponse,
+  QuestionType,
+  QuizKind,
+} from "@tmr/core";
 import { users } from "./users";
 import { classrooms } from "./classrooms";
 import { knowledgePoints, passages } from "./bank";
@@ -26,11 +33,21 @@ export const quizzes = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     quizDate: date("quiz_date", { mode: "string" }).notNull(),
+    kind: text("kind").$type<QuizKind>().notNull().default("daily"),
     size: integer("size").notNull(),
     promptVersion: text("prompt_version").notNull(),
     composedAt: timestamp("composed_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("quizzes_classroom_date_idx").on(table.classroomId, table.quizDate)],
+  (table) => [
+    uniqueIndex("quizzes_classroom_date_daily_idx")
+      .on(table.classroomId, table.quizDate)
+      .where(sql`kind = 'daily'`),
+    index("quizzes_user_kind_composed_idx").on(
+      table.userId,
+      table.kind,
+      table.composedAt,
+    ),
+  ],
 );
 
 export const questions = pgTable(

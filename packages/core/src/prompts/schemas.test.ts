@@ -15,10 +15,12 @@ describe("parseExtractionResult", () => {
     expect(result.knowledge_points).toEqual([]);
     expect(result.passages).toEqual([]);
     expect(result.discarded).toEqual([]);
+    expect(result.subject).toBeNull();
   });
 
   it("keeps a full knowledge point", () => {
     const result = parseExtractionResult({
+      subject: "Home vocabulary and emotions",
       target_language: "fr",
       native_language: "en",
       knowledge_points: [
@@ -38,6 +40,7 @@ describe("parseExtractionResult", () => {
     expect(result.knowledge_points).toHaveLength(1);
     expect(result.knowledge_points[0]?.grammar?.rule).toBe("An adjective becomes a noun.");
     expect(result.discarded[0]?.reason).toBe("unintelligible");
+    expect(result.subject).toBe("Home vocabulary and emotions");
   });
 });
 

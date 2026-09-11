@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClassroom, listQuizzesForClassroom } from "@tmr/db";
-import { Card } from "@/components/ui";
+import { Card, Badge } from "@/components/ui";
 import { formatQuizDate } from "@/components/quiz/question-review";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
@@ -27,7 +27,8 @@ export default async function QuizzesPage({ params }: { params: Promise<{ id: st
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Quizzes</h1>
         <p className="mt-1 text-sm text-neutral-500">
-          One quiz per day, drawn from this classroom bank. Attempts are unlimited.
+          One daily quiz each morning, plus any you create on demand. Attempts are
+          unlimited.
         </p>
       </div>
       {quizzes.length === 0 ? (
@@ -51,8 +52,13 @@ export default async function QuizzesPage({ params }: { params: Promise<{ id: st
               className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-4 transition hover:bg-neutral-50"
             >
               <div>
-                <p className="text-sm font-medium">{formatQuizDate(quiz.quizDate)}</p>
-                <p className="text-xs text-neutral-500">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium">{formatQuizDate(quiz.quizDate)}</p>
+                  <Badge tone={quiz.kind === "manual" ? "amber" : "neutral"}>
+                    {quiz.kind === "manual" ? "On demand" : "Daily"}
+                  </Badge>
+                </div>
+                <p className="mt-0.5 text-xs text-neutral-500">
                   {quiz.size} {quiz.size === 1 ? "question" : "questions"}
                 </p>
               </div>

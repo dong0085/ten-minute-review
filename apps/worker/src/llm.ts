@@ -311,6 +311,7 @@ function mockExtraction(input: ExtractInput): ExtractionResult {
   const hint = input.targetHint?.trim().toLowerCase();
   const targetLanguage = hint && /^[a-z]{2}$/.test(hint) ? hint : "fr";
   return {
+    subject: "Home vocabulary, emotions, and a Buddhist passage",
     target_language: targetLanguage,
     native_language: "en",
     knowledge_points: [

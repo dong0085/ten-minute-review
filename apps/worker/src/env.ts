@@ -1,5 +1,6 @@
 import path from "node:path";
 import dotenv from "dotenv";
+import { normalizeAppUrl } from "@tmr/core";
 
 dotenv.config({ path: [path.resolve(process.cwd(), "../../.env"), ".env"] });
 
@@ -30,7 +31,8 @@ export const env = {
   get authSecret(): string {
     return required("AUTH_SECRET");
   },
-  appUrl: process.env.APP_URL ?? "http://localhost:3000",
+  appUrl: normalizeAppUrl(process.env.APP_URL ?? "http://localhost:3000"),
+  port: Number(process.env.PORT ?? 3000),
   llmProvider: provider(process.env.LLM_PROVIDER, "mock", ["mock", "deepseek"] as const),
   emailProvider: provider(process.env.EMAIL_PROVIDER, "console", ["console", "resend"] as const),
   storageProvider: provider(process.env.STORAGE_PROVIDER, "local", ["local", "vercel"] as const),

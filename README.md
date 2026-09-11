@@ -46,4 +46,4 @@ Local development needs no accounts. `LLM_PROVIDER=mock` serves a fixture extrac
 
 Checks: `pnpm typecheck`, `pnpm test`, `pnpm --filter web lint`, `pnpm build`.
 
-Deploy: web to Vercel with the project's Root Directory set to `apps/web` and "Include files outside of the Root Directory" enabled; the worker to Railway with start command `pnpm --filter worker start`. Both need `DATABASE_URL`, `AUTH_SECRET`, the provider keys, and `APP_URL` set to the deployed origin.
+Deploy: web to Vercel with the project's Root Directory set to `apps/web` and "Include files outside of the Root Directory" enabled. The worker to Render using the `render.yaml` blueprint (New → Blueprint → pick this repo), which sets the start command to `pnpm --filter worker start` and the health check to `/health` on the free plan. The free instance sleeps after 15 minutes without traffic, so ping `https://<service>.onrender.com/health` every 5–10 minutes with a free cron pinger (e.g. cron-job.org) to keep it awake. Both hostings need `DATABASE_URL`, `AUTH_SECRET`, the provider keys, and `APP_URL` set to the deployed origin.

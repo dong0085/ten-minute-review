@@ -5,7 +5,7 @@ Specs live in `docs/`: `SCOPE.md` (every product decision), `PROMPTS.md` (the tw
 ## Layout
 
 - `apps/web` — Next.js 16 App Router UI and API routes, deploys to Vercel.
-- `apps/worker` — job loop (`extract`, `compose`, `send_email`) plus the 15-minute scheduler, runs on Railway with `tsx`, applies migrations on boot.
+- `apps/worker` — job loop (`extract`, `compose`, `send_email`) plus the 15-minute scheduler and a `/health` HTTP server, runs on Render with `tsx`, applies migrations on boot.
 - `packages/core` — domain types, prompt constants (`EXTRACTION_PROMPT_V1`, `COMPOSITION_PROMPT_V1`), grading, quiz sizing, email templates.
 - `packages/db` — Drizzle schema, SQL migrations in `drizzle/`, repositories.
 

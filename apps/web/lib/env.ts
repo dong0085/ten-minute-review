@@ -1,3 +1,5 @@
+import { normalizeAppUrl } from "@tmr/core";
+
 const provider = <T extends string>(
   value: string | undefined,
   fallback: T,
@@ -5,7 +7,7 @@ const provider = <T extends string>(
 ): T => (value && allowed.includes(value as T) ? (value as T) : fallback);
 
 export const env = {
-  appUrl: process.env.APP_URL ?? "http://localhost:3000",
+  appUrl: normalizeAppUrl(process.env.APP_URL ?? "http://localhost:3000"),
   authSecret: process.env.AUTH_SECRET ?? "dev-insecure-secret-change-me",
   databaseUrl: process.env.DATABASE_URL ?? "",
   inviteOnly: process.env.INVITE_ONLY !== "false",

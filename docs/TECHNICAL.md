@@ -10,7 +10,7 @@ The build blueprint. The data model is the centerpiece — it is the one part th
 |---|---|---|
 | Web | Next.js (App Router) on Vercel | UI and API route handlers |
 | Database | Postgres on Neon | All state, plus the job queue |
-| Worker | Node service on Railway | Extraction, composition, email sends |
+| Worker | Node service on Render (free web service, health-check pinged) | Extraction, composition, email sends |
 | Queue | `jobs` table in Postgres | Work handoff, no Redis needed |
 | Images | Vercel Blob | Uploaded note images |
 | LLM | DeepSeek, behind one adapter module | Extraction and composition |
@@ -281,7 +281,7 @@ Answers and explanations never leave the server before a submission. The quiz pa
 |---|---|
 | Web | Vercel |
 | Postgres | Neon |
-| Worker | Railway, one small always-on instance |
+| Worker | Render free web service, kept awake by a health-check pinger |
 | Images | Vercel Blob |
 | Email | Resend |
 | Domain | Purchased at deploy |

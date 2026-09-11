@@ -12,6 +12,7 @@ import { handleComposeJob } from "./handlers/compose";
 import { handleExtractJob } from "./handlers/extract";
 import { handleSendEmailJob } from "./handlers/send-email";
 import { tickScheduler } from "./scheduler";
+import { startHealthServer } from "./server";
 
 const workerId = `${os.hostname()}:${process.pid}`;
 const JOB_POLL_INTERVAL_MS = 5000;
@@ -54,6 +55,7 @@ async function processNextJob(db: Db): Promise<boolean> {
 }
 
 async function main(): Promise<void> {
+  startHealthServer(env.port);
   await runMigrations(env.databaseUrl);
   const db = createDb(env.databaseUrl);
   console.log(`[worker] started ${workerId}`);

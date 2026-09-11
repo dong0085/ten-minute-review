@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: ten-minute-review-worker
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install -g pnpm@10.15.0 && pnpm install --frozen-lockfile
+    startCommand: pnpm --filter worker start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: LLM_PROVIDER
+        value: deepseek
+      - key: EMAIL_PROVIDER
+        value: resend
+      - key: STORAGE_PROVIDER
+        value: vercel
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false

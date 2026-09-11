@@ -78,7 +78,7 @@ A web app that turns a tutoring session's notes — text or images — into a da
 ## Stack & infrastructure
 
 - **Next.js + TypeScript + Postgres**, Auth.js for auth, Stripe for billing. Confirmed, no constraints. *(my call: Auth.js — it covers Google OAuth natively, with our own token flows for verification and reset.)*
-- *(my call)* **Hosting:** Vercel for the app, managed Postgres (Neon), a small worker service for scheduled jobs, Resend for email, domain purchased at deploy. Full detail in `TECHNICAL.md`.
+- *(my call)* **Hosting:** Vercel for the app, managed Postgres (Neon), a small worker service for scheduled jobs, Brevo (or Resend) for email, domain purchased at deploy. Full detail in `TECHNICAL.md`.
 - *(my call)* **Email scheduling:** store each user's timezone; a scheduler runs frequently, picks users whose local morning has arrived, and enqueues that day's send — idempotent per user per day.
 
 ## MVP vs deferred
@@ -91,7 +91,7 @@ A web app that turns a tutoring session's notes — text or images — into a da
 ## My calls — override any
 
 1. Question bank built at upload, daily quiz composed fresh from it.
-2. Hosting: Vercel + Postgres (Neon) + worker + Resend.
+2. Hosting: Vercel + Postgres (Neon) + worker + Brevo (or Resend).
 3. Auth.js as the auth library.
 4. Referral is reciprocal: both sides get one free month.
 5. Free-tier "5 attempts" means 5 per quiz per day.

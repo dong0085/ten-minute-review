@@ -17,6 +17,41 @@ export type EmailMessage = {
   text: string;
 };
 
+function parseSender(value: string): { name?: string; email: string } {
+  const match = value.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  if (match?.[2]) {
+    return match[1] ? { name: match[1], email: match[2] } : { email: match[2] };
+  }
+  return { email: value.trim() };
+}
+
+async function sendViaBrevo(
+  apiKey: string,
+  from: string,
+  message: EmailMessage,
+): Promise<{ id: string | null }> {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: parseSender(from),
+      to: [{ email: message.to }],
+      subject: message.subject,
+      htmlContent: message.html,
+      textContent: message.text,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Brevo send failed (${response.status}): ${await response.text()}`);
+  }
+  const data = (await response.json()) as { messageId?: string };
+  return { id: data.messageId ?? null };
+}
+
 export async function sendEmail(message: EmailMessage): Promise<{ id: string | null }> {
   if (env.emailProvider === "resend") {
     if (!env.resendApiKey) {
@@ -34,6 +69,13 @@ export async function sendEmail(message: EmailMessage): Promise<{ id: string | n
       throw new Error(error.message);
     }
     return { id: data?.id ?? null };
+  }
+
+  if (env.emailProvider === "brevo") {
+    if (!env.brevoApiKey) {
+      throw new Error("BREVO_API_KEY is not set");
+    }
+    return sendViaBrevo(env.brevoApiKey, env.emailFrom, message);
   }
 
   console.log(

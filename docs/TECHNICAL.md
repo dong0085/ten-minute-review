@@ -14,7 +14,7 @@ The build blueprint. The data model is the centerpiece — it is the one part th
 | Queue | `jobs` table in Postgres | Work handoff, no Redis needed |
 | Images | Vercel Blob | Uploaded note images |
 | LLM | DeepSeek, behind one adapter module | Extraction and composition |
-| Email | Resend | Daily quiz email |
+| Email | Brevo (or Resend), behind one adapter | Daily quiz email |
 | Billing | Stripe | Modeled now, inactive |
 
 The web app never calls the LLM inline. It writes a row and returns. The worker picks it up. That keeps request latency predictable and lets a slow extraction retry without the user waiting.
@@ -226,7 +226,7 @@ Each match gets a `compose` job. The worker writes the quiz and its questions, t
 
 ### Email
 
-The worker builds one email per user per day containing every classroom quiz composed that morning, questions inline, each with a link to the web quiz. Sends through Resend, then writes `email_sends`. The unique constraint absorbs a duplicate run.
+The worker builds one email per user per day containing every classroom quiz composed that morning, questions inline, each with a link to the web quiz. Sends through Brevo (or Resend), then writes `email_sends`. The unique constraint absorbs a duplicate run.
 
 ### Billing
 
@@ -283,7 +283,7 @@ Answers and explanations never leave the server before a submission. The quiz pa
 | Postgres | Neon |
 | Worker | Render free web service, kept awake by a health-check pinger |
 | Images | Vercel Blob |
-| Email | Resend |
+| Email | Brevo (or Resend) |
 | Domain | Purchased at deploy |
 
 Environment variables:
@@ -294,6 +294,7 @@ AUTH_SECRET
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
 DEEPSEEK_API_KEY
+BREVO_API_KEY
 RESEND_API_KEY
 BLOB_READ_WRITE_TOKEN
 STRIPE_SECRET_KEY

@@ -28,7 +28,7 @@ Notes go in. The app reads them into a question bank of vocabulary, phrases, gra
 
 ## Stack
 
-Next.js and TypeScript on Vercel, Postgres, a small worker for extraction and scheduled sends, DeepSeek for the language model, Resend for email, Stripe for billing when it turns on. Detail in [`docs/TECHNICAL.md`](docs/TECHNICAL.md).
+Next.js and TypeScript on Vercel, Postgres, a small worker for extraction and scheduled sends, DeepSeek for the language model, Brevo (or Resend) for email, Stripe for billing when it turns on. Detail in [`docs/TECHNICAL.md`](docs/TECHNICAL.md).
 
 ## Building it
 
@@ -42,7 +42,7 @@ pnpm dev:web                # http://localhost:3000
 pnpm dev:worker             # job loop and the daily scheduler
 ```
 
-Local development needs no accounts. `LLM_PROVIDER=mock` serves a fixture extraction and a deterministic quiz, `EMAIL_PROVIDER=console` prints emails to the worker log, and `STORAGE_PROVIDER=local` writes images to `.uploads/`. To use the real services set `LLM_PROVIDER=deepseek` with `DEEPSEEK_API_KEY`, `EMAIL_PROVIDER=resend` with `RESEND_API_KEY` and `EMAIL_FROM`, `STORAGE_PROVIDER=vercel` with `BLOB_READ_WRITE_TOKEN`, and `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` for Google sign-in.
+Local development needs no accounts. `LLM_PROVIDER=mock` serves a fixture extraction and a deterministic quiz, `EMAIL_PROVIDER=console` prints emails to the worker log, and `STORAGE_PROVIDER=local` writes images to `.uploads/`. To use the real services set `LLM_PROVIDER=deepseek` with `DEEPSEEK_API_KEY`, `EMAIL_PROVIDER=brevo` with `BREVO_API_KEY` and `EMAIL_FROM` (or `EMAIL_PROVIDER=resend` with `RESEND_API_KEY`), `STORAGE_PROVIDER=vercel` with `BLOB_READ_WRITE_TOKEN`, and `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` for Google sign-in.
 
 Checks: `pnpm typecheck`, `pnpm test`, `pnpm --filter web lint`, `pnpm build`.
 

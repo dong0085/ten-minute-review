@@ -6,8 +6,10 @@ import "./globals.css";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { signOut } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
+import { getTheme } from "@/lib/theme-server";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -25,9 +27,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const user = await getSessionUser();
   const locale = await getLocale();
+  const theme = await getTheme();
   const t = await getTranslations("Layout");
   return (
-    <html lang={locale} className={cn("font-sans", geist.variable)}>
+    <html lang={locale} data-theme={theme} className={cn("font-sans", geist.variable)}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <NextIntlClientProvider>
           <header className="border-b border-border bg-card">
@@ -37,6 +40,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               </Link>
               <div className="flex items-center gap-4 text-sm">
                 <LanguageSwitcher signedIn={Boolean(user)} />
+                <ThemeSwitcher currentTheme={theme} />
                 {user ? (
                   <>
                     <Link

@@ -1,5 +1,6 @@
 export * from "./types";
 export * from "./languages";
+export * from "./theme";
 export * from "./messages";
 export * from "./constants";
 export * from "./quiz-size";

@@ -49,77 +49,115 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ---------------------------------------------------------------------------
+   Theme palettes
+
+   A theme is two numbers: an accent hue and how saturated the accent runs.
+   Every token below derives from those, so adding a palette means adding a
+   hue rather than a second copy of the token set.
+
+   Accent lightness is 0.52 in light mode, which keeps accent-foreground at
+   5.1:1 or better on every hue, and 0.76 in dark mode. Surface chroma is
+   capped at levels all four hues reach inside the sRGB gamut, so the
+   browser never has to clamp a colour and shift its hue.
+   --------------------------------------------------------------------------- */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    color-scheme: light;
+
+    /* Mint (薄荷) — the default palette. */
+    --theme-hue: 165;
+    --theme-chroma: 0.107;
+
+    --background: oklch(0.99 0.005 var(--theme-hue));
+    --foreground: oklch(0.22 0.022 var(--theme-hue));
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: oklch(0.22 0.022 var(--theme-hue));
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --success: oklch(0.55 0.14 152);
-    --warning: oklch(0.55 0.12 65);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    --popover-foreground: oklch(0.22 0.022 var(--theme-hue));
+    --primary: oklch(0.52 var(--theme-chroma) var(--theme-hue));
+    --primary-foreground: oklch(0.99 0.005 var(--theme-hue));
+    --secondary: oklch(0.96 0.014 var(--theme-hue));
+    --secondary-foreground: oklch(0.3 0.03 var(--theme-hue));
+    --muted: oklch(0.965 0.011 var(--theme-hue));
+    --muted-foreground: oklch(0.52 0.02 var(--theme-hue));
+    --accent: oklch(0.955 0.016 var(--theme-hue));
+    --accent-foreground: oklch(0.3 0.03 var(--theme-hue));
+    --destructive: oklch(0.545 0.2 27.325);
+    --success: oklch(0.5 0.13 152);
+    --warning: oklch(0.5 0.11 65);
+    --border: oklch(0.91 0.013 var(--theme-hue));
+    --input: oklch(0.9 0.014 var(--theme-hue));
+    --ring: oklch(0.55 0.09 var(--theme-hue));
+    --chart-1: oklch(0.52 0.107 var(--theme-hue));
+    --chart-2: oklch(0.64 0.095 var(--theme-hue));
+    --chart-3: oklch(0.74 0.075 var(--theme-hue));
+    --chart-4: oklch(0.83 0.055 var(--theme-hue));
+    --chart-5: oklch(0.9 0.035 var(--theme-hue));
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar: oklch(0.985 0.007 var(--theme-hue));
+    --sidebar-foreground: oklch(0.22 0.022 var(--theme-hue));
+    --sidebar-primary: oklch(0.52 var(--theme-chroma) var(--theme-hue));
+    --sidebar-primary-foreground: oklch(0.99 0.005 var(--theme-hue));
+    --sidebar-accent: oklch(0.955 0.016 var(--theme-hue));
+    --sidebar-accent-foreground: oklch(0.3 0.03 var(--theme-hue));
+    --sidebar-border: oklch(0.91 0.013 var(--theme-hue));
+    --sidebar-ring: oklch(0.55 0.09 var(--theme-hue));
+}
+
+/* Sky (晴空) */
+[data-theme="sky"] {
+    --theme-hue: 232;
+    --theme-chroma: 0.105;
+}
+
+/* Sakura (樱花) */
+[data-theme="sakura"] {
+    --theme-hue: 350;
+    --theme-chroma: 0.11;
+}
+
+/* Lavender (薰衣草) */
+[data-theme="lavender"] {
+    --theme-hue: 300;
+    --theme-chroma: 0.11;
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    color-scheme: dark;
+
+    --background: oklch(0.16 0.012 var(--theme-hue));
+    --foreground: oklch(0.97 0.005 var(--theme-hue));
+    --card: oklch(0.21 0.014 var(--theme-hue));
+    --card-foreground: oklch(0.97 0.005 var(--theme-hue));
+    --popover: oklch(0.21 0.014 var(--theme-hue));
+    --popover-foreground: oklch(0.97 0.005 var(--theme-hue));
+    --primary: oklch(0.76 var(--theme-chroma) var(--theme-hue));
+    --primary-foreground: oklch(0.2 0.02 var(--theme-hue));
+    --secondary: oklch(0.27 0.014 var(--theme-hue));
+    --secondary-foreground: oklch(0.97 0.005 var(--theme-hue));
+    --muted: oklch(0.27 0.014 var(--theme-hue));
+    --muted-foreground: oklch(0.72 0.015 var(--theme-hue));
+    --accent: oklch(0.27 0.014 var(--theme-hue));
+    --accent-foreground: oklch(0.97 0.005 var(--theme-hue));
     --destructive: oklch(0.704 0.191 22.216);
     --success: oklch(0.72 0.15 155);
     --warning: oklch(0.78 0.14 75);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.6 0.09 var(--theme-hue));
+    --chart-1: oklch(0.76 0.107 var(--theme-hue));
+    --chart-2: oklch(0.66 0.095 var(--theme-hue));
+    --chart-3: oklch(0.56 0.08 var(--theme-hue));
+    --chart-4: oklch(0.46 0.06 var(--theme-hue));
+    --chart-5: oklch(0.36 0.04 var(--theme-hue));
+    --sidebar: oklch(0.21 0.014 var(--theme-hue));
+    --sidebar-foreground: oklch(0.97 0.005 var(--theme-hue));
+    --sidebar-primary: oklch(0.76 var(--theme-chroma) var(--theme-hue));
+    --sidebar-primary-foreground: oklch(0.2 0.02 var(--theme-hue));
+    --sidebar-accent: oklch(0.27 0.014 var(--theme-hue));
+    --sidebar-accent-foreground: oklch(0.97 0.005 var(--theme-hue));
     --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --sidebar-ring: oklch(0.6 0.09 var(--theme-hue));
 }
 
 @layer base {

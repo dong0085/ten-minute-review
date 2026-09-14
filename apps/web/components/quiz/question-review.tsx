@@ -1,9 +1,11 @@
 "use client";
 
 import { CATEGORIES, type Category } from "@tmr/core";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export type AnswerShape =
@@ -82,6 +84,7 @@ export function QuestionReviewCard({
           </div>
           {isCorrect !== undefined ? (
             <Badge variant={isCorrect ? "success" : "destructive"}>
+              {isCorrect ? <CheckCircle2 /> : <XCircle />}
               {isCorrect ? t("correct") : t("wrong")}
             </Badge>
           ) : null}
@@ -111,7 +114,12 @@ export function QuestionReviewCard({
             </div>
           ) : null}
         </dl>
-        {explanation ? <p className="text-sm text-muted-foreground">{explanation}</p> : null}
+        {explanation ? (
+          <>
+            <Separator />
+            <p className="text-sm text-muted-foreground">{explanation}</p>
+          </>
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -1,9 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
+import { FileQuestion } from "lucide-react";
 import { getClassroom, listQuizzesForClassroom } from "@tmr/db";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { DeleteQuizButton } from "@/components/classroom/delete-quiz-button";
 import { formatQuizDate } from "@/lib/format";
 import { getDb } from "@/lib/db";
@@ -36,13 +46,20 @@ export default async function QuizzesPage({ params }: { params: Promise<{ id: st
       {quizzes.length === 0 ? (
         <Card>
           <CardContent>
-            <p className="text-sm text-muted-foreground">{t("empty")}</p>
-            <Link
-              className="mt-3 inline-block text-sm text-foreground underline hover:text-muted-foreground"
-              href={`/classrooms/${id}/upload`}
-            >
-              {t("addNotes")}
-            </Link>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <FileQuestion />
+                </EmptyMedia>
+                <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
+                <EmptyDescription>{t("empty")}</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/classrooms/${id}/upload`}>{t("addNotes")}</Link>
+                </Button>
+              </EmptyContent>
+            </Empty>
           </CardContent>
         </Card>
       ) : (

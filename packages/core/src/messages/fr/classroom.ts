@@ -28,7 +28,6 @@ export const classroom: MessageShape<(typeof en)["Classroom"]> = {
     stepQueued: "En attente",
     stepWriting: "Rédaction de ton quiz",
     stepReady: "Prêt",
-    creatingAria: "Création de ton quiz",
     hintFewSeconds: "Cela prend généralement quelques secondes.",
     hintLonger: "Cela prend un peu plus de temps que d'habitude.",
     hintAlmost: "Presque terminé.",
@@ -150,6 +149,7 @@ export const classroom: MessageShape<(typeof en)["Classroom"]> = {
     blurb:
       "Un quiz quotidien chaque matin, plus ceux que tu crées à la demande. Les tentatives sont illimitées.",
     empty: "Aucun quiz pour le moment. Ils sont composés après le traitement de tes notes.",
+    emptyTitle: "Aucun quiz pour le moment",
     addNotes: "Ajouter des notes",
     onDemand: "À la demande",
     daily: "Quotidien",
@@ -158,8 +158,9 @@ export const classroom: MessageShape<(typeof en)["Classroom"]> = {
     notAttempted: "Pas encore fait",
     attempts: "{count, plural, one {# tentative} other {# tentatives}}",
     deleteQuiz: "Supprimer",
+    deleteTitle: "Supprimer ce quiz ?",
     deleteConfirm:
-      "Supprimer ce quiz ? Ses tentatives et réponses seront supprimées aussi. Cette action est définitive.",
+      "Ses tentatives et réponses seront supprimées aussi. Cette action est définitive.",
     deleting: "Suppression…",
     deleteError: "Impossible de supprimer ce quiz. Réessaie.",
   },

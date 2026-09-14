@@ -1,12 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type JobStatus = "pending" | "running";
 type Phase = "idle" | "posting" | "composing" | "ready" | "stopped" | "failed";
@@ -19,31 +26,6 @@ type TodayResponse = {
 const POLL_MS = 3000;
 const TIMEOUT_SECONDS = 90;
 const MIN_STEP_MS = 600;
-
-function Spinner({ className }: { className?: string }) {
-  return (
-    <svg
-      className={cn("h-4 w-4 animate-spin", className)}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-      />
-    </svg>
-  );
-}
 
 export function TodayQuizAction({
   classroomId,
@@ -74,9 +56,6 @@ export function TodayQuizAction({
   const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [elapsed, setElapsed] = useState(Math.floor(initialElapsed));
   const [readyQuizId, setReadyQuizId] = useState<string | null>(null);
-  const [entered, setEntered] = useState(false);
-  const [closing, setClosing] = useState(false);
-  const dialogRef = useRef<HTMLDivElement>(null);
 
   const activeQuizId = dailyQuizId ?? readyQuizId;
   const showModal = phase !== "idle" && !minimized;
@@ -128,28 +107,13 @@ export function TodayQuizAction({
   }, [phase, fetchToday, router, step]);
 
   const minimize = useCallback(() => {
-    setEntered(false);
     setMinimized(true);
   }, []);
 
-  useEffect(() => {
-    if (!showModal) {
-      return;
-    }
-    const frame = requestAnimationFrame(() => setEntered(true));
-    dialogRef.current?.focus();
-    return () => cancelAnimationFrame(frame);
-  }, [showModal]);
-
-  const close = useCallback(() => {
-    setClosing(true);
-    setTimeout(() => {
-      setClosing(false);
-      setPhase("idle");
-      setMinimized(false);
-      setStep("pending");
-      setEntered(false);
-    }, 180);
+  const dismiss = useCallback(() => {
+    setPhase("idle");
+    setMinimized(false);
+    setStep("pending");
   }, []);
 
   const start = useCallback(async () => {
@@ -229,36 +193,6 @@ export function TodayQuizAction({
     return () => cancelAnimationFrame(frame);
   }, [autoStart, bankSize, classroomId, router, start]);
 
-  const onDialogKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      if (phase === "composing" || phase === "posting") {
-        minimize();
-        return;
-      }
-      close();
-      return;
-    }
-    if (event.key !== "Tab" || !dialogRef.current) {
-      return;
-    }
-    const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-      "a[href], button:not([disabled])",
-    );
-    if (focusable.length === 0) {
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last?.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first?.focus();
-    }
-  };
-
   const composing = phase === "posting" || phase === "composing";
   const timedOut = composing && elapsed >= TIMEOUT_SECONDS;
   const stepIndex = step === "running" ? 1 : 0;
@@ -277,9 +211,9 @@ export function TodayQuizAction({
         className="flex items-center gap-2 text-sm font-medium text-foreground"
       >
         {phase === "posting" ? (
-          <Spinner className="h-3.5 w-3.5" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : step === "running" ? (
-          <Spinner className="h-3.5 w-3.5" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
           <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
         )}
@@ -342,141 +276,133 @@ export function TodayQuizAction({
         </div>
       </div>
 
-      {showModal ? (
-        <div
-          className={cn(
-            "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 transition-opacity duration-200 motion-reduce:transition-none",
-            entered && !closing ? "opacity-100" : "opacity-0",
-          )}
-        >
-          <div
-            ref={dialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("creatingAria")}
-            tabIndex={-1}
-            onKeyDown={onDialogKeyDown}
-            className={cn(
-              "w-full max-w-sm rounded-xl bg-card p-6 shadow-xl outline-none transition-all duration-200 motion-reduce:transition-none",
-              entered && !closing ? "scale-100 opacity-100" : "scale-95 opacity-0",
-            )}
-          >
-            {composing && !timedOut ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-base font-semibold" aria-live="polite">
-                    {phase === "posting" ? t("stepQueued") : steps[stepIndex]?.label}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {elapsed < 10
-                      ? t("hintFewSeconds")
-                      : elapsed < 30
-                        ? t("hintLonger")
-                        : t("hintAlmost")}
-                  </p>
-                </div>
-                <ol className="space-y-2">
-                  {steps.map((entry, index) => {
-                    const done = index < stepIndex;
-                    const current = index === stepIndex;
-                    return (
-                      <li key={entry.key} className="flex items-center gap-2 text-sm">
-                        {done ? (
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                            ✓
-                          </span>
-                        ) : current ? (
-                          <Spinner className="h-3.5 w-3.5 text-muted-foreground" />
-                        ) : (
-                          <span className="h-2 w-2 rounded-full bg-border" />
-                        )}
-                        <span
-                          className={
-                            current ? "font-medium text-foreground" : "text-muted-foreground"
-                          }
-                        >
-                          {entry.label}
+      <Dialog
+        open={showModal}
+        onOpenChange={(next) => {
+          if (next) {
+            return;
+          }
+          if (phase === "posting" || phase === "composing") {
+            minimize();
+            return;
+          }
+          dismiss();
+        }}
+      >
+        <DialogContent showCloseButton={false}>
+          {composing && !timedOut ? (
+            <>
+              <DialogHeader>
+                <DialogTitle aria-live="polite">
+                  {phase === "posting" ? t("stepQueued") : steps[stepIndex]?.label}
+                </DialogTitle>
+                <DialogDescription>
+                  {elapsed < 10
+                    ? t("hintFewSeconds")
+                    : elapsed < 30
+                      ? t("hintLonger")
+                      : t("hintAlmost")}
+                </DialogDescription>
+              </DialogHeader>
+              <ol className="space-y-2">
+                {steps.map((entry, index) => {
+                  const done = index < stepIndex;
+                  const current = index === stepIndex;
+                  return (
+                    <li key={entry.key} className="flex items-center gap-2 text-sm">
+                      {done ? (
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                          <Check className="size-2.5" strokeWidth={3} />
                         </span>
-                      </li>
-                    );
-                  })}
-                </ol>
-                <div className="flex justify-between gap-2 pt-1">
-                  <Button variant="outline" onClick={minimize}>
-                    {t("minimize")}
-                  </Button>
-                  <Button variant="ghost" onClick={cancel}>
-                    {tCommon("cancel")}
-                  </Button>
-                </div>
-              </div>
-            ) : phase === "ready" && readyQuizId ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-base font-semibold">{t("readyTitle")}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {t("knowledgePoints", { count: bankSize })}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild>
-                    <Link href={`/classrooms/${classroomId}/quiz/${readyQuizId}`}>
-                      {t("take")}
-                    </Link>
-                  </Button>
-                  <Button variant="outline" onClick={start}>
-                    {t("createAnother")}
-                  </Button>
-                </div>
-                <div className="pt-1">
-                  <Button variant="ghost" onClick={close}>
-                    {t("close")}
-                  </Button>
-                </div>
-              </div>
-            ) : timedOut ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-base font-semibold">{t("timeoutTitle")}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{t("timeoutBlurb")}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={checkAgain}>{t("checkAgain")}</Button>
-                  <Button variant="ghost" onClick={close}>
-                    {t("close")}
-                  </Button>
-                </div>
-              </div>
-            ) : phase === "stopped" ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-base font-semibold">{t("stoppedTitle")}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{t("stoppedBlurb")}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={start}>{t("createNow")}</Button>
-                  <Button variant="ghost" onClick={close}>
-                    {t("close")}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-base font-semibold">{t("failedTitle")}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{t("failedBlurb")}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={start}>{t("tryAgain")}</Button>
-                  <Button variant="ghost" onClick={close}>
-                    {t("close")}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : null}
+                      ) : current ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                      ) : (
+                        <span className="h-2 w-2 rounded-full bg-border" />
+                      )}
+                      <span
+                        className={
+                          current ? "font-medium text-foreground" : "text-muted-foreground"
+                        }
+                      >
+                        {entry.label}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+              <DialogFooter>
+                <Button variant="ghost" onClick={cancel}>
+                  {tCommon("cancel")}
+                </Button>
+                <Button variant="outline" onClick={minimize}>
+                  {t("minimize")}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : phase === "ready" && readyQuizId ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t("readyTitle")}</DialogTitle>
+                <DialogDescription>
+                  {t("knowledgePoints", { count: bankSize })}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="ghost" onClick={dismiss}>
+                  {t("close")}
+                </Button>
+                <Button variant="outline" onClick={start}>
+                  {t("createAnother")}
+                </Button>
+                <Button asChild>
+                  <Link href={`/classrooms/${classroomId}/quiz/${readyQuizId}`}>
+                    {t("take")}
+                  </Link>
+                </Button>
+              </DialogFooter>
+            </>
+          ) : timedOut ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t("timeoutTitle")}</DialogTitle>
+                <DialogDescription>{t("timeoutBlurb")}</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="ghost" onClick={dismiss}>
+                  {t("close")}
+                </Button>
+                <Button onClick={checkAgain}>{t("checkAgain")}</Button>
+              </DialogFooter>
+            </>
+          ) : phase === "stopped" ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t("stoppedTitle")}</DialogTitle>
+                <DialogDescription>{t("stoppedBlurb")}</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="ghost" onClick={dismiss}>
+                  {t("close")}
+                </Button>
+                <Button onClick={start}>{t("createNow")}</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t("failedTitle")}</DialogTitle>
+                <DialogDescription>{t("failedBlurb")}</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="ghost" onClick={dismiss}>
+                  {t("close")}
+                </Button>
+                <Button onClick={start}>{t("tryAgain")}</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { signOut } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
@@ -75,6 +76,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             </nav>
           </header>
           <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+          <Toaster />
         </NextIntlClientProvider>
       </body>
     </html>

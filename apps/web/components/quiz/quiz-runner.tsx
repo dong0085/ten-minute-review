@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { CATEGORIES, type Category } from "@tmr/core";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { clearQuizDraft, loadQuizDraft, saveQuizDraft } from "@/lib/quiz-draft";
 import { QuestionReviewCard, type AnswerShape } from "./question-review";
@@ -236,6 +241,7 @@ export function QuizRunner({
       }
       setError(message);
       setPhase("taking");
+      toast.error(message);
     }
   }, [attemptToken, current, questions, quizId, responses, t, trackTime, userId]);
 
@@ -292,8 +298,18 @@ export function QuizRunner({
   if (phase === "loading") {
     return (
       <Card>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">{t("loading")}</p>
+        <CardContent className="space-y-4">
+          <span className="sr-only">{t("loading")}</span>
+          <Skeleton className="h-5 w-24 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         </CardContent>
       </Card>
     );
@@ -396,12 +412,7 @@ export function QuizRunner({
             {t("answeredProgress", { answered: answeredCount, total: questions.length })}
           </span>
         </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-primary transition-all"
-            style={{ width: `${((current + 1) / questions.length) * 100}%` }}
-          />
-        </div>
+        <Progress className="mt-2 h-1.5" value={((current + 1) / questions.length) * 100} />
       </div>
       {error ? (
         <Alert variant="destructive">
@@ -423,29 +434,36 @@ export function QuizRunner({
             />
           ) : null}
           {currentQuestion.type === "mcq" || currentQuestion.type === "image" ? (
-            <div className="space-y-2">
+            <RadioGroup
+              value={typeof response?.index === "number" ? String(response.index) : ""}
+              onValueChange={(value) =>
+                setAnswer(currentQuestion.id, { index: Number(value) })
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.repeat) {
+                  event.preventDefault();
+                  goNext();
+                }
+              }}
+            >
               {(currentQuestion.options ?? []).map((option, index) => {
                 const selected = response?.index === index;
+                const optionId = `${currentQuestion.id}-option-${index}`;
                 return (
-                  <label
-                    key={`${currentQuestion.id}-${index}`}
+                  <Label
+                    key={optionId}
+                    htmlFor={optionId}
                     className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm",
+                      "mb-0 w-full cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm leading-normal font-normal",
                       selected ? "border-primary bg-muted" : "border-border hover:bg-muted",
                     )}
                   >
-                    <input
-                      type="radio"
-                      name={currentQuestion.id}
-                      checked={selected}
-                      onChange={() => setAnswer(currentQuestion.id, { index })}
-                      className="accent-primary"
-                    />
+                    <RadioGroupItem value={String(index)} id={optionId} />
                     <span>{option}</span>
-                  </label>
+                  </Label>
                 );
               })}
-            </div>
+            </RadioGroup>
           ) : null}
           {currentQuestion.type === "true_false" ? (
             <div className="flex gap-2">
@@ -522,6 +540,7 @@ export function QuizRunner({
             {t("next")}
           </Button>
           <Button onClick={() => void submit()} disabled={phase === "submitting"}>
+            {phase === "submitting" ? <Loader2 className="animate-spin" /> : null}
             {phase === "submitting" ? t("submitting") : t("submit")}
           </Button>
         </div>

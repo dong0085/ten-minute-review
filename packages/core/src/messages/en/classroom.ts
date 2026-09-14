@@ -24,7 +24,6 @@ export const classroom = {
     stepQueued: "Queued",
     stepWriting: "Writing your quiz",
     stepReady: "Ready",
-    creatingAria: "Creating your quiz",
     hintFewSeconds: "This usually takes a few seconds.",
     hintLonger: "Taking a little longer than usual.",
     hintAlmost: "Almost there.",
@@ -143,6 +142,7 @@ export const classroom = {
     blurb:
       "One daily quiz each morning, plus any you create on demand. Attempts are unlimited.",
     empty: "No quizzes yet. They are composed after your notes are processed.",
+    emptyTitle: "No quizzes yet",
     addNotes: "Add notes",
     onDemand: "On demand",
     daily: "Daily",
@@ -151,8 +151,9 @@ export const classroom = {
     notAttempted: "Not attempted",
     attempts: "{count, plural, one {# attempt} other {# attempts}}",
     deleteQuiz: "Delete",
+    deleteTitle: "Delete this quiz?",
     deleteConfirm:
-      "Delete this quiz? Its attempts and answers are removed with it. This cannot be undone.",
+      "Its attempts and answers are removed with it. This cannot be undone.",
     deleting: "Deleting…",
     deleteError: "Could not delete this quiz. Please try again.",
   },

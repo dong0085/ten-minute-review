@@ -5,6 +5,17 @@ import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import {
+  Avatar,
+  AvatarFallback,
+} from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { signOut } from "@/lib/auth";
@@ -38,34 +49,50 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/" className="text-sm font-semibold">
                 {t("title")}
               </Link>
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2 text-sm">
                 <LanguageSwitcher signedIn={Boolean(user)} />
                 <ThemeSwitcher currentTheme={theme} />
                 {user ? (
-                  <>
-                    <Link
-                      className="text-muted-foreground hover:text-foreground"
-                      href="/classrooms"
-                    >
-                      {t("classrooms")}
-                    </Link>
-                    <Link className="text-muted-foreground hover:text-foreground" href="/account">
-                      {t("account")}
-                    </Link>
-                    <span className="hidden text-muted-foreground sm:inline">
-                      {user.username ?? user.email}
-                    </span>
-                    <form
-                      action={async () => {
-                        "use server";
-                        await signOut({ redirectTo: "/" });
-                      }}
-                    >
-                      <Button type="submit" variant="ghost" size="sm">
-                        {t("signOut")}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={user.username ?? user.email}
+                      >
+                        <Avatar size="sm">
+                          <AvatarFallback>
+                            {(user.username ?? user.email).slice(0, 1).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
                       </Button>
-                    </form>
-                  </>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                        {user.username ?? user.email}
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/classrooms">{t("classrooms")}</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/account">{t("account")}</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <form
+                        action={async () => {
+                          "use server";
+                          await signOut({ redirectTo: "/" });
+                        }}
+                      >
+                        <DropdownMenuItem asChild>
+                          <button type="submit" className="w-full text-left">
+                            {t("signOut")}
+                          </button>
+                        </DropdownMenuItem>
+                      </form>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ) : (
                   <>
                     <Link className="text-muted-foreground hover:text-foreground" href="/signin">

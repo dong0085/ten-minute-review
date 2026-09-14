@@ -5,6 +5,7 @@ import { getClassroom, listUploadsForUser } from "@tmr/db";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { UploadHistoryItem } from "@/components/classroom/upload-history-item";
 import { Card, CardContent } from "@/components/ui/card";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
@@ -77,12 +78,11 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
             const src = imageUrl;
             const skipped = upload.discarded.length;
             return (
-              <details
+              <UploadHistoryItem
                 key={upload.id}
-                className="rounded-xl border border-border bg-card"
-              >
-                <summary className="flex cursor-pointer items-center justify-between gap-3 p-4">
-                  <div className="flex min-w-0 items-center gap-3">
+                summary={
+                  <>
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
                     {src ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -109,40 +109,40 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     {skipped > 0 ? (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="hidden text-xs text-muted-foreground sm:inline">
                         {t("linesSkipped", { count: skipped })}
                       </span>
                     ) : null}
                     {statusBadge(upload.extractionStatus)}
                   </div>
-                </summary>
-                <div className="border-t border-border p-4">
-                  {src ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={src}
-                      alt={upload.originalFilename ?? t("imageAlt")}
-                      className="max-h-96 rounded-lg border border-border object-contain"
-                    />
-                  ) : (
-                    <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-                      {upload.textContent}
-                    </p>
-                  )}
-                  {skipped > 0 ? (
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      {t("skippedDetail", { count: skipped })}
-                    </p>
-                  ) : null}
-                  {upload.extractionError ? (
-                    <div className="mt-3">
-                      <Alert variant="destructive">
-                        <AlertDescription>{upload.extractionError}</AlertDescription>
-                      </Alert>
-                    </div>
-                  ) : null}
-                </div>
-              </details>
+                  </>
+                }
+              >
+                {src ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={src}
+                    alt={upload.originalFilename ?? t("imageAlt")}
+                    className="max-h-96 rounded-lg border border-border object-contain"
+                  />
+                ) : (
+                  <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                    {upload.textContent}
+                  </p>
+                )}
+                {skipped > 0 ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {t("skippedDetail", { count: skipped })}
+                  </p>
+                ) : null}
+                {upload.extractionError ? (
+                  <div className="mt-3">
+                    <Alert variant="destructive">
+                      <AlertDescription>{upload.extractionError}</AlertDescription>
+                    </Alert>
+                  </div>
+                ) : null}
+              </UploadHistoryItem>
             );
           })}
         </div>

@@ -14,6 +14,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { AccountStats } from "@/components/account/account-stats";
 import { DeleteAccount } from "@/components/account/delete-account";
 import { EmailPreferencesForm } from "@/components/account/email-preferences-form";
@@ -125,27 +133,31 @@ export default async function AccountPage() {
               .
             </p>
           ) : (
-            <ul className="mt-3 divide-y divide-border">
-              {classrooms.map((classroom) => (
-                <li
-                  key={classroom.id}
-                  className="flex items-center justify-between gap-3 py-2 text-sm"
-                >
-                  <Link
-                    className="font-medium hover:underline"
-                    href={`/classrooms/${classroom.id}`}
-                  >
-                    {classroom.name}
-                  </Link>
-                  <span className="text-xs text-muted-foreground">
-                    {t("languagePair", {
-                      target: languageLabel(classroom.targetLanguage, locale),
-                      native: languageLabel(classroom.nativeLanguage, locale),
-                    })}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <Table className="mt-3">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("classroomsSection")}</TableHead>
+                  <TableHead>{t("languages")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {classrooms.map((classroom) => (
+                  <TableRow key={classroom.id}>
+                    <TableCell>
+                      <Link className="font-medium hover:underline" href={`/classrooms/${classroom.id}`}>
+                        {classroom.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right text-xs text-muted-foreground">
+                      {t("languagePair", {
+                        target: languageLabel(classroom.targetLanguage, locale),
+                        native: languageLabel(classroom.nativeLanguage, locale),
+                      })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
@@ -156,36 +168,39 @@ export default async function AccountPage() {
           {groupedQuizzes.size === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">{t("noQuizzes")}</p>
           ) : (
-            Array.from(groupedQuizzes.entries()).map(([classroomId, group]) => (
-              <div key={classroomId} className="mt-4">
-                <h3 className="text-sm font-medium">{group.classroomName}</h3>
-                <ul className="mt-1 divide-y divide-border">
-                  {group.quizzes.map((quiz) => (
-                    <li
-                      key={quiz.id}
-                      className="flex items-center justify-between gap-3 py-2 text-sm"
-                    >
-                      <Link
-                        className="text-muted-foreground hover:underline"
-                        href={`/classrooms/${classroomId}/quiz/${quiz.id}`}
-                      >
-                        {format.dateTime(new Date(`${quiz.quizDate}T00:00:00`), {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </Link>
-                      <span className="text-xs text-muted-foreground">
+            <Table className="mt-3">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("classroomsSection")}</TableHead>
+                  <TableHead>{t("quizDate")}</TableHead>
+                  <TableHead className="text-right">{t("quizResults")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from(groupedQuizzes.entries()).flatMap(([classroomId, group]) =>
+                  group.quizzes.map((quiz) => (
+                    <TableRow key={quiz.id}>
+                      <TableCell className="font-medium">{group.classroomName}</TableCell>
+                      <TableCell>
+                        <Link className="text-muted-foreground hover:underline" href={`/classrooms/${classroomId}/quiz/${quiz.id}`}>
+                          {format.dateTime(new Date(`${quiz.quizDate}T00:00:00`), {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground">
                         {quiz.bestScore !== null
                           ? t("bestScore", { score: quiz.bestScore, size: quiz.size })
                           : t("quizQuestions", { count: quiz.size })}{" "}
                         · {t("attempts", { count: quiz.attemptCount })}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
+                      </TableCell>
+                    </TableRow>
+                  )),
+                )}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
@@ -203,30 +218,37 @@ export default async function AccountPage() {
           {referrals.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">{t("noSignUps")}</p>
           ) : (
-            <ul className="mt-3 divide-y divide-border">
-              {referrals.map((entry) => (
-                <li
-                  key={entry.id}
-                  className="flex items-center justify-between gap-3 py-2 text-sm"
-                >
-                  <span className="text-muted-foreground">
-                    {t("signedUp", {
-                      when: format.dateTime(entry.createdAt, {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      }),
-                    })}
-                  </span>
-                  <Badge variant={entry.status === "rewarded" ? "success" : "secondary"}>
-                    {entry.status === "rewarded"
-                      ? t("statusRewarded")
-                      : entry.status === "signed_up"
-                        ? t("statusSignedUp")
-                        : t("statusCreated")}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
+            <Table className="mt-3">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("referralDate")}</TableHead>
+                  <TableHead className="text-right">{t("referralStatus")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {referrals.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell className="text-muted-foreground">
+                      {t("signedUp", {
+                        when: format.dateTime(entry.createdAt, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        }),
+                      })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={entry.status === "rewarded" ? "success" : "secondary"}>
+                        {entry.status === "rewarded"
+                          ? t("statusRewarded")
+                          : entry.status === "signed_up"
+                            ? t("statusSignedUp")
+                            : t("statusCreated")}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

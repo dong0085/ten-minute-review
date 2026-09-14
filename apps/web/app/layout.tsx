@@ -3,6 +3,7 @@ import Link from "next/link";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
+import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { signOut } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
@@ -26,9 +27,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const t = await getTranslations("Layout");
   return (
     <html lang={locale} className={cn("font-sans", geist.variable)}>
-      <body className="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <NextIntlClientProvider>
-          <header className="border-b border-neutral-200 bg-white">
+          <header className="border-b border-border bg-card">
             <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
               <Link href="/" className="text-sm font-semibold">
                 {t("title")}
@@ -37,13 +38,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 <LanguageSwitcher signedIn={Boolean(user)} />
                 {user ? (
                   <>
-                    <Link className="text-neutral-600 hover:text-neutral-900" href="/classrooms">
+                    <Link
+                      className="text-muted-foreground hover:text-foreground"
+                      href="/classrooms"
+                    >
                       {t("classrooms")}
                     </Link>
-                    <Link className="text-neutral-600 hover:text-neutral-900" href="/account">
+                    <Link className="text-muted-foreground hover:text-foreground" href="/account">
                       {t("account")}
                     </Link>
-                    <span className="hidden text-neutral-400 sm:inline">
+                    <span className="hidden text-muted-foreground sm:inline">
                       {user.username ?? user.email}
                     </span>
                     <form
@@ -52,25 +56,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                         await signOut({ redirectTo: "/" });
                       }}
                     >
-                      <button
-                        type="submit"
-                        className="text-neutral-600 hover:text-neutral-900"
-                      >
+                      <Button type="submit" variant="ghost" size="sm">
                         {t("signOut")}
-                      </button>
+                      </Button>
                     </form>
                   </>
                 ) : (
                   <>
-                    <Link className="text-neutral-600 hover:text-neutral-900" href="/signin">
+                    <Link className="text-muted-foreground hover:text-foreground" href="/signin">
                       {t("signIn")}
                     </Link>
-                    <Link
-                      className="rounded-lg bg-neutral-900 px-3 py-1.5 text-white hover:bg-neutral-700"
-                      href="/signup"
-                    >
-                      {t("createAccount")}
-                    </Link>
+                    <Button asChild size="sm">
+                      <Link href="/signup">{t("createAccount")}</Link>
+                    </Button>
                   </>
                 )}
               </div>

@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { MAX_IMAGE_BYTES } from "@tmr/core";
-import { Alert, Badge, Button, Card, Label, Textarea } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const MAX_FILES = 10;
 
@@ -27,7 +32,7 @@ type UploadRow = {
 };
 
 const fileInputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition file:mr-3 file:rounded-md file:border-0 file:bg-neutral-900 file:px-3 file:py-1.5 file:text-white focus:border-neutral-900";
+  "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground focus:border-ring dark:bg-input/30";
 
 async function readError(response: Response): Promise<string | null> {
   const data: unknown = await response.json().catch(() => null);
@@ -48,15 +53,15 @@ function firstLine(value: string | null, fallback: string): string {
 function StatusBadge({ status }: { status: ExtractionStatus }) {
   const t = useTranslations("Upload.Panel");
   if (status === "done") {
-    return <Badge tone="green">{t("processed")}</Badge>;
+    return <Badge variant="success">{t("processed")}</Badge>;
   }
   if (status === "failed") {
-    return <Badge tone="red">{t("failed")}</Badge>;
+    return <Badge variant="destructive">{t("failed")}</Badge>;
   }
   if (status === "running") {
-    return <Badge tone="amber">{t("reading")}</Badge>;
+    return <Badge variant="warning">{t("reading")}</Badge>;
   }
-  return <Badge tone="amber">{t("queued")}</Badge>;
+  return <Badge variant="warning">{t("queued")}</Badge>;
 }
 
 export function UploadPanel({ classroomId }: { classroomId: string }) {
@@ -219,7 +224,8 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
   return (
     <div className="space-y-6">
       <Card>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <Label>{t("pasteLabel")}</Label>
             <Textarea
@@ -239,21 +245,21 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
               onChange={handleFiles}
               className={fileInputClass}
             />
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-1 text-xs text-muted-foreground">
               {t("upToImages", { max: MAX_FILES })}
             </p>
-            {fileError ? <p className="mt-2 text-sm text-red-700">{fileError}</p> : null}
+            {fileError ? <p className="mt-2 text-sm text-destructive">{fileError}</p> : null}
             {files.length > 0 ? (
               <ul className="mt-3 space-y-1">
                 {files.map((file, index) => (
                   <li
                     key={`${file.name}-${index}`}
-                    className="flex items-center justify-between gap-3 rounded-lg bg-neutral-50 px-3 py-2 text-sm"
+                    className="flex items-center justify-between gap-3 rounded-lg bg-muted px-3 py-2 text-sm"
                   >
                     <span className="min-w-0 truncate">{file.name}</span>
                     <button
                       type="button"
-                      className="text-xs text-neutral-500 hover:text-red-700"
+                      className="text-xs text-muted-foreground hover:text-destructive"
                       onClick={() =>
                         setFiles((current) =>
                           current.filter((_, fileIndex) => fileIndex !== index),
@@ -267,30 +273,36 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
               </ul>
             ) : null}
           </div>
-          {formError ? <Alert tone="error">{formError}</Alert> : null}
+          {formError ? (
+            <Alert variant="destructive">
+              <AlertDescription>{formError}</AlertDescription>
+            </Alert>
+          ) : null}
           <Button type="submit" disabled={submitting}>
             {submitting ? t("savingNotes") : t("uploadNotes")}
           </Button>
-        </form>
+          </form>
+        </CardContent>
       </Card>
       {sessionIds.length > 0 ? (
         <Card>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardContent>
+            <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold">
                 {processing ? t("readingNotes") : t("processingFinished")}
               </h2>
-              <p className="mt-1 text-sm text-neutral-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {processing ? t("processingBlurb") : t("finishedBlurb")}
               </p>
             </div>
-            <Button variant="secondary" size="sm" onClick={() => void refresh()}>
+            <Button variant="outline" size="sm" onClick={() => void refresh()}>
               {t("checkStatus")}
             </Button>
           </div>
           <ul className="mt-4 space-y-3">
             {sessionUploads.length === 0 ? (
-              <li className="text-sm text-neutral-500">{t("waiting")}</li>
+              <li className="text-sm text-muted-foreground">{t("waiting")}</li>
             ) : null}
             {sessionUploads.map((upload) => {
               const showPoints =
@@ -298,7 +310,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
                 upload.extractionStatus === "done" &&
                 sessionUploads.length === 1;
               return (
-                <li key={upload.id} className="rounded-lg border border-neutral-200 p-3">
+                <li key={upload.id} className="rounded-lg border border-border p-3">
                   <div className="flex items-center justify-between gap-3">
                     <p className="min-w-0 truncate text-sm">
                       {upload.subject ??
@@ -309,17 +321,17 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
                     <StatusBadge status={upload.extractionStatus} />
                   </div>
                   {upload.extractionStatus === "done" ? (
-                    <p className="mt-2 text-sm text-green-800">
+                    <p className="mt-2 text-sm text-success">
                       {showPoints ? t("pointsPrefix", { points: pointsDelta }) : ""}
                       {t("linesSkipped", { count: upload.discardedCount })}
                     </p>
                   ) : null}
                   {upload.extractionStatus === "failed" ? (
                     <div className="mt-2 space-y-1">
-                      <p className="text-sm text-red-700">
+                      <p className="text-sm text-destructive">
                         {upload.extractionError ?? t("extractionFailed")}
                       </p>
-                      <p className="text-xs text-neutral-500">{t("keptBlurb")}</p>
+                      <p className="text-xs text-muted-foreground">{t("keptBlurb")}</p>
                     </div>
                   ) : null}
                 </li>
@@ -327,18 +339,19 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
             })}
           </ul>
           {!processing && pointsDelta !== null && sessionUploads.length > 1 ? (
-            <p className="mt-3 text-sm text-green-800">
+            <p className="mt-3 text-sm text-success">
               {t("pointsAdded", { count: pointsDelta })}
             </p>
           ) : null}
           <div className="mt-4 text-sm">
             <Link
-              className="text-neutral-600 underline hover:text-neutral-900"
+              className="text-muted-foreground underline hover:text-foreground"
               href={`/classrooms/${classroomId}/history`}
             >
               {t("viewHistory")}
             </Link>
           </div>
+          </CardContent>
         </Card>
       ) : null}
     </div>

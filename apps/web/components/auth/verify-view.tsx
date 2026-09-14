@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Alert, Card } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 
 type VerifyResult = "loading" | "success" | "invalid";
 
@@ -44,36 +45,48 @@ export function VerifyView() {
   if (state === "loading") {
     return (
       <Card>
-        <p className="text-sm text-neutral-600">Verifying your email...</p>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Verifying your email...</p>
+        </CardContent>
       </Card>
     );
   }
 
   if (state === "invalid") {
     return (
-      <Card className="space-y-3">
-        <Alert tone="error">This verification link is invalid or has expired.</Alert>
-        <p className="text-sm text-neutral-600">
-          Sign in to request a new link, or create an account again.
-        </p>
-        <div className="flex gap-4 text-sm">
-          <Link className="font-medium underline" href="/signin">
-            Sign in
-          </Link>
-          <Link className="underline" href="/signup">
-            Create account
-          </Link>
-        </div>
+      <Card>
+        <CardContent className="space-y-3">
+          <Alert variant="destructive">
+            <AlertDescription>
+              This verification link is invalid or has expired.
+            </AlertDescription>
+          </Alert>
+          <p className="text-sm text-muted-foreground">
+            Sign in to request a new link, or create an account again.
+          </p>
+          <div className="flex gap-4 text-sm">
+            <Link className="font-medium underline" href="/signin">
+              Sign in
+            </Link>
+            <Link className="underline" href="/signup">
+              Create account
+            </Link>
+          </div>
+        </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="space-y-3">
-      <Alert tone="success">Your email is verified.</Alert>
-      <Link className="text-sm font-medium underline" href="/signin">
-        Sign in
-      </Link>
+    <Card>
+      <CardContent className="space-y-3">
+        <Alert variant="success">
+          <AlertDescription>Your email is verified.</AlertDescription>
+        </Alert>
+        <Link className="text-sm font-medium underline" href="/signin">
+          Sign in
+        </Link>
+      </CardContent>
     </Card>
   );
 }

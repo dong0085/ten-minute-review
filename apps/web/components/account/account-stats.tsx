@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ActivityStats, AttemptScore, LearningStats, RecentMiss } from "@tmr/db";
-import { Badge, Card } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatDurationMs } from "@/lib/format";
 
 function percent(correct: number, answered: number): number {
@@ -26,13 +28,12 @@ export async function AccountStats({
   if (activity.attemptCount === 0) {
     return (
       <Card>
-        <p className="text-sm text-neutral-500">{t("empty")}</p>
-        <Link
-          className="mt-3 inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100"
-          href="/classrooms"
-        >
-          {t("goToClassrooms")}
-        </Link>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{t("empty")}</p>
+          <Button asChild variant="outline" className="mt-3">
+            <Link href="/classrooms">{t("goToClassrooms")}</Link>
+          </Button>
+        </CardContent>
       </Card>
     );
   }
@@ -61,111 +62,115 @@ export async function AccountStats({
   return (
     <div className="space-y-6">
       <Card>
-        <h2 className="text-sm font-semibold">{t("activityTitle")}</h2>
-        <dl className="mt-3 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {tiles.map((tile) => (
-            <div key={tile.label}>
-              <dd className="text-xl font-semibold">{tile.value}</dd>
-              <dt className="mt-0.5 text-xs text-neutral-500">{tile.label}</dt>
-            </div>
-          ))}
-        </dl>
+        <CardContent>
+          <h2 className="text-sm font-semibold">{t("activityTitle")}</h2>
+          <dl className="mt-3 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {tiles.map((tile) => (
+              <div key={tile.label}>
+                <dd className="text-xl font-semibold">{tile.value}</dd>
+                <dt className="mt-0.5 text-xs text-muted-foreground">{tile.label}</dt>
+              </div>
+            ))}
+          </dl>
+        </CardContent>
       </Card>
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold">{t("learningTitle")}</h2>
-          {attempts.length >= 2 ? (
-            <div className="flex items-center gap-2 text-xs text-neutral-500">
-              <span>{t("trend", { count: attempts.length })}</span>
-              <svg
-                viewBox="0 0 100 30"
-                preserveAspectRatio="none"
-                className="h-8 w-24 text-neutral-900"
-                aria-hidden="true"
-              >
-                <polyline
-                  points={trendPoints}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  vectorEffect="non-scaling-stroke"
-                />
-              </svg>
+        <CardContent>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold">{t("learningTitle")}</h2>
+            {attempts.length >= 2 ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>{t("trend", { count: attempts.length })}</span>
+                <svg
+                  viewBox="0 0 100 30"
+                  preserveAspectRatio="none"
+                  className="h-8 w-24 text-foreground"
+                  aria-hidden="true"
+                >
+                  <polyline
+                    points={trendPoints}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <h3 className="text-xs font-medium text-muted-foreground">{t("categoryTitle")}</h3>
+            {categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("empty")}</p>
+            ) : (
+              categories.map((category) => {
+                const accuracy = percent(category.correct, category.answered);
+                return (
+                  <div key={category.category}>
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium">{categoryT(category.category)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t("categoryMeta", {
+                          correct: category.correct,
+                          answered: category.answered,
+                        })}
+                        {" · "}
+                        {accuracy}%
+                      </span>
+                    </div>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${accuracy}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {learning.gaps.length > 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              {t("notPracticed", {
+                categories: learning.gaps.map((gap) => categoryT(gap)).join(", "),
+              })}
+            </p>
+          ) : null}
+
+          {learning.bankPoints > 0 ? (
+            <div className="mt-4 space-y-1 border-t border-border pt-4 text-sm text-muted-foreground">
+              <p>
+                {t("mastered", {
+                  mastered: learning.masteredPoints,
+                  total: learning.bankPoints,
+                })}
+              </p>
+              <p>
+                {t("practiced", {
+                  practiced: learning.practicedPoints,
+                  total: learning.bankPoints,
+                })}
+              </p>
             </div>
           ) : null}
-        </div>
 
-        <div className="mt-4 space-y-3">
-          <h3 className="text-xs font-medium text-neutral-500">{t("categoryTitle")}</h3>
-          {categories.length === 0 ? (
-            <p className="text-sm text-neutral-500">{t("empty")}</p>
-          ) : (
-            categories.map((category) => {
-              const accuracy = percent(category.correct, category.answered);
-              return (
-                <div key={category.category}>
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium">{categoryT(category.category)}</span>
-                    <span className="text-xs text-neutral-500">
-                      {t("categoryMeta", {
-                        correct: category.correct,
-                        answered: category.answered,
-                      })}
-                      {" · "}
-                      {accuracy}%
-                    </span>
-                  </div>
-                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-neutral-200">
-                    <div
-                      className="h-full rounded-full bg-neutral-900"
-                      style={{ width: `${accuracy}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {learning.gaps.length > 0 ? (
-          <p className="mt-4 text-sm text-neutral-600">
-            {t("notPracticed", {
-              categories: learning.gaps.map((gap) => categoryT(gap)).join(", "),
-            })}
-          </p>
-        ) : null}
-
-        {learning.bankPoints > 0 ? (
-          <div className="mt-4 space-y-1 border-t border-neutral-200 pt-4 text-sm text-neutral-600">
-            <p>
-              {t("mastered", {
-                mastered: learning.masteredPoints,
-                total: learning.bankPoints,
-              })}
-            </p>
-            <p>
-              {t("practiced", {
-                practiced: learning.practicedPoints,
-                total: learning.bankPoints,
-              })}
-            </p>
-          </div>
-        ) : null}
-
-        {misses.length > 0 ? (
-          <div className="mt-4 border-t border-neutral-200 pt-4">
-            <h3 className="text-xs font-medium text-neutral-500">{t("recentMisses")}</h3>
-            <ul className="mt-2 space-y-2">
-              {misses.map((miss) => (
-                <li key={miss.knowledgePointId} className="flex items-start gap-2 text-sm">
-                  <Badge>{categoryT(miss.category)}</Badge>
-                  <span className="text-neutral-700">{miss.stem}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+          {misses.length > 0 ? (
+            <div className="mt-4 border-t border-border pt-4">
+              <h3 className="text-xs font-medium text-muted-foreground">{t("recentMisses")}</h3>
+              <ul className="mt-2 space-y-2">
+                {misses.map((miss) => (
+                  <li key={miss.knowledgePointId} className="flex items-start gap-2 text-sm">
+                    <Badge variant="secondary">{categoryT(miss.category)}</Badge>
+                    <span className="text-muted-foreground">{miss.stem}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </CardContent>
       </Card>
     </div>
   );

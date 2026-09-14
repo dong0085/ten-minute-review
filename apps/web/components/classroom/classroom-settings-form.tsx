@@ -4,11 +4,15 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { LANGUAGES } from "@tmr/core";
-import { Alert, Button, Card, Input, Label } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { languageLabel } from "@/lib/language-label";
 
 const selectClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-neutral-900";
+  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition focus:border-ring disabled:opacity-50 dark:bg-input/30";
 
 export function ClassroomSettingsForm({
   classroom,
@@ -69,7 +73,8 @@ export function ClassroomSettingsForm({
 
   return (
     <Card>
-      <form className="space-y-4" onSubmit={onSubmit}>
+      <CardContent>
+        <form className="space-y-4" onSubmit={onSubmit}>
         <h2 className="text-lg font-semibold">{t("title")}</h2>
         <div>
           <Label>{t("name")}</Label>
@@ -131,14 +136,23 @@ export function ClassroomSettingsForm({
               touch();
             }}
           />
-          <p className="mt-1 text-xs text-neutral-500">{t("autoStopHelp")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("autoStopHelp")}</p>
         </div>
-        {error ? <Alert tone="error">{error}</Alert> : null}
-        {saved ? <Alert tone="success">{t("saved")}</Alert> : null}
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+        {saved ? (
+          <Alert variant="success">
+            <AlertDescription>{t("saved")}</AlertDescription>
+          </Alert>
+        ) : null}
         <Button type="submit" disabled={pending}>
           {pending ? tc("saving") : t("saveChanges")}
         </Button>
-      </form>
+        </form>
+      </CardContent>
     </Card>
   );
 }

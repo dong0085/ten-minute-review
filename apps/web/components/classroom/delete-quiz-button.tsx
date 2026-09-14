@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 
 export function DeleteQuizButton({ quizId }: { quizId: string }) {
   const t = useTranslations("Classroom.QuizzesPage");
@@ -34,14 +34,14 @@ export function DeleteQuizButton({ quizId }: { quizId: string }) {
   return (
     <div className="flex flex-col items-end gap-1">
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         disabled={pending}
         onClick={() => void remove()}
       >
         {pending ? t("deleting") : t("deleteQuiz")}
       </Button>
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
   );
 }

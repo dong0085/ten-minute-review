@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Alert, Button } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 async function readError(response: Response): Promise<string | null> {
   const data: unknown = await response.json().catch(() => null);
@@ -43,27 +44,37 @@ export function DeleteAccount() {
   if (!confirming) {
     return (
       <div className="space-y-2">
-        <p className="text-sm text-neutral-600">{t("description")}</p>
-        <Button variant="danger" onClick={() => setConfirming(true)}>
+        <p className="text-sm text-muted-foreground">{t("description")}</p>
+        <Button variant="destructive" onClick={() => setConfirming(true)}>
           {t("deleteAccount")}
         </Button>
-        {error ? <Alert tone="error">{error}</Alert> : null}
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      <Alert tone="error">{t("warning")}</Alert>
+      <Alert variant="destructive">
+        <AlertDescription>{t("warning")}</AlertDescription>
+      </Alert>
       <div className="flex flex-wrap gap-2">
-        <Button variant="danger" onClick={() => void remove()} disabled={deleting}>
+        <Button variant="destructive" onClick={() => void remove()} disabled={deleting}>
           {deleting ? t("deleting") : t("confirm")}
         </Button>
-        <Button variant="secondary" onClick={() => setConfirming(false)} disabled={deleting}>
+        <Button variant="outline" onClick={() => setConfirming(false)} disabled={deleting}>
           {tc("cancel")}
         </Button>
       </div>
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
     </div>
   );
 }

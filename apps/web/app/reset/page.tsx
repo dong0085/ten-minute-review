@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Alert } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ResetForm } from "@/components/auth/reset-form";
 
 function first(value: string | string[] | undefined) {
@@ -24,11 +24,13 @@ export default async function ResetPage({
       {token ? (
         <ResetForm token={token} />
       ) : (
-        <Alert tone="error">
-          {t("invalid")}{" "}
-          <Link className="font-medium underline" href="/forgot">
-            {t("requestNew")}
-          </Link>
+        <Alert variant="destructive">
+          <AlertDescription>
+            {t("invalid")}{" "}
+            <Link className="font-medium underline" href="/forgot">
+              {t("requestNew")}
+            </Link>
+          </AlertDescription>
         </Alert>
       )}
     </div>

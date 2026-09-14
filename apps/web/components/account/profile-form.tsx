@@ -4,11 +4,14 @@ import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { UI_LOCALES } from "@tmr/core";
-import { Alert, Button, Input, Label } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { languageLabel } from "@/lib/language-label";
 
 const selectClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-neutral-900";
+  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition focus:border-ring disabled:opacity-50 dark:bg-input/30";
 
 function timezoneOptions(current: string): string[] {
   const supported = (Intl as unknown as { supportedValuesOf?: (key: string) => string[] })
@@ -89,23 +92,27 @@ export function ProfileForm({
       <div className="mt-3 space-y-4">
         <dl className="grid gap-4 text-sm sm:grid-cols-3">
           <div>
-            <dt className="text-xs text-neutral-500">{t("username")}</dt>
+            <dt className="text-xs text-muted-foreground">{t("username")}</dt>
             <dd className="mt-0.5 font-medium">
               {username.trim() === "" ? t("notSet") : username}
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-neutral-500">{t("interfaceLanguage")}</dt>
+            <dt className="text-xs text-muted-foreground">{t("interfaceLanguage")}</dt>
             <dd className="mt-0.5 font-medium">{languageLabel(uiLanguage, locale)}</dd>
           </div>
           <div>
-            <dt className="text-xs text-neutral-500">{t("timezone")}</dt>
+            <dt className="text-xs text-muted-foreground">{t("timezone")}</dt>
             <dd className="mt-0.5 font-medium">{timezone}</dd>
           </div>
         </dl>
-        {saved ? <Alert tone="success">{t("saved")}</Alert> : null}
+        {saved ? (
+          <Alert variant="success">
+            <AlertDescription>{t("saved")}</AlertDescription>
+          </Alert>
+        ) : null}
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             resetFields();
             setSaved(false);
@@ -122,16 +129,18 @@ export function ProfileForm({
     <form onSubmit={handleSubmit} className="mt-3 space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label>{t("username")}</Label>
+          <Label htmlFor="profile-username">{t("username")}</Label>
           <Input
+            id="profile-username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             placeholder={t("usernamePlaceholder")}
           />
         </div>
         <div>
-          <Label>{t("interfaceLanguage")}</Label>
+          <Label htmlFor="profile-language">{t("interfaceLanguage")}</Label>
           <select
+            id="profile-language"
             value={uiLanguage}
             onChange={(event) => setUiLanguage(event.target.value)}
             className={selectClass}
@@ -144,8 +153,9 @@ export function ProfileForm({
           </select>
         </div>
         <div>
-          <Label>{t("timezone")}</Label>
+          <Label htmlFor="profile-timezone">{t("timezone")}</Label>
           <select
+            id="profile-timezone"
             value={timezone}
             onChange={(event) => setTimezone(event.target.value)}
             className={selectClass}
@@ -158,14 +168,18 @@ export function ProfileForm({
           </select>
         </div>
       </div>
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={saving}>
           {saving ? tc("saving") : t("save")}
         </Button>
         <Button
           type="button"
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             resetFields();
             setEditing(false);

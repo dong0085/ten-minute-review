@@ -15,14 +15,14 @@ export async function BankSummary({
     <div className="space-y-3">
       <div>
         <h2 className="text-lg font-semibold">{t("title")}</h2>
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-muted-foreground">
           {total === 0 ? t("empty") : t("total", { count: total })}
         </p>
       </div>
-      <dl className="divide-y divide-neutral-100">
+      <dl className="divide-y divide-border">
         {CATEGORIES.map((category) => (
           <div key={category} className="flex items-center justify-between py-2 text-sm">
-            <dt className="text-neutral-600">{categoryT(category)}</dt>
+            <dt className="text-muted-foreground">{categoryT(category)}</dt>
             <dd className="font-medium">{values.get(category) ?? 0}</dd>
           </div>
         ))}

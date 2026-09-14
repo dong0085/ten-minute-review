@@ -9,12 +9,16 @@ import {
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { UI_LOCALES } from "@tmr/core";
-import { Alert, Button, Card, Input, Label } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { languageLabel } from "@/lib/language-label";
 import { GoogleButton } from "./google-button";
 
 const selectClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-neutral-900";
+  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition focus:border-ring disabled:opacity-50 dark:bg-input/30";
 
 const subscribe = () => () => {};
 
@@ -96,93 +100,106 @@ export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
 
   if (done) {
     return (
-      <Card className="space-y-3">
-        <h2 className="text-lg font-semibold">{t("checkEmailTitle")}</h2>
-        <p className="text-sm text-neutral-600">{t("checkEmailBody", { email })}</p>
-        <Link className="text-sm font-medium underline" href="/signin">
-          {t("goToSignIn")}
-        </Link>
+      <Card>
+        <CardContent className="space-y-3">
+          <h2 className="text-lg font-semibold">{t("checkEmailTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("checkEmailBody", { email })}</p>
+          <Link className="text-sm font-medium underline" href="/signin">
+            {t("goToSignIn")}
+          </Link>
+        </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="space-y-5">
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <div>
-          <Label>{t("inviteCode")}</Label>
-          <Input
-            value={inviteCode}
-            onChange={(event) => {
-              setInviteCode(event.target.value);
-              writeInviteCookie(event.target.value);
-            }}
-            placeholder={t("invitePlaceholder")}
-            autoComplete="off"
-          />
-        </div>
-        <div>
-          <Label>{t("email")}</Label>
-          <Input
-            type="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </div>
-        <div>
-          <Label>{t("password")}</Label>
-          <Input
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+    <Card>
+      <CardContent className="space-y-5">
+        <form className="space-y-4" onSubmit={onSubmit}>
           <div>
-            <Label>{t("language")}</Label>
-            <select
-              className={selectClass}
-              value={uiLanguage}
-              onChange={(event) => setLanguageOverride(event.target.value)}
-            >
-              <option value="">{t("browserDefault")}</option>
-              {UI_LOCALES.map((code) => (
-                <option key={code} value={code}>
-                  {languageLabel(code, locale)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <Label>{t("timezone")}</Label>
+            <Label htmlFor="signup-invite">{t("inviteCode")}</Label>
             <Input
-              value={timezone}
-              onChange={(event) => setTimezoneOverride(event.target.value)}
-              placeholder="America/New_York"
+              id="signup-invite"
+              value={inviteCode}
+              onChange={(event) => {
+                setInviteCode(event.target.value);
+                writeInviteCookie(event.target.value);
+              }}
+              placeholder={t("invitePlaceholder")}
+              autoComplete="off"
             />
           </div>
-        </div>
-        {error ? <Alert tone="error">{error}</Alert> : null}
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? t("creating") : t("createAccount")}
-        </Button>
-      </form>
+          <div>
+            <Label htmlFor="signup-email">{t("email")}</Label>
+            <Input
+              id="signup-email"
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="signup-password">{t("password")}</Label>
+            <Input
+              id="signup-password"
+              type="password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="signup-language">{t("language")}</Label>
+              <select
+                id="signup-language"
+                className={selectClass}
+                value={uiLanguage}
+                onChange={(event) => setLanguageOverride(event.target.value)}
+              >
+                <option value="">{t("browserDefault")}</option>
+                {UI_LOCALES.map((code) => (
+                  <option key={code} value={code}>
+                    {languageLabel(code, locale)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="signup-timezone">{t("timezone")}</Label>
+              <Input
+                id="signup-timezone"
+                value={timezone}
+                onChange={(event) => setTimezoneOverride(event.target.value)}
+                placeholder="America/New_York"
+              />
+            </div>
+          </div>
+          {error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? t("creating") : t("createAccount")}
+          </Button>
+        </form>
 
-      <div className="flex items-center gap-3 text-xs text-neutral-400">
-        <span className="h-px flex-1 bg-neutral-200" />
-        {t("or")}
-        <span className="h-px flex-1 bg-neutral-200" />
-      </div>
-      <GoogleButton label={t("google")} />
-      <p className="text-center text-sm text-neutral-600">
-        {t("alreadyHave")}{" "}
-        <Link className="font-medium underline" href="/signin">
-          {t("signIn")}
-        </Link>
-      </p>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          {t("or")}
+          <span className="h-px flex-1 bg-border" />
+        </div>
+        <GoogleButton label={t("google")} />
+        <p className="text-center text-sm text-muted-foreground">
+          {t("alreadyHave")}{" "}
+          <Link className="font-medium underline" href="/signin">
+            {t("signIn")}
+          </Link>
+        </p>
+      </CardContent>
     </Card>
   );
 }

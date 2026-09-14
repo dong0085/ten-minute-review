@@ -3,7 +3,11 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Alert, Button, Card, Input, Label } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function ForgotForm() {
   const t = useTranslations("Auth.ForgotForm");
@@ -37,38 +41,49 @@ export function ForgotForm() {
 
   if (done) {
     return (
-      <Card className="space-y-3">
-        <Alert tone="success">{t("sent")}</Alert>
-        <Link className="text-sm font-medium underline" href="/signin">
-          {t("back")}
-        </Link>
+      <Card>
+        <CardContent className="space-y-3">
+          <Alert variant="success">
+            <AlertDescription>{t("sent")}</AlertDescription>
+          </Alert>
+          <Link className="text-sm font-medium underline" href="/signin">
+            {t("back")}
+          </Link>
+        </CardContent>
       </Card>
     );
   }
 
   return (
     <Card>
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <p className="text-sm text-neutral-600">{t("intro")}</p>
-        <div>
-          <Label>{tc("email")}</Label>
-          <Input
-            type="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </div>
-        {error ? <Alert tone="error">{error}</Alert> : null}
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? t("sending") : t("submit")}
-        </Button>
-        <p className="text-center text-sm text-neutral-600">
-          <Link className="underline" href="/signin">
-            {t("back")}
-          </Link>
-        </p>
-      </form>
+      <CardContent>
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <p className="text-sm text-muted-foreground">{t("intro")}</p>
+          <div>
+            <Label htmlFor="forgot-email">{tc("email")}</Label>
+            <Input
+              id="forgot-email"
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </div>
+          {error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? t("sending") : t("submit")}
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            <Link className="underline" href="/signin">
+              {t("back")}
+            </Link>
+          </p>
+        </form>
+      </CardContent>
     </Card>
   );
 }

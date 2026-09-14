@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Alert } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SignUpForm } from "@/components/auth/signup-form";
 
 function first(value: string | string[] | undefined) {
@@ -20,9 +20,13 @@ export default async function SignUpPage({
     <div className="mx-auto max-w-md space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-neutral-600">{t("subtitle")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
-      {error === "invite" ? <Alert tone="error">{t("inviteError")}</Alert> : null}
+      {error === "invite" ? (
+        <Alert variant="destructive">
+          <AlertDescription>{t("inviteError")}</AlertDescription>
+        </Alert>
+      ) : null}
       <SignUpForm initialCode={code} />
     </div>
   );

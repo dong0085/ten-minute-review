@@ -5,8 +5,8 @@ import type { KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button, cn } from "@/components/ui";
-import { LinkButton } from "@/components/classroom/link-button";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type JobStatus = "pending" | "running";
 type Phase = "idle" | "posting" | "composing" | "ready" | "stopped" | "failed";
@@ -270,25 +270,25 @@ export function TodayQuizAction({
   ];
 
   const inlineProgress = (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2">
       <button
         type="button"
         onClick={() => setMinimized(false)}
-        className="flex items-center gap-2 text-sm font-medium text-neutral-800 hover:text-neutral-950"
+        className="flex items-center gap-2 text-sm font-medium text-foreground"
       >
         {phase === "posting" ? (
           <Spinner className="h-3.5 w-3.5" />
         ) : step === "running" ? (
           <Spinner className="h-3.5 w-3.5" />
         ) : (
-          <span className="h-2 w-2 rounded-full bg-neutral-400" />
+          <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
         )}
         {phase === "posting" || step === "pending" ? t("stepQueued") : t("stepWriting")}
       </button>
       <button
         type="button"
         onClick={cancel}
-        className="ml-auto text-xs text-neutral-500 underline hover:text-neutral-900"
+        className="ml-auto text-xs text-muted-foreground underline hover:text-foreground"
       >
         {tCommon("cancel")}
       </button>
@@ -300,7 +300,7 @@ export function TodayQuizAction({
       <div className="flex flex-col justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">{t("title")}</h2>
-          <p className="mt-1 text-sm text-neutral-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {activeQuizId ? t("ready") : t("idle")}
           </p>
         </div>
@@ -308,10 +308,12 @@ export function TodayQuizAction({
           {activeQuizId ? (
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <LinkButton href={`/classrooms/${classroomId}/quiz/${activeQuizId}`}>
-                  {t("takeToday")}
-                </LinkButton>
-                <Button variant="secondary" onClick={start} disabled={composing}>
+                <Button asChild>
+                  <Link href={`/classrooms/${classroomId}/quiz/${activeQuizId}`}>
+                    {t("takeToday")}
+                  </Link>
+                </Button>
+                <Button variant="outline" onClick={start} disabled={composing}>
                   {t("createNow")}
                 </Button>
               </div>
@@ -320,9 +322,9 @@ export function TodayQuizAction({
           ) : bankSize === 0 ? (
             <div className="space-y-2">
               <Button disabled>{t("createNow")}</Button>
-              <p className="text-xs text-neutral-500">
+              <p className="text-xs text-muted-foreground">
                 <Link
-                  className="underline hover:text-neutral-900"
+                  className="underline hover:text-foreground"
                   href={`/classrooms/${classroomId}/upload`}
                 >
                   {t("addNotes")}
@@ -355,7 +357,7 @@ export function TodayQuizAction({
             tabIndex={-1}
             onKeyDown={onDialogKeyDown}
             className={cn(
-              "w-full max-w-sm rounded-xl bg-white p-6 shadow-xl outline-none transition-all duration-200 motion-reduce:transition-none",
+              "w-full max-w-sm rounded-xl bg-card p-6 shadow-xl outline-none transition-all duration-200 motion-reduce:transition-none",
               entered && !closing ? "scale-100 opacity-100" : "scale-95 opacity-0",
             )}
           >
@@ -365,7 +367,7 @@ export function TodayQuizAction({
                   <h3 className="text-base font-semibold" aria-live="polite">
                     {phase === "posting" ? t("stepQueued") : steps[stepIndex]?.label}
                   </h3>
-                  <p className="mt-1 text-sm text-neutral-500">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {elapsed < 10
                       ? t("hintFewSeconds")
                       : elapsed < 30
@@ -380,17 +382,17 @@ export function TodayQuizAction({
                     return (
                       <li key={entry.key} className="flex items-center gap-2 text-sm">
                         {done ? (
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 text-[10px] text-white">
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
                             ✓
                           </span>
                         ) : current ? (
-                          <Spinner className="h-3.5 w-3.5 text-neutral-700" />
+                          <Spinner className="h-3.5 w-3.5 text-muted-foreground" />
                         ) : (
-                          <span className="h-2 w-2 rounded-full bg-neutral-300" />
+                          <span className="h-2 w-2 rounded-full bg-border" />
                         )}
                         <span
                           className={
-                            current ? "font-medium text-neutral-900" : "text-neutral-500"
+                            current ? "font-medium text-foreground" : "text-muted-foreground"
                           }
                         >
                           {entry.label}
@@ -400,7 +402,7 @@ export function TodayQuizAction({
                   })}
                 </ol>
                 <div className="flex justify-between gap-2 pt-1">
-                  <Button variant="secondary" onClick={minimize}>
+                  <Button variant="outline" onClick={minimize}>
                     {t("minimize")}
                   </Button>
                   <Button variant="ghost" onClick={cancel}>
@@ -412,15 +414,17 @@ export function TodayQuizAction({
               <div className="space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">{t("readyTitle")}</h3>
-                  <p className="mt-1 text-sm text-neutral-500">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {t("knowledgePoints", { count: bankSize })}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <LinkButton href={`/classrooms/${classroomId}/quiz/${readyQuizId}`}>
-                    {t("take")}
-                  </LinkButton>
-                  <Button variant="secondary" onClick={start}>
+                  <Button asChild>
+                    <Link href={`/classrooms/${classroomId}/quiz/${readyQuizId}`}>
+                      {t("take")}
+                    </Link>
+                  </Button>
+                  <Button variant="outline" onClick={start}>
                     {t("createAnother")}
                   </Button>
                 </div>
@@ -434,7 +438,7 @@ export function TodayQuizAction({
               <div className="space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">{t("timeoutTitle")}</h3>
-                  <p className="mt-1 text-sm text-neutral-500">{t("timeoutBlurb")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("timeoutBlurb")}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button onClick={checkAgain}>{t("checkAgain")}</Button>
@@ -447,7 +451,7 @@ export function TodayQuizAction({
               <div className="space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">{t("stoppedTitle")}</h3>
-                  <p className="mt-1 text-sm text-neutral-500">{t("stoppedBlurb")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("stoppedBlurb")}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button onClick={start}>{t("createNow")}</Button>
@@ -460,7 +464,7 @@ export function TodayQuizAction({
               <div className="space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">{t("failedTitle")}</h3>
-                  <p className="mt-1 text-sm text-neutral-500">{t("failedBlurb")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("failedBlurb")}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button onClick={start}>{t("tryAgain")}</Button>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { getUserById, upsertEmailPreferences } from "@tmr/db";
 import { verifyUnsubscribeToken } from "@tmr/core/node";
+import { Button } from "@/components/ui/button";
 import { getDb } from "@/lib/db";
 import { env } from "@/lib/env";
 
@@ -20,13 +21,10 @@ export default async function UnsubscribePage({
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <h1 className="text-2xl font-semibold">{t("invalidTitle")}</h1>
-        <p className="mt-3 text-neutral-600">{t("invalidBody")}</p>
-        <Link
-          href="/account"
-          className="mt-6 inline-block rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-100"
-        >
-          {t("goToAccount")}
-        </Link>
+        <p className="mt-3 text-muted-foreground">{t("invalidBody")}</p>
+        <Button asChild variant="outline" className="mt-6">
+          <Link href="/account">{t("goToAccount")}</Link>
+        </Button>
       </div>
     );
   }
@@ -39,13 +37,10 @@ export default async function UnsubscribePage({
   return (
     <div className="mx-auto max-w-md py-16 text-center">
       <h1 className="text-2xl font-semibold">{t("successTitle")}</h1>
-      <p className="mt-3 text-neutral-600">{t("successBody")}</p>
-      <Link
-        href="/account"
-        className="mt-6 inline-block rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
-      >
-        {t("manage")}
-      </Link>
+      <p className="mt-3 text-muted-foreground">{t("successBody")}</p>
+      <Button asChild className="mt-6">
+        <Link href="/account">{t("manage")}</Link>
+      </Button>
     </div>
   );
 }

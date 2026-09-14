@@ -2,10 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { Alert, Button, Label } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 const selectClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-neutral-900 disabled:bg-neutral-100";
+  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition focus:border-ring disabled:opacity-50 dark:bg-input/30";
 
 async function readError(response: Response): Promise<string | null> {
   const data: unknown = await response.json().catch(() => null);
@@ -72,20 +74,28 @@ export function EmailPreferencesForm({
   if (!editing) {
     return (
       <div className="mt-3 space-y-4">
-        {unsubscribedAt ? <Alert>{t("unsubscribed")}</Alert> : null}
+        {unsubscribedAt ? (
+          <Alert>
+            <AlertDescription>{t("unsubscribed")}</AlertDescription>
+          </Alert>
+        ) : null}
         <dl className="grid gap-4 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-xs text-neutral-500">{t("dailyLabel")}</dt>
+            <dt className="text-xs text-muted-foreground">{t("dailyLabel")}</dt>
             <dd className="mt-0.5 font-medium">{dailyEnabled ? t("on") : t("off")}</dd>
           </div>
           <div>
-            <dt className="text-xs text-neutral-500">{t("sendHour")}</dt>
+            <dt className="text-xs text-muted-foreground">{t("sendHour")}</dt>
             <dd className="mt-0.5 font-medium">{formatHour(sendHourLocal)}</dd>
           </div>
         </dl>
-        {saved ? <Alert tone="success">{t("saved")}</Alert> : null}
+        {saved ? (
+          <Alert variant="success">
+            <AlertDescription>{t("saved")}</AlertDescription>
+          </Alert>
+        ) : null}
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             resetFields();
             setSaved(false);
@@ -100,19 +110,24 @@ export function EmailPreferencesForm({
 
   return (
     <form onSubmit={handleSubmit} className="mt-3 space-y-4">
-      {unsubscribedAt ? <Alert>{t("unsubscribed")}</Alert> : null}
+      {unsubscribedAt ? (
+        <Alert>
+          <AlertDescription>{t("unsubscribed")}</AlertDescription>
+        </Alert>
+      ) : null}
       <label className="flex items-center gap-3 text-sm">
         <input
           type="checkbox"
           checked={dailyEnabled}
           onChange={(event) => setDailyEnabled(event.target.checked)}
-          className="h-4 w-4 accent-neutral-900"
+          className="h-4 w-4 accent-primary"
         />
         <span>{t("dailyToggle")}</span>
       </label>
       <div className="max-w-xs">
-        <Label>{t("sendHour")}</Label>
+        <Label htmlFor="email-send-hour">{t("sendHour")}</Label>
         <select
+          id="email-send-hour"
           value={sendHourLocal}
           onChange={(event) => setSendHourLocal(Number(event.target.value))}
           className={selectClass}
@@ -125,14 +140,18 @@ export function EmailPreferencesForm({
           ))}
         </select>
       </div>
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={saving}>
           {saving ? tc("saving") : t("save")}
         </Button>
         <Button
           type="button"
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             resetFields();
             setEditing(false);

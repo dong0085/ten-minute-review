@@ -18,13 +18,13 @@ export default async function UploadPage({ params }: { params: Promise<{ id: str
     <div className="space-y-6">
       <div>
         <Link
-          className="text-sm text-neutral-600 hover:text-neutral-900"
+          className="text-sm text-muted-foreground hover:text-foreground"
           href={`/classrooms/${id}`}
         >
           ← {classroom.name}
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-neutral-500">{t("blurb")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("blurb")}</p>
       </div>
       <UploadPanel classroomId={id} />
     </div>

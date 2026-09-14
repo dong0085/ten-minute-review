@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 
 export function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
   const [pending, setPending] = useState(false);
@@ -10,7 +10,7 @@ export function GoogleButton({ label = "Continue with Google" }: { label?: strin
   return (
     <Button
       type="button"
-      variant="secondary"
+      variant="outline"
       className="w-full"
       disabled={pending}
       onClick={() => {

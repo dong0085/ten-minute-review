@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getClassroom, listQuizzesForClassroom } from "@tmr/db";
-import { Card, Badge } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { DeleteQuizButton } from "@/components/classroom/delete-quiz-button";
 import { formatQuizDate } from "@/lib/format";
 import { getDb } from "@/lib/db";
@@ -24,30 +25,32 @@ export default async function QuizzesPage({ params }: { params: Promise<{ id: st
     <div className="space-y-6">
       <div>
         <Link
-          className="text-sm text-neutral-600 hover:text-neutral-900"
+          className="text-sm text-muted-foreground hover:text-foreground"
           href={`/classrooms/${id}`}
         >
           ← {classroom.name}
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-neutral-500">{t("blurb")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("blurb")}</p>
       </div>
       {quizzes.length === 0 ? (
         <Card>
-          <p className="text-sm text-neutral-600">{t("empty")}</p>
-          <Link
-            className="mt-3 inline-block text-sm text-neutral-700 underline hover:text-neutral-900"
-            href={`/classrooms/${id}/upload`}
-          >
-            {t("addNotes")}
-          </Link>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">{t("empty")}</p>
+            <Link
+              className="mt-3 inline-block text-sm text-foreground underline hover:text-muted-foreground"
+              href={`/classrooms/${id}/upload`}
+            >
+              {t("addNotes")}
+            </Link>
+          </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
           {quizzes.map((quiz) => (
             <div
               key={quiz.id}
-              className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white p-4 transition hover:bg-neutral-50"
+              className="flex items-center gap-2 rounded-xl border border-border bg-card p-4 transition hover:bg-muted/50"
             >
               <Link
                 href={`/classrooms/${id}/quiz/${quiz.id}`}
@@ -56,17 +59,17 @@ export default async function QuizzesPage({ params }: { params: Promise<{ id: st
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium">{formatQuizDate(quiz.quizDate, locale)}</p>
-                    <Badge tone={quiz.kind === "manual" ? "amber" : "neutral"}>
+                    <Badge variant={quiz.kind === "manual" ? "warning" : "secondary"}>
                       {quiz.kind === "manual" ? t("onDemand") : t("daily")}
                     </Badge>
                   </div>
-                  <p className="mt-0.5 text-xs text-neutral-500">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {t("questions", { count: quiz.size })}
                   </p>
                 </div>
-                <div className="text-right text-xs text-neutral-500">
+                <div className="text-right text-xs text-muted-foreground">
                   {quiz.bestScore !== null ? (
-                    <p className="font-medium text-neutral-800">
+                    <p className="font-medium text-foreground">
                       {t("best", { score: quiz.bestScore, size: quiz.size })}
                     </p>
                   ) : (

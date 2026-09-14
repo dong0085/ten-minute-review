@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Alert } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SignInForm } from "@/components/auth/signin-form";
 
 function first(value: string | string[] | undefined) {
@@ -20,11 +20,17 @@ export default async function SignInPage({
     <div className="mx-auto max-w-md space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-neutral-600">{t("subtitle")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
-      {verified ? <Alert tone="success">{t("verified")}</Alert> : null}
+      {verified ? (
+        <Alert variant="success">
+          <AlertDescription>{t("verified")}</AlertDescription>
+        </Alert>
+      ) : null}
       {error ? (
-        <Alert tone="error">{error === "invite" ? t("inviteError") : t("signInError")}</Alert>
+        <Alert variant="destructive">
+          <AlertDescription>{error === "invite" ? t("inviteError") : t("signInError")}</AlertDescription>
+        </Alert>
       ) : null}
       <SignInForm />
     </div>

@@ -2,14 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { getAttemptReview, getClassroom, getQuizForUser } from "@tmr/db";
-import { Badge, Card } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { QuestionReviewCard } from "@/components/quiz/question-review";
 import { formatQuizDate } from "@/lib/format";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
-
-const linkButtonClass =
-  "inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100";
 
 export default async function AttemptPage({
   params,
@@ -38,7 +37,7 @@ export default async function AttemptPage({
     review.attempt.questionCount > 0
       ? Math.round((review.attempt.correctCount / review.attempt.questionCount) * 100)
       : 0;
-  const scoreTone = scorePercent >= 80 ? "green" : scorePercent >= 50 ? "amber" : "red";
+  const scoreTone = scorePercent >= 80 ? "success" : scorePercent >= 50 ? "warning" : "destructive";
 
   function formatDuration(ms: number): string {
     const totalSeconds = Math.round(ms / 1000);
@@ -53,16 +52,16 @@ export default async function AttemptPage({
     <div className="space-y-6">
       <div>
         <Link
-          className="text-sm text-neutral-600 hover:text-neutral-900"
+          className="text-sm text-muted-foreground hover:text-foreground"
           href={`/classrooms/${id}/quizzes`}
         >
           {t("allQuizzes")}
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-neutral-500">{classroom.name}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{classroom.name}</p>
       </div>
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-semibold">
@@ -71,9 +70,9 @@ export default async function AttemptPage({
                   total: review.attempt.questionCount,
                 })}
               </h2>
-              <Badge tone={scoreTone}>{scorePercent}%</Badge>
+              <Badge variant={scoreTone}>{scorePercent}%</Badge>
             </div>
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               {formatQuizDate(quiz.quizDate, locale)} · {formatDuration(review.attempt.durationMs)}{" "}
               ·{" "}
               {t("submitted", {
@@ -85,17 +84,17 @@ export default async function AttemptPage({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/classrooms/${id}/quiz/${quiz.id}`} className={linkButtonClass}>
-              {t("retake")}
-            </Link>
-            <Link href={`/classrooms/${id}?create=1`} className={linkButtonClass}>
-              {t("createAnother")}
-            </Link>
-            <Link href={`/classrooms/${id}/quizzes`} className={linkButtonClass}>
-              {t("allQuizzesButton")}
-            </Link>
+            <Button asChild variant="outline">
+              <Link href={`/classrooms/${id}/quiz/${quiz.id}`}>{t("retake")}</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/classrooms/${id}?create=1`}>{t("createAnother")}</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/classrooms/${id}/quizzes`}>{t("allQuizzesButton")}</Link>
+            </Button>
           </div>
-        </div>
+        </CardContent>
       </Card>
       {review.answers.map((answer) => (
         <QuestionReviewCard

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { cn } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 export function ClassroomTabs({ classroomId }: { classroomId: string }) {
   const t = useTranslations("Classroom.Tabs");
@@ -18,7 +18,7 @@ export function ClassroomTabs({ classroomId }: { classroomId: string }) {
   ];
 
   return (
-    <nav className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-neutral-200">
+    <nav className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border">
       {tabs.map((tab) => {
         const active = tab.href === base ? pathname === base : pathname.startsWith(tab.href);
         return (
@@ -28,8 +28,8 @@ export function ClassroomTabs({ classroomId }: { classroomId: string }) {
             className={cn(
               "-mb-px shrink-0 border-b-2 px-3 py-2 text-sm transition",
               active
-                ? "border-neutral-900 font-medium text-neutral-900"
-                : "border-transparent text-neutral-500 hover:text-neutral-900",
+                ? "border-primary font-medium text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {tab.label}

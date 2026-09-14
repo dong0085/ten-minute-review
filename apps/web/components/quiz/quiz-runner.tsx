@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CATEGORIES, type Category } from "@tmr/core";
-import { Alert, Badge, Button, Card, Input, Label, cn } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { clearQuizDraft, loadQuizDraft, saveQuizDraft } from "@/lib/quiz-draft";
 import { QuestionReviewCard, type AnswerShape } from "./question-review";
 import type { LocalResponse, QuizQuestion } from "./types";
@@ -20,9 +26,6 @@ type SubmitResult = {
     explanation: string;
   }[];
 };
-
-const linkButtonClass =
-  "inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100";
 
 function blankCount(stem: string): number {
   const matches = stem.match(/_{2,}/g);
@@ -289,21 +292,27 @@ export function QuizRunner({
   if (phase === "loading") {
     return (
       <Card>
-        <p className="text-sm text-neutral-600">{t("loading")}</p>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{t("loading")}</p>
+        </CardContent>
       </Card>
     );
   }
 
   if (phase === "error") {
     return (
-      <Card className="space-y-3">
-        <Alert tone="error">{error ?? t("startError")}</Alert>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => void startAttempt()}>{t("tryAgain")}</Button>
-          <Link href={`/classrooms/${classroomId}/quizzes`} className={linkButtonClass}>
-            {t("backToQuizzes")}
-          </Link>
-        </div>
+      <Card>
+        <CardContent className="space-y-3">
+          <Alert variant="destructive">
+            <AlertDescription>{error ?? t("startError")}</AlertDescription>
+          </Alert>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => void startAttempt()}>{t("tryAgain")}</Button>
+            <Button asChild variant="outline">
+              <Link href={`/classrooms/${classroomId}/quizzes`}>{t("backToQuizzes")}</Link>
+            </Button>
+          </div>
+        </CardContent>
       </Card>
     );
   }
@@ -313,11 +322,12 @@ export function QuizRunner({
       result.questionCount > 0
         ? Math.round((result.correctCount / result.questionCount) * 100)
         : 0;
-    const scoreTone = scorePercent >= 80 ? "green" : scorePercent >= 50 ? "amber" : "red";
+    const scoreTone =
+      scorePercent >= 80 ? "success" : scorePercent >= 50 ? "warning" : "destructive";
     return (
       <div className="space-y-4">
         <Card>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-semibold">
@@ -326,26 +336,25 @@ export function QuizRunner({
                     total: result.questionCount,
                   })}
                 </h2>
-                <Badge tone={scoreTone}>{scorePercent}%</Badge>
+                <Badge variant={scoreTone}>{scorePercent}%</Badge>
               </div>
-              <p className="mt-1 text-sm text-neutral-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {result.correctCount === result.questionCount
                   ? t("everyAnswerLanded")
                   : t("reviewMissed")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" onClick={() => void startAttempt()}>
+              <Button variant="outline" onClick={() => void startAttempt()}>
                 {t("retake")}
               </Button>
-              <Link
-                href={`/classrooms/${classroomId}/attempts/${result.attemptId}`}
-                className={linkButtonClass}
-              >
-                {t("fullReview")}
-              </Link>
+              <Button asChild variant="outline">
+                <Link href={`/classrooms/${classroomId}/attempts/${result.attemptId}`}>
+                  {t("fullReview")}
+                </Link>
+              </Button>
             </div>
-          </div>
+          </CardContent>
         </Card>
         {questions.map((question) => {
           const item = result.results.find((entry) => entry.questionId === question.id);
@@ -379,7 +388,7 @@ export function QuizRunner({
   return (
     <div className="space-y-4">
       <div>
-        <div className="flex items-center justify-between text-sm text-neutral-600">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
             {t("questionProgress", { current: current + 1, total: questions.length })}
           </span>
@@ -387,86 +396,92 @@ export function QuizRunner({
             {t("answeredProgress", { answered: answeredCount, total: questions.length })}
           </span>
         </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-neutral-200">
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-neutral-900 transition-all"
+            className="h-full rounded-full bg-primary transition-all"
             style={{ width: `${((current + 1) / questions.length) * 100}%` }}
           />
         </div>
       </div>
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
       <Card>
-        <div className="flex items-center gap-2">
-          <Badge>{categoryLabel(currentQuestion.category)}</Badge>
-        </div>
-        <p className="mt-3 whitespace-pre-wrap text-base font-medium">{currentQuestion.stem}</p>
-        {currentQuestion.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={currentQuestion.imageUrl}
-            alt={tReview("handwritten")}
-            className="mt-3 max-h-72 rounded-lg border border-neutral-200 object-contain"
-          />
-        ) : null}
-        {currentQuestion.type === "mcq" || currentQuestion.type === "image" ? (
-          <div className="mt-4 space-y-2">
-            {(currentQuestion.options ?? []).map((option, index) => {
-              const selected = response?.index === index;
-              return (
-                <label
-                  key={`${currentQuestion.id}-${index}`}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm",
-                    selected
-                      ? "border-neutral-900 bg-neutral-50"
-                      : "border-neutral-200 hover:bg-neutral-50",
-                  )}
-                >
-                  <input
-                    type="radio"
-                    name={currentQuestion.id}
-                    checked={selected}
-                    onChange={() => setAnswer(currentQuestion.id, { index })}
-                    className="accent-neutral-900"
-                  />
-                  <span>{option}</span>
-                </label>
-              );
-            })}
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{categoryLabel(currentQuestion.category)}</Badge>
           </div>
-        ) : null}
-        {currentQuestion.type === "true_false" ? (
-          <div className="mt-4 flex gap-2">
-            {[true, false].map((value) => {
-              const selected = response?.value === value;
-              return (
-                <Button
-                  key={String(value)}
-                  type="button"
-                  variant={selected ? "primary" : "secondary"}
-                  onClick={() => setAnswer(currentQuestion.id, { value })}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.repeat) {
-                      event.preventDefault();
-                      goNext();
-                    }
-                  }}
-                >
-                  {value ? tReview("true") : tReview("false")}
-                </Button>
-              );
-            })}
-          </div>
-        ) : null}
-        {currentQuestion.type === "fill_blank" ? (
-          <div className="mt-4 space-y-3">
-            {Array.from({ length: blankCount(currentQuestion.stem) }).map((_, index) => (
-              <div key={index}>
-                <Label>{t("blank", { number: index + 1 })}</Label>
-                <Input
-                  ref={(element) => {
-                    blankRefs.current[index] = element;
-                  }}
+          <p className="whitespace-pre-wrap text-base font-medium">{currentQuestion.stem}</p>
+          {currentQuestion.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={currentQuestion.imageUrl}
+              alt={tReview("handwritten")}
+              className="max-h-72 rounded-lg border border-border object-contain"
+            />
+          ) : null}
+          {currentQuestion.type === "mcq" || currentQuestion.type === "image" ? (
+            <div className="space-y-2">
+              {(currentQuestion.options ?? []).map((option, index) => {
+                const selected = response?.index === index;
+                return (
+                  <label
+                    key={`${currentQuestion.id}-${index}`}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm",
+                      selected ? "border-primary bg-muted" : "border-border hover:bg-muted",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name={currentQuestion.id}
+                      checked={selected}
+                      onChange={() => setAnswer(currentQuestion.id, { index })}
+                      className="accent-primary"
+                    />
+                    <span>{option}</span>
+                  </label>
+                );
+              })}
+            </div>
+          ) : null}
+          {currentQuestion.type === "true_false" ? (
+            <div className="flex gap-2">
+              {[true, false].map((value) => {
+                const selected = response?.value === value;
+                return (
+                  <Button
+                    key={String(value)}
+                    type="button"
+                    variant={selected ? "default" : "outline"}
+                    onClick={() => setAnswer(currentQuestion.id, { value })}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !event.repeat) {
+                        event.preventDefault();
+                        goNext();
+                      }
+                    }}
+                  >
+                    {value ? tReview("true") : tReview("false")}
+                  </Button>
+                );
+              })}
+            </div>
+          ) : null}
+          {currentQuestion.type === "fill_blank" ? (
+            <div className="space-y-3">
+              {Array.from({ length: blankCount(currentQuestion.stem) }).map((_, index) => (
+                <div key={index}>
+                  <Label htmlFor={`${currentQuestion.id}-blank-${index}`}>
+                    {t("blank", { number: index + 1 })}
+                  </Label>
+                  <Input
+                    id={`${currentQuestion.id}-blank-${index}`}
+                    ref={(element) => {
+                      blankRefs.current[index] = element;
+                    }}
                   value={response?.blanks?.[index] ?? ""}
                   enterKeyHint={
                     index < blankCount(currentQuestion.stem) - 1 ||
@@ -488,10 +503,11 @@ export function QuizRunner({
             ))}
           </div>
         ) : null}
+        </CardContent>
       </Card>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => goTo(current - 1, currentQuestion.id)}
           disabled={current === 0}
         >
@@ -499,7 +515,7 @@ export function QuizRunner({
         </Button>
         <div className="flex gap-2">
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={() => goTo(current + 1, currentQuestion.id)}
             disabled={current === questions.length - 1}
           >

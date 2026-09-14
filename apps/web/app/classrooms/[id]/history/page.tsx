@@ -2,7 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { getClassroom, listUploadsForUser } from "@tmr/db";
-import { Alert, Badge, Card } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { objectUrl } from "@/lib/storage";
@@ -35,12 +38,14 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
 
   function statusBadge(status: string) {
     if (status === "done") {
-      return <Badge tone="green">{t("statusProcessed")}</Badge>;
+      return <Badge variant="success">{t("statusProcessed")}</Badge>;
     }
     if (status === "failed") {
-      return <Badge tone="red">{t("statusFailed")}</Badge>;
+      return <Badge variant="destructive">{t("statusFailed")}</Badge>;
     }
-    return <Badge tone="amber">{status === "running" ? t("statusReading") : t("statusQueued")}</Badge>;
+    return (
+      <Badge variant="warning">{status === "running" ? t("statusReading") : t("statusQueued")}</Badge>
+    );
   }
 
   return (
@@ -48,24 +53,23 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <Link
-            className="text-sm text-neutral-600 hover:text-neutral-900"
+            className="text-sm text-muted-foreground hover:text-foreground"
             href={`/classrooms/${id}`}
           >
             ← {classroom.name}
           </Link>
           <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
-          <p className="mt-1 text-sm text-neutral-500">{t("blurb")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("blurb")}</p>
         </div>
-        <Link
-          className="inline-flex items-center justify-center rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
-          href={`/classrooms/${id}/upload`}
-        >
-          {t("addNotes")}
-        </Link>
+        <Button asChild>
+          <Link href={`/classrooms/${id}/upload`}>{t("addNotes")}</Link>
+        </Button>
       </div>
       {uploads.length === 0 ? (
         <Card>
-          <p className="text-sm text-neutral-600">{t("empty")}</p>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">{t("empty")}</p>
+          </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -75,7 +79,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
             return (
               <details
                 key={upload.id}
-                className="rounded-xl border border-neutral-200 bg-white"
+                className="rounded-xl border border-border bg-card"
               >
                 <summary className="flex cursor-pointer items-center justify-between gap-3 p-4">
                   <div className="flex min-w-0 items-center gap-3">
@@ -94,7 +98,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
                             ? (upload.originalFilename ?? t("image"))
                             : firstLine(upload.textContent, t("textNotes")))}
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-muted-foreground">
                         {format.dateTime(upload.createdAt, {
                           dateStyle: "medium",
                           timeStyle: "short",
@@ -105,34 +109,36 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     {skipped > 0 ? (
-                      <span className="text-xs text-neutral-500">
+                      <span className="text-xs text-muted-foreground">
                         {t("linesSkipped", { count: skipped })}
                       </span>
                     ) : null}
                     {statusBadge(upload.extractionStatus)}
                   </div>
                 </summary>
-                <div className="border-t border-neutral-200 p-4">
+                <div className="border-t border-border p-4">
                   {src ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={src}
                       alt={upload.originalFilename ?? t("imageAlt")}
-                      className="max-h-96 rounded-lg border border-neutral-200 object-contain"
+                      className="max-h-96 rounded-lg border border-border object-contain"
                     />
                   ) : (
-                    <p className="whitespace-pre-wrap text-sm text-neutral-700">
+                    <p className="whitespace-pre-wrap text-sm text-muted-foreground">
                       {upload.textContent}
                     </p>
                   )}
                   {skipped > 0 ? (
-                    <p className="mt-3 text-xs text-neutral-500">
+                    <p className="mt-3 text-xs text-muted-foreground">
                       {t("skippedDetail", { count: skipped })}
                     </p>
                   ) : null}
                   {upload.extractionError ? (
                     <div className="mt-3">
-                      <Alert tone="error">{upload.extractionError}</Alert>
+                      <Alert variant="destructive">
+                        <AlertDescription>{upload.extractionError}</AlertDescription>
+                      </Alert>
                     </div>
                   ) : null}
                 </div>

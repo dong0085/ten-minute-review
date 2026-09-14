@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { bankSize, getDailyQuizByClassroomAndDate, listClassrooms } from "@tmr/db";
 import {
   ClassroomCard,
   isClassroomDormant,
 } from "@/components/classroom/classroom-card";
-import { LinkButton } from "@/components/classroom/link-button";
+import { Button } from "@/components/ui/button";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 
@@ -37,8 +38,10 @@ export default async function ClassroomsPage() {
     return (
       <div className="mx-auto max-w-xl space-y-6 py-8 text-center">
         <h1 className="text-2xl font-semibold">{t("emptyTitle")}</h1>
-        <p className="text-neutral-600">{t("emptyBlurb")}</p>
-        <LinkButton href="/classrooms/new">{t("create")}</LinkButton>
+        <p className="text-muted-foreground">{t("emptyBlurb")}</p>
+        <Button asChild>
+          <Link href="/classrooms/new">{t("create")}</Link>
+        </Button>
       </div>
     );
   }
@@ -47,9 +50,9 @@ export default async function ClassroomsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <LinkButton href="/classrooms/new" size="sm">
-          {t("newClassroom")}
-        </LinkButton>
+        <Button asChild size="sm">
+          <Link href="/classrooms/new">{t("newClassroom")}</Link>
+        </Button>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {cards.map(({ classroom, bankSize: size, todayQuizId }) => (

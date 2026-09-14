@@ -2,7 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Alert, Button, Card, Input, Label } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function ResetForm({ token }: { token: string }) {
   const [password, setPassword] = useState("");
@@ -40,43 +44,55 @@ export function ResetForm({ token }: { token: string }) {
 
   if (done) {
     return (
-      <Card className="space-y-3">
-        <Alert tone="success">Your password has been updated.</Alert>
-        <Link className="text-sm font-medium underline" href="/signin">
-          Sign in
-        </Link>
+      <Card>
+        <CardContent className="space-y-3">
+          <Alert variant="success">
+            <AlertDescription>Your password has been updated.</AlertDescription>
+          </Alert>
+          <Link className="text-sm font-medium underline" href="/signin">
+            Sign in
+          </Link>
+        </CardContent>
       </Card>
     );
   }
 
   return (
     <Card>
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <div>
-          <Label>New password</Label>
-          <Input
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </div>
-        <div>
-          <Label>Confirm password</Label>
-          <Input
-            type="password"
-            required
-            minLength={8}
-            value={confirm}
-            onChange={(event) => setConfirm(event.target.value)}
-          />
-        </div>
-        {error ? <Alert tone="error">{error}</Alert> : null}
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Saving..." : "Set new password"}
-        </Button>
-      </form>
+      <CardContent>
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <div>
+            <Label htmlFor="reset-password">New password</Label>
+            <Input
+              id="reset-password"
+              type="password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="reset-confirm">Confirm password</Label>
+            <Input
+              id="reset-confirm"
+              type="password"
+              required
+              minLength={8}
+              value={confirm}
+              onChange={(event) => setConfirm(event.target.value)}
+            />
+          </div>
+          {error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? "Saving..." : "Set new password"}
+          </Button>
+        </form>
+      </CardContent>
     </Card>
   );
 }

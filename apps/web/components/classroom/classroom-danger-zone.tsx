@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Alert, Button, Card } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function ClassroomDangerZone({ classroomId }: { classroomId: string }) {
   const t = useTranslations("Classroom.DangerZone");
@@ -59,20 +61,26 @@ export function ClassroomDangerZone({ classroomId }: { classroomId: string }) {
   }
 
   return (
-    <Card className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">{t("title")}</h2>
-        <p className="mt-1 text-sm text-neutral-600">{t("blurb")}</p>
-      </div>
-      {error ? <Alert tone="error">{error}</Alert> : null}
-      <div className="flex flex-wrap gap-3">
-        <Button variant="secondary" disabled={pending !== null} onClick={() => void archive()}>
-          {pending === "archive" ? t("archiving") : t("archive")}
-        </Button>
-        <Button variant="danger" disabled={pending !== null} onClick={() => void remove()}>
-          {pending === "delete" ? t("deleting") : t("delete")}
-        </Button>
-      </div>
+    <Card>
+      <CardContent className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">{t("title")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("blurb")}</p>
+        </div>
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" disabled={pending !== null} onClick={() => void archive()}>
+            {pending === "archive" ? t("archiving") : t("archive")}
+          </Button>
+          <Button variant="destructive" disabled={pending !== null} onClick={() => void remove()}>
+            {pending === "delete" ? t("deleting") : t("delete")}
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   );
 }

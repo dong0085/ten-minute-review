@@ -6,6 +6,11 @@ import "./globals.css";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { signOut } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Layout");
@@ -20,7 +25,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
   const t = await getTranslations("Layout");
   return (
-    <html lang={locale}>
+    <html lang={locale} className={cn("font-sans", geist.variable)}>
       <body className="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
         <NextIntlClientProvider>
           <header className="border-b border-neutral-200 bg-white">

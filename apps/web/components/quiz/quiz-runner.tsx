@@ -236,6 +236,56 @@ export function QuizRunner({
     }
   }, [attemptToken, current, questions, quizId, responses, t, trackTime, userId]);
 
+  const goNext = useCallback(() => {
+    const activeQuestion = questions[current];
+    if (!activeQuestion) {
+      return;
+    }
+    if (current < questions.length - 1) {
+      focusFirstBlank.current = true;
+      trackTime(activeQuestion.id);
+      setCurrent(current + 1);
+      return;
+    }
+    void submit();
+  }, [current, questions, submit, trackTime]);
+
+  useEffect(() => {
+    if (phase !== "taking") {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" || event.repeat || event.isComposing) {
+        return;
+      }
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+      if (
+        target instanceof HTMLButtonElement ||
+        target instanceof HTMLAnchorElement ||
+        target instanceof HTMLSelectElement ||
+        target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+      event.preventDefault();
+      if (target instanceof HTMLInputElement && target.type === "text") {
+        const index = blankRefs.current.indexOf(target);
+        const activeQuestion = questions[current];
+        const count = activeQuestion ? blankCount(activeQuestion.stem) : 0;
+        if (index >= 0 && index < count - 1) {
+          blankRefs.current[index + 1]?.focus();
+          return;
+        }
+      }
+      goNext();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [current, goNext, phase, questions]);
+
   if (phase === "loading") {
     return (
       <Card>
@@ -395,6 +445,12 @@ export function QuizRunner({
                   type="button"
                   variant={selected ? "primary" : "secondary"}
                   onClick={() => setAnswer(currentQuestion.id, { value })}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.repeat) {
+                      event.preventDefault();
+                      goNext();
+                    }
+                  }}
                 >
                   {value ? tReview("true") : tReview("false")}
                 </Button>
@@ -418,26 +474,6 @@ export function QuizRunner({
                       ? "next"
                       : "go"
                   }
-                  onKeyDown={(event) => {
-                    if (
-                      event.key !== "Enter" ||
-                      event.nativeEvent.isComposing ||
-                      phase === "submitting"
-                    ) {
-                      return;
-                    }
-                    event.preventDefault();
-                    if (index < blankCount(currentQuestion.stem) - 1) {
-                      blankRefs.current[index + 1]?.focus();
-                      return;
-                    }
-                    if (current < questions.length - 1) {
-                      focusFirstBlank.current = true;
-                      goTo(current + 1, currentQuestion.id);
-                      return;
-                    }
-                    void submit();
-                  }}
                   onChange={(event) => {
                     const count = blankCount(currentQuestion.stem);
                     const blanks = Array.from(

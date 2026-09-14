@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { ThemeProvider } from "@/components/theme-provider";
 import { signOut } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
 import { getTheme } from "@/lib/theme-server";
@@ -41,9 +42,15 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const theme = await getTheme();
   const t = await getTranslations("Layout");
   return (
-    <html lang={locale} data-theme={theme} className={cn("font-sans", geist.variable)}>
+    <html
+      lang={locale}
+      data-theme={theme}
+      className={cn("font-sans", geist.variable)}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <NextIntlClientProvider>
+        <ThemeProvider>
+          <NextIntlClientProvider>
           <header className="border-b border-border bg-card">
             <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
               <Link href="/" className="text-sm font-semibold">
@@ -108,7 +115,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </header>
           <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
           <Toaster />
-        </NextIntlClientProvider>
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

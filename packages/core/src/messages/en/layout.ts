@@ -3,6 +3,13 @@ export const layout = {
   description: "Your tutoring notes, a ten-minute quiz every morning.",
   language: "Language",
   theme: "Theme",
+  themePalette: "Colour palette",
+  appearance: "Appearance",
+  mode: {
+    light: "Light",
+    dark: "Dark",
+    system: "System",
+  },
   themeName: {
     mint: "Mint",
     sky: "Sky",

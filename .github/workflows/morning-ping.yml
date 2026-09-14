@@ -2,8 +2,7 @@ name: Morning email ping
 
 on:
   schedule:
-    - cron: "0 5,6 * * *"
-    - cron: "0 11,12 * * *"
+    - cron: "0 5-14 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -14,21 +13,13 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Wake worker at 07:00 America/Toronto or Europe/Paris
+      - name: Wake worker so the scheduler sends due morning emails
         env:
           WORKER_URL: ${{ vars.WORKER_URL }}
         run: |
           if [ -z "$WORKER_URL" ]; then
             echo "WORKER_URL repository variable is not set" >&2
             exit 1
-          fi
-
-          paris=$(TZ=Europe/Paris date +%H)
-          toronto=$(TZ=America/Toronto date +%H)
-
-          if [ "${{ github.event_name }}" != "workflow_dispatch" ] && [ "$paris" != "07" ] && [ "$toronto" != "07" ]; then
-            echo "Not 07:00 in Europe/Paris or America/Toronto, skipping"
-            exit 0
           fi
 
           echo "Pinging $WORKER_URL/health"

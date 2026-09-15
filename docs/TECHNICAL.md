@@ -163,7 +163,7 @@ Usage stats are computed live from `attempts` and `attempt_answers` in `packages
 
 ### email_preferences, email_sends
 
-`email_preferences`: `user_id` pk, `daily_enabled` (default true), `send_hour_local` (default 7), `unsubscribed_at`.
+`email_preferences`: `user_id` pk, `daily_enabled` (default true), `send_hour_local` (retained for compatibility; the daily send time is fixed, so nothing reads it), `unsubscribed_at`.
 
 `email_sends`: `id`, `user_id`, `sent_on` date, `kind` (`daily` or `manual`), `quiz_id` nullable, `classroom_ids` jsonb, `provider_message_id`, `created_at`. **Partial unique on `(user_id, sent_on) WHERE kind = 'daily'`** — one daily email per user per morning. **Unique on `(user_id, quiz_id)`** — one email per on-demand quiz.
 
@@ -227,7 +227,7 @@ Images are sent to the model as image content and read the same way text is. Not
 
 ### Daily composition
 
-The scheduler runs every 15 minutes and finds classrooms that are due:
+The send time is **one fixed instant for everyone**: 7:00 AM America/Toronto, computed by `dailySendAt()` in `packages/core/src/schedule.ts` (11:00 UTC in summer, 12:00 UTC in winter). Users cannot choose a time. The scheduler runs every 15 minutes while the worker is awake and finds classrooms that are due:
 
 ```sql
 SELECT c.*
@@ -238,7 +238,8 @@ WHERE c.archived_at IS NULL
   AND c.active_until > now()
   AND ep.daily_enabled
   AND ep.unsubscribed_at IS NULL
-  AND date_part('hour', now() AT TIME ZONE u.timezone) >= ep.send_hour_local
+  AND now() >= $send_at
+  AND c.created_at < $send_at
   AND NOT EXISTS (
     SELECT 1 FROM quizzes q
     WHERE q.classroom_id = c.id
@@ -252,13 +253,15 @@ WHERE c.archived_at IS NULL
   );
 ```
 
+`$send_at` is the current day's 7:00 AM Eastern instant. `created_at < $send_at` means a classroom created later that day waits for tomorrow's send, while a classroom that existed at that instant stays eligible for the rest of the day — a missed wake-up catches up rather than skipping. The learner's local date still comes from their own timezone, so the quiz lands on the right calendar day everywhere.
+
 Each match gets a `compose` job. The worker writes the quiz and its questions, then enqueues one `send_email` job per **user** — not per classroom, because the email is a single menu.
 
-On-demand quizzes use the same compose job and the same selection rules, enqueued directly by `POST /api/classrooms/:id/quizzes` with `source: "manual"`. They skip the daily existence check and never enqueue an email.
+On-demand quizzes use the same compose job and the same selection rules, enqueued directly by `POST /api/classrooms/:id/quizzes` with `source: "manual"`. They skip the daily existence check.
 
 ### Email
 
-The worker builds one email per user per day containing every classroom quiz composed that morning, questions inline, each with a link to the web quiz. Sends through Brevo (or Resend), then writes `email_sends`. The unique constraint absorbs a duplicate run.
+The worker builds one email per user per day containing every classroom quiz composed that morning, questions inline, each with a link to the web quiz. The daily email goes out at the fixed 7:00 AM Eastern instant for every user; the account page and classroom home show the next send in the reader's own timezone, with UTC in parentheses. Sends through Brevo (or Resend), then writes `email_sends`. The unique constraint absorbs a duplicate run.
 
 On-demand composition enqueues its own `send_email` job carrying `kind: "manual"` and the new `quizId`. That email contains just that quiz and dedupes per quiz, so it can be sent the same day the morning email already went out. Both kinds respect `email_preferences`.
 
@@ -317,7 +320,7 @@ Answers and explanations never leave the server before a submission. The quiz pa
 |---|---|
 | Web | Vercel |
 | Postgres | Neon |
-| Worker | Render free web service, kept awake by a health-check pinger |
+| Worker | Render free web service, kept awake through the 7:00 AM Eastern send by a GitHub Actions keep-alive |
 | Images | Vercel Blob |
 | Email | Brevo (or Resend) |
 | Domain | Purchased at deploy |
@@ -339,6 +342,8 @@ APP_URL
 ```
 
 Migrations run from the worker on boot, so the web app never needs database credentials at build time.
+
+`.github/workflows/morning-ping.yml` wakes the worker at 10:05, 11:05, and 12:05 UTC and pings `/health` every two minutes for 50 minutes per run. That covers both send instants (11:00 UTC in summer, 12:00 UTC in winter) with lead time and keeps the instance from idling mid-compose or mid-send. The run fails visibly if the worker stops responding. Add the `WORKER_URL` repository variable before the first deploy.
 
 ---
 

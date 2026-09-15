@@ -19,6 +19,7 @@ import { BankSummary } from "@/components/classroom/bank-summary";
 import { TodayQuizAction } from "@/components/classroom/today-quiz-action";
 import { formatQuizDate } from "@/lib/format";
 import { getDb } from "@/lib/db";
+import { formatResetTime } from "@/lib/send-time";
 import { requireUser } from "@/lib/session";
 
 const REHYDRATE_WINDOW_MS = 10 * 60 * 1000;
@@ -53,6 +54,7 @@ export default async function ClassroomHomePage({
   const t = await getTranslations("Classroom.HomePage");
   const locale = await getLocale();
   const format = await getFormatter();
+  const reset = formatResetTime(locale, user.timezone);
   const db = getDb();
   const classroom = await getClassroom(db, user.id, id);
   if (!classroom) {
@@ -85,6 +87,9 @@ export default async function ClassroomHomePage({
               bankSize={size}
               nowMs={nowMs()}
               autoStart={create === "1"}
+              resetLocal={reset.local}
+              resetUtc={reset.utc}
+              resetTomorrow={reset.tomorrow}
               initialJob={
                 composeJob
                   ? {

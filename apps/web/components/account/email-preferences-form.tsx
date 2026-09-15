@@ -4,10 +4,6 @@ import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-
-const selectClass =
-  "h-10 w-full rounded-xl border border-input/90 bg-card/55 px-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/25 disabled:opacity-50 dark:bg-input/20";
 
 async function readError(response: Response): Promise<string | null> {
   const data: unknown = await response.json().catch(() => null);
@@ -20,23 +16,22 @@ async function readError(response: Response): Promise<string | null> {
   return null;
 }
 
-function formatHour(hour: number): string {
-  return `${hour.toString().padStart(2, "0")}:00`;
-}
-
 export function EmailPreferencesForm({
   defaultDailyEnabled,
-  defaultSendHourLocal,
   unsubscribedAt,
+  resetLocal,
+  resetUtc,
+  resetTomorrow,
 }: {
   defaultDailyEnabled: boolean;
-  defaultSendHourLocal: number;
   unsubscribedAt: string | null;
+  resetLocal: string;
+  resetUtc: string;
+  resetTomorrow: boolean;
 }) {
   const t = useTranslations("Account.EmailPreferencesForm");
   const tc = useTranslations("Common");
   const [dailyEnabled, setDailyEnabled] = useState(defaultDailyEnabled);
-  const [sendHourLocal, setSendHourLocal] = useState(defaultSendHourLocal);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -44,7 +39,6 @@ export function EmailPreferencesForm({
 
   const resetFields = () => {
     setDailyEnabled(defaultDailyEnabled);
-    setSendHourLocal(defaultSendHourLocal);
     setError(null);
   };
 
@@ -57,7 +51,7 @@ export function EmailPreferencesForm({
       const response = await fetch("/api/me/email-preferences", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ dailyEnabled, sendHourLocal }),
+        body: JSON.stringify({ dailyEnabled }),
       });
       if (!response.ok) {
         throw new Error((await readError(response)) ?? t("error"));
@@ -85,8 +79,12 @@ export function EmailPreferencesForm({
             <dd className="mt-0.5 font-medium">{dailyEnabled ? t("on") : t("off")}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">{t("sendHour")}</dt>
-            <dd className="mt-0.5 font-medium">{formatHour(sendHourLocal)}</dd>
+            <dt className="text-xs text-muted-foreground">{t("resetLabel")}</dt>
+            <dd className="mt-0.5 font-medium">
+              {resetTomorrow
+                ? t("resetAtTomorrow", { local: resetLocal, utc: resetUtc })
+                : t("resetAt", { local: resetLocal, utc: resetUtc })}
+            </dd>
           </div>
         </dl>
         {saved ? (
@@ -124,22 +122,6 @@ export function EmailPreferencesForm({
         />
         <span>{t("dailyToggle")}</span>
       </label>
-      <div className="max-w-xs">
-        <Label htmlFor="email-send-hour">{t("sendHour")}</Label>
-        <select
-          id="email-send-hour"
-          value={sendHourLocal}
-          onChange={(event) => setSendHourLocal(Number(event.target.value))}
-          className={selectClass}
-          disabled={!dailyEnabled}
-        >
-          {Array.from({ length: 24 }, (_, hour) => (
-            <option key={hour} value={hour}>
-              {formatHour(hour)}
-            </option>
-          ))}
-        </select>
-      </div>
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>

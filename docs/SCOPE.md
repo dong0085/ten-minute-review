@@ -54,7 +54,7 @@ A web app that turns a tutoring session's notes — text or images — into a da
 
 ## Emails
 
-- One email per user each morning, at their **local morning time** — the user's timezone is stored.
+- One email per user each morning, at one fixed time: **7:00 AM Eastern**. The user's timezone is stored only to show that time on the web.
 - With multiple classrooms, the email presents a **menu** of that day's classroom quizzes; the user picks one to enter.
 - The email **carries the questions inline** and links to the web for interactive answering. It is a portal, not just a notification. Answering mentally without clicking is a valid path; nothing is recorded in that case.
 - Sends are on by default and come with unsubscribe. Sending requires at least one active classroom.
@@ -82,7 +82,7 @@ A web app that turns a tutoring session's notes — text or images — into a da
 
 - **Next.js + TypeScript + Postgres**, Auth.js for auth, Stripe for billing. Confirmed, no constraints. *(my call: Auth.js — it covers Google OAuth natively, with our own token flows for verification and reset.)*
 - *(my call)* **Hosting:** Vercel for the app, managed Postgres (Neon), a small worker service for scheduled jobs, Brevo (or Resend) for email, domain purchased at deploy. Full detail in `TECHNICAL.md`.
-- *(my call)* **Email scheduling:** store each user's timezone; a scheduler runs frequently, picks users whose local morning has arrived, and enqueues that day's send — idempotent per user per day.
+- *(my call)* **Email scheduling:** one fixed send instant (7:00 AM Eastern) for everyone; a scheduler runs frequently, picks classrooms due that day, and enqueues the send — idempotent per user per day, with same-day catch-up when the worker wakes late.
 
 ## MVP vs deferred
 

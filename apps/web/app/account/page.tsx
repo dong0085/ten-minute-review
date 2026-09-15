@@ -29,6 +29,7 @@ import { ProfileForm } from "@/components/account/profile-form";
 import { getDb } from "@/lib/db";
 import { env } from "@/lib/env";
 import { languageLabel } from "@/lib/language-label";
+import { formatResetTime } from "@/lib/send-time";
 import { requireUser } from "@/lib/session";
 
 export default async function AccountPage() {
@@ -36,6 +37,7 @@ export default async function AccountPage() {
   const t = await getTranslations("Account");
   const locale = await getLocale();
   const format = await getFormatter();
+  const reset = formatResetTime(locale, user.timezone);
   const db = getDb();
   const [
     preferences,
@@ -116,10 +118,12 @@ export default async function AccountPage() {
           <h2 className="font-heading text-xl font-semibold">{t("emailPreferencesSection")}</h2>
           <EmailPreferencesForm
             defaultDailyEnabled={preferences?.dailyEnabled ?? true}
-            defaultSendHourLocal={preferences?.sendHourLocal ?? 7}
             unsubscribedAt={
               preferences?.unsubscribedAt ? preferences.unsubscribedAt.toISOString() : null
             }
+            resetLocal={reset.local}
+            resetUtc={reset.utc}
+            resetTomorrow={reset.tomorrow}
           />
         </CardContent>
       </Card>

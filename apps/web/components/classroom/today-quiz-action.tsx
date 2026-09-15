@@ -34,6 +34,9 @@ export function TodayQuizAction({
   nowMs,
   autoStart = false,
   initialJob,
+  resetLocal,
+  resetUtc,
+  resetTomorrow,
 }: {
   classroomId: string;
   dailyQuizId: string | null;
@@ -41,6 +44,9 @@ export function TodayQuizAction({
   nowMs: number;
   autoStart?: boolean;
   initialJob: { status: JobStatus; requestedAt: string } | null;
+  resetLocal: string;
+  resetUtc: string;
+  resetTomorrow: boolean;
 }) {
   const t = useTranslations("Classroom.TodayQuiz");
   const tCommon = useTranslations("Common");
@@ -249,6 +255,11 @@ export function TodayQuizAction({
         <div>
           <p className="max-w-md text-sm leading-6 text-muted-foreground">
             {activeQuizId ? t("ready") : t("idle")}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground/80">
+            {resetTomorrow
+              ? t("resetAtTomorrow", { local: resetLocal, utc: resetUtc })
+              : t("resetAt", { local: resetLocal, utc: resetUtc })}
           </p>
         </div>
         <div>

@@ -3,6 +3,7 @@ export * from "./languages";
 export * from "./theme";
 export * from "./messages";
 export * from "./constants";
+export * from "./schedule";
 export * from "./quiz-size";
 export * from "./option-order";
 export * from "./grading";

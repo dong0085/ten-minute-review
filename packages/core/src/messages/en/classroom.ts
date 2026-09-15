@@ -18,6 +18,8 @@ export const classroom = {
     title: "Today's quiz",
     ready: "Your quiz for today is ready.",
     idle: "Create one now, or wait for your morning email.",
+    resetAt: "Resets at {local} ({utc} UTC)",
+    resetAtTomorrow: "Resets tomorrow at {local} ({utc} UTC)",
     takeToday: "Take today's quiz",
     createNow: "Create a quiz now",
     addNotes: "Add notes",

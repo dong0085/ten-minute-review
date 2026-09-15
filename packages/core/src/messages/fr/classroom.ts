@@ -22,6 +22,8 @@ export const classroom: MessageShape<(typeof en)["Classroom"]> = {
     title: "Le quiz du jour",
     ready: "Ton quiz du jour est prêt.",
     idle: "Crée-le maintenant ou attends ton e-mail du matin.",
+    resetAt: "Réinitialisation à {local} ({utc} UTC)",
+    resetAtTomorrow: "Réinitialisation demain à {local} ({utc} UTC)",
     takeToday: "Faire le quiz du jour",
     createNow: "Créer un quiz maintenant",
     addNotes: "Ajoute des notes",

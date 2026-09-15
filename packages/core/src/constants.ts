@@ -4,7 +4,9 @@ export const DEFAULT_AUTO_STOP_DAYS = 7;
 
 export const ACTIVE_WINDOW_DAYS = 7;
 
-export const DEFAULT_SEND_HOUR_LOCAL = 7;
+export const DAILY_SEND_HOUR_LOCAL = 7;
+
+export const DAILY_SEND_TIMEZONE = "America/Toronto";
 
 export const FREE_TIER = {
   classrooms: 3,

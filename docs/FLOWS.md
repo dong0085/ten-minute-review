@@ -143,14 +143,14 @@ Sections:
 - **Classrooms** — the list, with archive and delete.
 - **Quiz history** — a cross-classroom view.
 - **Referrals** — the user's code, the share link, and who signed up with it.
-- **Email preferences** — daily email on or off, send hour, unsubscribe.
+- **Email preferences** — daily email on or off, unsubscribe, and the next send time in the user's timezone.
 - **Data** — export everything, or delete the account.
 
 Account deletion removes classrooms, uploads, knowledge points, quizzes, attempts, and stored images. A confirmation step names what will be lost.
 
 ## 15. Email preferences and unsubscribe
 
-- The send hour is per user, in their local timezone. Default 7am.
+- The daily email goes out at one fixed time, 7:00 AM Eastern, for everyone. The account page and the classroom home show the next send in the user's timezone, with UTC in parentheses.
 - Turning the daily email off is immediate and affects every classroom.
 - Every email carries a one-click unsubscribe link that needs no sign-in. It lands on a page confirming the change, with a link back to settings.
 

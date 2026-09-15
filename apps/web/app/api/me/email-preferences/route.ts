@@ -7,7 +7,6 @@ import { getSessionUser } from "@/lib/session";
 
 const updatePreferencesSchema = z.object({
   dailyEnabled: z.boolean().optional(),
-  sendHourLocal: z.coerce.number().int().min(0).max(23).optional(),
   unsubscribedAt: z
     .union([
       z.null(),
@@ -17,14 +16,9 @@ const updatePreferencesSchema = z.object({
   unsubscribed: z.boolean().optional(),
 });
 
-function preferencesPayload(row: {
-  dailyEnabled: boolean;
-  sendHourLocal: number;
-  unsubscribedAt: Date | null;
-}) {
+function preferencesPayload(row: { dailyEnabled: boolean; unsubscribedAt: Date | null }) {
   return {
     dailyEnabled: row.dailyEnabled,
-    sendHourLocal: row.sendHourLocal,
     unsubscribedAt: row.unsubscribedAt,
   };
 }
@@ -38,7 +32,7 @@ export async function GET() {
     const preferences = await getEmailPreferences(getDb(), user.id);
     if (!preferences) {
       return jsonOk({
-        preferences: { dailyEnabled: true, sendHourLocal: 7, unsubscribedAt: null },
+        preferences: { dailyEnabled: true, unsubscribedAt: null },
       });
     }
     return jsonOk({ preferences: preferencesPayload(preferences) });
@@ -57,9 +51,6 @@ export async function PATCH(request: Request) {
     const patch: EmailPreferencesInput = {};
     if (body.dailyEnabled !== undefined) {
       patch.dailyEnabled = body.dailyEnabled;
-    }
-    if (body.sendHourLocal !== undefined) {
-      patch.sendHourLocal = body.sendHourLocal;
     }
     if (body.unsubscribedAt !== undefined) {
       patch.unsubscribedAt =

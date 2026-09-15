@@ -131,7 +131,7 @@ export type DueClassroom = {
   localDate: string;
 };
 
-export async function listDueClassrooms(db: Db) {
+export async function listDueClassrooms(db: Db, sendAt: Date) {
   const rows = await db.execute<DueClassroom>(sql`
     SELECT
       c.id AS "classroomId",
@@ -145,7 +145,8 @@ export async function listDueClassrooms(db: Db) {
       AND c.active_until > now()
       AND ep.daily_enabled
       AND ep.unsubscribed_at IS NULL
-      AND date_part('hour', now() AT TIME ZONE u.timezone) >= ep.send_hour_local
+      AND now() >= ${sendAt}
+      AND c.created_at < ${sendAt}
       AND NOT EXISTS (
         SELECT 1 FROM quizzes q
         WHERE q.classroom_id = c.id

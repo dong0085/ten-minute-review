@@ -50,7 +50,7 @@ export async function completeJob(db: Db, jobId: string) {
 export async function failJob(db: Db, jobId: string, error: string) {
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
   if (!job) {
-    return;
+    return { terminal: false };
   }
   const terminal = job.attempts >= JOB_MAX_ATTEMPTS;
   await db
@@ -64,10 +64,11 @@ export async function failJob(db: Db, jobId: string, error: string) {
       runAt: new Date(),
     })
     .where(eq(jobs.id, jobId));
+  return { terminal };
 }
 
 export async function reapStaleJobs(db: Db) {
-  await db.execute(sql`
+  const retried = await db.execute(sql`
     UPDATE jobs
     SET status = 'pending',
         locked_at = NULL,
@@ -75,8 +76,9 @@ export async function reapStaleJobs(db: Db) {
     WHERE status = 'running'
       AND locked_at < now() - (${JOB_STALE_MINUTES} * interval '1 minute')
       AND attempts < ${JOB_MAX_ATTEMPTS}
+    RETURNING id
   `);
-  await db.execute(sql`
+  const failed = await db.execute(sql`
     UPDATE jobs
     SET status = 'failed',
         last_error = COALESCE(last_error, 'stalled'),
@@ -86,7 +88,9 @@ export async function reapStaleJobs(db: Db) {
     WHERE status = 'running'
       AND locked_at < now() - (${JOB_STALE_MINUTES} * interval '1 minute')
       AND attempts >= ${JOB_MAX_ATTEMPTS}
+    RETURNING id
   `);
+  return { retried: Array.from(retried).length, failed: Array.from(failed).length };
 }
 
 export async function getJobById(db: Db, jobId: string) {
@@ -104,6 +108,49 @@ export async function hasPendingComposeJob(db: Db, classroomId: string): Promise
         inArray(jobs.status, ["pending", "running"]),
         sql`${jobs.payload}->>'classroomId' = ${classroomId}`,
         sql`${jobs.payload}->>'cancelRequested' IS DISTINCT FROM 'true'`,
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
+}
+
+export async function hasActiveDailyComposeJob(
+  db: Db,
+  classroomId: string,
+  localDate: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: jobs.id })
+    .from(jobs)
+    .where(
+      and(
+        eq(jobs.kind, "compose"),
+        inArray(jobs.status, ["pending", "running"]),
+        sql`${jobs.payload}->>'classroomId' = ${classroomId}`,
+        sql`${jobs.payload}->>'localDate' = ${localDate}`,
+        sql`COALESCE(${jobs.payload}->>'source', 'daily') = 'daily'`,
+        sql`${jobs.payload}->>'cancelRequested' IS DISTINCT FROM 'true'`,
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
+}
+
+export async function hasActiveDailyEmailJob(
+  db: Db,
+  userId: string,
+  localDate: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: jobs.id })
+    .from(jobs)
+    .where(
+      and(
+        eq(jobs.kind, "send_email"),
+        inArray(jobs.status, ["pending", "running"]),
+        sql`${jobs.payload}->>'userId' = ${userId}`,
+        sql`${jobs.payload}->>'quizDate' = ${localDate}`,
+        sql`COALESCE(${jobs.payload}->>'kind', 'daily') = 'daily'`,
       ),
     )
     .limit(1);

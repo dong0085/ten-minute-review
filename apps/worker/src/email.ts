@@ -31,6 +31,7 @@ async function sendViaBrevo(
   message: EmailMessage,
 ): Promise<{ id: string | null }> {
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    signal: AbortSignal.timeout(30_000),
     method: "POST",
     headers: {
       accept: "application/json",

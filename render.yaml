@@ -1,12 +1,13 @@
 services:
-  - type: web
-    name: ten-minutes-review-worker
+  - type: cron
+    name: ten-minutes-review-jobs
     runtime: node
-    plan: free
+    plan: 0.5c-512mb
     rootDir: .
+    schedule: "*/10 * * * *"
     buildCommand: npm install -g pnpm@10.15.0 && pnpm install --frozen-lockfile
-    startCommand: pnpm --filter worker start
-    healthCheckPath: /health
+    preDeployCommand: pnpm db:migrate
+    startCommand: pnpm --filter worker once
     autoDeploy: true
     envVars:
       - key: NODE_VERSION

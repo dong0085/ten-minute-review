@@ -509,6 +509,7 @@ function createDeepseekProvider(): LlmProvider {
   async function chat(systemPrompt: string, userContent: unknown): Promise<unknown> {
     const base = env.deepseekBaseUrl.replace(/\/+$/, "");
     const response = await fetch(`${base}/chat/completions`, {
+      signal: AbortSignal.timeout(120_000),
       method: "POST",
       headers: {
         "content-type": "application/json",

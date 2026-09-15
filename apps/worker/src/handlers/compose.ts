@@ -155,10 +155,12 @@ export async function handleComposeJob(
     throw new Error(`failed to create quiz for classroom ${classroomId} on ${localDate}`);
   }
 
-  await enqueueJob(db, {
-    kind: "send_email",
-    payload: { userId, quizDate: localDate, kind, quizId: quiz.id },
-  });
+  if (kind === "manual") {
+    await enqueueJob(db, {
+      kind: "send_email",
+      payload: { userId, quizDate: localDate, kind, quizId: quiz.id },
+    });
+  }
   console.log(
     `[worker] compose ${kind} ${classroomId} ${localDate}: ${kept.length} questions (${dropped.length} dropped)`,
   );

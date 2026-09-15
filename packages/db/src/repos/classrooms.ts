@@ -132,6 +132,7 @@ export type DueClassroom = {
 };
 
 export async function listDueClassrooms(db: Db, sendAt: Date) {
+  const encodedSendAt = sql.param(sendAt, classrooms.createdAt);
   const rows = await db.execute<DueClassroom>(sql`
     SELECT
       c.id AS "classroomId",
@@ -140,13 +141,18 @@ export async function listDueClassrooms(db: Db, sendAt: Date) {
       to_char((now() AT TIME ZONE u.timezone)::date, 'YYYY-MM-DD') AS "localDate"
     FROM classrooms c
     JOIN users u ON u.id = c.user_id
-    JOIN email_preferences ep ON ep.user_id = u.id
+    LEFT JOIN email_preferences ep ON ep.user_id = u.id
     WHERE c.archived_at IS NULL
       AND c.active_until > now()
-      AND ep.daily_enabled
+      AND COALESCE(ep.daily_enabled, true)
       AND ep.unsubscribed_at IS NULL
-      AND now() >= ${sendAt}
-      AND c.created_at < ${sendAt}
+      AND now() >= ${encodedSendAt}
+      AND c.created_at < ${encodedSendAt}
+      AND EXISTS (
+        SELECT 1 FROM knowledge_points kp
+        WHERE kp.classroom_id = c.id
+          AND kp.retired_at IS NULL
+      )
       AND NOT EXISTS (
         SELECT 1 FROM quizzes q
         WHERE q.classroom_id = c.id
@@ -160,6 +166,110 @@ export async function listDueClassrooms(db: Db, sendAt: Date) {
       )
   `);
   return Array.from(rows) as DueClassroom[];
+}
+
+export type DailyEmailRecipient = {
+  userId: string;
+  localDate: string;
+};
+
+export async function listReadyDailyEmailRecipients(db: Db, sendAt: Date) {
+  const encodedSendAt = sql.param(sendAt, classrooms.createdAt);
+  const rows = await db.execute<DailyEmailRecipient>(sql`
+    WITH eligible AS (
+      SELECT
+        c.id AS classroom_id,
+        u.id AS user_id,
+        (now() AT TIME ZONE u.timezone)::date AS local_date
+      FROM classrooms c
+      JOIN users u ON u.id = c.user_id
+      LEFT JOIN email_preferences ep ON ep.user_id = u.id
+      WHERE c.archived_at IS NULL
+        AND c.active_until > now()
+        AND COALESCE(ep.daily_enabled, true)
+        AND ep.unsubscribed_at IS NULL
+        AND now() >= ${encodedSendAt}
+        AND c.created_at < ${encodedSendAt}
+        AND EXISTS (
+          SELECT 1 FROM knowledge_points kp
+          WHERE kp.classroom_id = c.id
+            AND kp.retired_at IS NULL
+        )
+    )
+    SELECT
+      e.user_id AS "userId",
+      to_char(e.local_date, 'YYYY-MM-DD') AS "localDate"
+    FROM eligible e
+    LEFT JOIN quizzes q
+      ON q.classroom_id = e.classroom_id
+      AND q.quiz_date = e.local_date
+      AND q.kind = 'daily'
+    LEFT JOIN deleted_daily_quizzes d
+      ON d.classroom_id = e.classroom_id
+      AND d.quiz_date = e.local_date
+    LEFT JOIN email_sends es
+      ON es.user_id = e.user_id
+      AND es.sent_on = e.local_date
+      AND es.kind = 'daily'
+    GROUP BY e.user_id, e.local_date
+    HAVING count(*) FILTER (WHERE q.id IS NULL AND d.id IS NULL) = 0
+      AND count(q.id) > 0
+      AND count(es.id) = 0
+  `);
+  return Array.from(rows) as DailyEmailRecipient[];
+}
+
+export type OverdueDailyDelivery = DailyEmailRecipient & {
+  missingClassrooms: number;
+  quizCount: number;
+};
+
+export async function listUnsentDailyEmailRecipients(db: Db, sendAt: Date) {
+  const encodedSendAt = sql.param(sendAt, classrooms.createdAt);
+  const rows = await db.execute<OverdueDailyDelivery>(sql`
+    WITH eligible AS (
+      SELECT
+        c.id AS classroom_id,
+        u.id AS user_id,
+        (now() AT TIME ZONE u.timezone)::date AS local_date
+      FROM classrooms c
+      JOIN users u ON u.id = c.user_id
+      LEFT JOIN email_preferences ep ON ep.user_id = u.id
+      WHERE c.archived_at IS NULL
+        AND c.active_until > now()
+        AND COALESCE(ep.daily_enabled, true)
+        AND ep.unsubscribed_at IS NULL
+        AND now() >= ${encodedSendAt}
+        AND c.created_at < ${encodedSendAt}
+        AND EXISTS (
+          SELECT 1 FROM knowledge_points kp
+          WHERE kp.classroom_id = c.id
+            AND kp.retired_at IS NULL
+        )
+    )
+    SELECT
+      e.user_id AS "userId",
+      to_char(e.local_date, 'YYYY-MM-DD') AS "localDate",
+      count(*) FILTER (WHERE q.id IS NULL AND d.id IS NULL)::int AS "missingClassrooms",
+      count(q.id)::int AS "quizCount"
+    FROM eligible e
+    LEFT JOIN quizzes q
+      ON q.classroom_id = e.classroom_id
+      AND q.quiz_date = e.local_date
+      AND q.kind = 'daily'
+    LEFT JOIN deleted_daily_quizzes d
+      ON d.classroom_id = e.classroom_id
+      AND d.quiz_date = e.local_date
+    LEFT JOIN email_sends es
+      ON es.user_id = e.user_id
+      AND es.sent_on = e.local_date
+      AND es.kind = 'daily'
+    WHERE es.id IS NULL
+    GROUP BY e.user_id, e.local_date
+    HAVING count(q.id) > 0
+      OR count(*) FILTER (WHERE q.id IS NULL AND d.id IS NULL) > 0
+  `);
+  return Array.from(rows) as OverdueDailyDelivery[];
 }
 
 export type CreateUploadInput = {

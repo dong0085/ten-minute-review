@@ -8,6 +8,7 @@ import {
   extendClassroomActivityForLogin,
   getUserByEmail,
   recordReferralSignup,
+  upsertEmailPreferences,
 } from "@tmr/db";
 import { env } from "./env";
 import { getDb } from "./db";
@@ -99,6 +100,10 @@ export const authConfig: NextAuthConfig = {
         return false;
       }
       user.id = created.id;
+      await upsertEmailPreferences(db, created.id, {
+        dailyEnabled: true,
+        sendHourLocal: 7,
+      });
       if (referrerUserId) {
         await recordReferralSignup(db, {
           referrerUserId,

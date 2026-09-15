@@ -1,15 +1,9 @@
-import os from "node:os";
-import { claimJob, completeJob, createDb, failJob } from "@tmr/db";
+import { createDb } from "@tmr/db";
 import { runMigrations } from "@tmr/db/migrate";
-import type { Db, Job } from "@tmr/db";
 import { env } from "./env";
-import { handleComposeJob } from "./handlers/compose";
-import { handleExtractJob } from "./handlers/extract";
-import { handleSendEmailJob } from "./handlers/send-email";
-import { tickScheduler } from "./scheduler";
+import { processNextJob, runWorkerOnce } from "./runner";
 import { startHealthServer } from "./server";
 
-const workerId = `${os.hostname()}:${process.pid}`;
 const JOB_POLL_INTERVAL_MS = 5000;
 const SCHEDULER_INTERVAL_MS = 15 * 60 * 1000;
 
@@ -19,55 +13,21 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function runJob(db: Db, job: Job): Promise<void> {
-  switch (job.kind) {
-    case "extract":
-      return handleExtractJob(db, job.payload);
-    case "compose":
-      return handleComposeJob(db, job.payload, job.id);
-    case "send_email":
-      return handleSendEmailJob(db, job.payload);
-    default:
-      throw new Error(`unknown job kind: ${String(job.kind)}`);
-  }
-}
-
-async function processNextJob(db: Db): Promise<boolean> {
-  const job = await claimJob(db, workerId);
-  if (!job) {
-    return false;
-  }
-  try {
-    await runJob(db, job);
-    await completeJob(db, job.id);
-    console.log(`[worker] ${job.kind} ${job.id} done`);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    await failJob(db, job.id, message);
-    console.error(`[worker] ${job.kind} ${job.id} failed: ${message}`);
-  }
-  return true;
-}
-
 async function main(): Promise<void> {
   startHealthServer(env.port);
   await runMigrations(env.databaseUrl);
   const db = createDb(env.databaseUrl);
-  console.log(`[worker] started ${workerId}`);
+  console.log("[worker] started");
 
   let lastSchedulerTick = 0;
   while (running) {
     try {
-      while (running && (await processNextJob(db))) {
-        // drain the queue before sleeping
-      }
-
       if (running && Date.now() - lastSchedulerTick >= SCHEDULER_INTERVAL_MS) {
         lastSchedulerTick = Date.now();
-        const enqueued = await tickScheduler(db);
-        if (enqueued > 0) {
-          console.log(`[worker] scheduler enqueued ${enqueued} compose job(s)`);
-        }
+        const summary = await runWorkerOnce(db);
+        console.log(`[worker] scheduled run complete ${JSON.stringify(summary)}`);
+      } else if (running) {
+        await processNextJob(db);
       }
     } catch (error) {
       console.error("[worker] loop error", error);

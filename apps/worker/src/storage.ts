@@ -42,6 +42,7 @@ export async function getObjectBytes(key: string): Promise<ObjectBytes> {
     // TODO: use head() from @vercel/blob once that package is a direct dependency of the worker.
     const url = /^https?:\/\//.test(key) ? key : `https://blob.vercel-storage.com/${key}`;
     const response = await fetch(url, {
+      signal: AbortSignal.timeout(60_000),
       headers: env.blobReadWriteToken
         ? { authorization: `Bearer ${env.blobReadWriteToken}` }
         : undefined,

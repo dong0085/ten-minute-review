@@ -20,7 +20,7 @@ export default async function UnsubscribePage({
   if (!user) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <h1 className="text-2xl font-semibold">{t("invalidTitle")}</h1>
+        <h1 className="font-heading text-4xl font-semibold tracking-[-0.035em]">{t("invalidTitle")}</h1>
         <p className="mt-3 text-muted-foreground">{t("invalidBody")}</p>
         <Button asChild variant="outline" className="mt-6">
           <Link href="/account">{t("goToAccount")}</Link>
@@ -36,7 +36,7 @@ export default async function UnsubscribePage({
 
   return (
     <div className="mx-auto max-w-md py-16 text-center">
-      <h1 className="text-2xl font-semibold">{t("successTitle")}</h1>
+      <h1 className="font-heading text-4xl font-semibold tracking-[-0.035em]">{t("successTitle")}</h1>
       <p className="mt-3 text-muted-foreground">{t("successBody")}</p>
       <Button asChild className="mt-6">
         <Link href="/account">{t("manage")}</Link>

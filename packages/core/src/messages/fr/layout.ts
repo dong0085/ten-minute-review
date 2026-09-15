@@ -1,5 +1,5 @@
 export const layout = {
-  title: "ten-minute-review",
+  title: "Ten Minutes Review",
   description: "Tes notes de cours deviennent un quiz de dix minutes chaque matin.",
   language: "Langue",
   theme: "Thème",

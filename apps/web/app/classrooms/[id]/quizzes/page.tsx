@@ -34,14 +34,8 @@ export default async function QuizzesPage({ params }: { params: Promise<{ id: st
   return (
     <div className="space-y-6">
       <div>
-        <Link
-          className="text-sm text-muted-foreground hover:text-foreground"
-          href={`/classrooms/${id}`}
-        >
-          ← {classroom.name}
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("blurb")}</p>
+        <h1 className="font-heading text-3xl font-semibold tracking-[-0.03em]">{t("title")}</h1>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("blurb")}</p>
       </div>
       {quizzes.length === 0 ? (
         <Card>
@@ -67,7 +61,7 @@ export default async function QuizzesPage({ params }: { params: Promise<{ id: st
           {quizzes.map((quiz) => (
             <div
               key={quiz.id}
-              className="flex items-center gap-2 rounded-xl border border-border bg-card p-4 transition hover:bg-muted/50"
+              className="flex items-center gap-2 rounded-2xl border border-border/70 bg-card/75 p-4 shadow-[0_1px_2px_rgb(var(--shadow-colour)/0.035)] transition hover:-translate-y-px hover:border-primary/15 hover:bg-card"
             >
               <Link
                 href={`/classrooms/${id}/quiz/${quiz.id}`}

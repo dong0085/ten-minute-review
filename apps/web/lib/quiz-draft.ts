@@ -2,6 +2,8 @@ import type { LocalResponse } from "@/components/quiz/types";
 
 export const ATTEMPT_TTL_MS = 2 * 60 * 60 * 1000;
 
+export type QuizOptionOrders = Record<string, number[]>;
+
 export type QuizDraft = {
   version: 1;
   attemptToken: string;
@@ -10,11 +12,27 @@ export type QuizDraft = {
   responses: Record<string, LocalResponse>;
   current: number;
   durations: Record<string, number>;
+  optionOrders?: QuizOptionOrders;
   savedAt: number;
 };
 
 function storageKey(userId: string, quizId: string): string {
   return `tmr:quiz-draft:${userId}:${quizId}`;
+}
+
+function optionOrdersStorageKey(userId: string, quizId: string): string {
+  return `tmr:quiz-option-orders:${userId}:${quizId}`;
+}
+
+function isQuizOptionOrders(value: unknown): value is QuizOptionOrders {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    Object.values(value).every(
+      (order) => Array.isArray(order) && order.every((index) => Number.isInteger(index)),
+    )
+  );
 }
 
 function isQuizDraft(value: unknown): value is QuizDraft {
@@ -32,7 +50,8 @@ function isQuizDraft(value: unknown): value is QuizDraft {
     typeof draft.responses === "object" &&
     draft.responses !== null &&
     typeof draft.durations === "object" &&
-    draft.durations !== null
+    draft.durations !== null &&
+    (draft.optionOrders === undefined || isQuizOptionOrders(draft.optionOrders))
   );
 }
 
@@ -72,6 +91,40 @@ export function clearQuizDraft(userId: string, quizId: string): void {
   }
   try {
     window.localStorage.removeItem(storageKey(userId, quizId));
+  } catch {
+    return;
+  }
+}
+
+export function loadQuizOptionOrders(userId: string, quizId: string): QuizOptionOrders {
+  if (typeof window === "undefined") {
+    return {};
+  }
+  try {
+    const raw = window.localStorage.getItem(optionOrdersStorageKey(userId, quizId));
+    if (!raw) {
+      return {};
+    }
+    const parsed: unknown = JSON.parse(raw);
+    return isQuizOptionOrders(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveQuizOptionOrders(
+  userId: string,
+  quizId: string,
+  optionOrders: QuizOptionOrders,
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(
+      optionOrdersStorageKey(userId, quizId),
+      JSON.stringify(optionOrders),
+    );
   } catch {
     return;
   }

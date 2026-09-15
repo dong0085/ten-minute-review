@@ -64,7 +64,7 @@ export function ClassroomDangerZone({ classroomId }: { classroomId: string }) {
     <Card>
       <CardContent className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold">{t("title")}</h2>
+          <h2 className="font-heading text-2xl font-semibold tracking-[-0.025em]">{t("title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t("blurb")}</p>
         </div>
         {error ? (

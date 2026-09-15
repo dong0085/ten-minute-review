@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Check, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -204,7 +204,7 @@ export function TodayQuizAction({
   ];
 
   const inlineProgress = (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/15 bg-card/70 px-3 py-2.5">
       <button
         type="button"
         onClick={() => setMinimized(false)}
@@ -232,9 +232,22 @@ export function TodayQuizAction({
   return (
     <>
       <div className="flex flex-col justify-between gap-4">
+        <div className="flex items-start justify-between gap-5">
+          <div>
+            <p className="eyebrow flex items-center gap-1.5">
+              <Sparkles className="size-3" />
+              {t("kicker")}
+            </p>
+            <h2 className="mt-2 font-heading text-3xl font-semibold tracking-[-0.03em]">
+              {t("title")}
+            </h2>
+          </div>
+          <span aria-hidden="true" className="font-heading text-4xl font-semibold italic text-primary/25">
+            10′
+          </span>
+        </div>
         <div>
-          <h2 className="text-lg font-semibold">{t("title")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="max-w-md text-sm leading-6 text-muted-foreground">
             {activeQuizId ? t("ready") : t("idle")}
           </p>
         </div>
@@ -245,6 +258,7 @@ export function TodayQuizAction({
                 <Button asChild>
                   <Link href={`/classrooms/${classroomId}/quiz/${activeQuizId}`}>
                     {t("takeToday")}
+                    <ArrowRight />
                   </Link>
                 </Button>
                 <Button variant="outline" onClick={start} disabled={composing}>
@@ -271,6 +285,7 @@ export function TodayQuizAction({
           ) : (
             <Button onClick={start} disabled={phase === "posting"}>
               {t("createNow")}
+              <ArrowRight />
             </Button>
           )}
         </div>
@@ -304,12 +319,12 @@ export function TodayQuizAction({
                       : t("hintAlmost")}
                 </DialogDescription>
               </DialogHeader>
-              <ol className="space-y-2">
+              <ol className="space-y-2 rounded-xl border border-border/70 bg-muted/40 p-3">
                 {steps.map((entry, index) => {
                   const done = index < stepIndex;
                   const current = index === stepIndex;
                   return (
-                    <li key={entry.key} className="flex items-center gap-2 text-sm">
+                    <li key={entry.key} className="flex items-center gap-2.5 rounded-lg px-1 py-1 text-sm">
                       {done ? (
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
                           <Check className="size-2.5" strokeWidth={3} />

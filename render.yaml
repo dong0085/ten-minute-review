@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ten-minute-review-worker
+    name: ten-minutes-review-worker
     runtime: node
     plan: free
     rootDir: .

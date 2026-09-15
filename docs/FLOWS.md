@@ -99,7 +99,8 @@ This is the classroom's memory. Everything the user ever fed in stays readable h
 - **Submit** is the commit point. An attempt row is created, answers are written, and grading runs server-side.
 - The timer records how long the attempt took, per question and overall. A refresh keeps it running.
 - Answers and the current question live in a local draft, so a refresh or a same-browser reopen resumes where the quiz left off.
-- Enter advances on every question type: in fill-in-the-blank questions it moves to the next blank first, then to the next question; on the last question it submits the quiz. Arrow keys keep their native behavior when switching between options.
+- Enter advances on every question type: in fill-in-the-blank questions it moves to the next blank first, then to the next question; on the last question it submits the quiz. Multiple-choice options receive focus when their question opens, and Up/Down selects through them without requiring a click.
+- Multiple-choice options are shuffled for each attempt, remain stable when an in-progress draft is restored, and never repeat the immediately previous attempt's order when at least two options exist.
 
 Attempts are unlimited. The server records an attempt only at submit, so a quiz is never half-recorded; the local draft expires two hours after it starts.
 

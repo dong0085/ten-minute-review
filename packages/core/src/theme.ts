@@ -15,8 +15,8 @@ export function isUiTheme(value: string | null | undefined): value is UiTheme {
 
 /** Preview colours for the theme picker, matching each palette's primary. */
 export const THEME_SWATCHES: Record<UiTheme, string> = {
-  mint: "#097c59",
-  sky: "#00739c",
-  sakura: "#964d72",
-  lavender: "#73599d",
+  mint: "#4d796b",
+  sky: "#536f89",
+  sakura: "#895f70",
+  lavender: "#746780",
 };

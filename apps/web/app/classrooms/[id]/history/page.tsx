@@ -53,14 +53,8 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Link
-            className="text-sm text-muted-foreground hover:text-foreground"
-            href={`/classrooms/${id}`}
-          >
-            ← {classroom.name}
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t("blurb")}</p>
+          <h1 className="font-heading text-3xl font-semibold tracking-[-0.03em]">{t("title")}</h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("blurb")}</p>
         </div>
         <Button asChild>
           <Link href={`/classrooms/${id}/upload`}>{t("addNotes")}</Link>
@@ -73,7 +67,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 border-l border-border/70 pl-3 sm:pl-5">
           {uploads.map(({ upload, imageUrl }) => {
             const src = imageUrl;
             const skipped = upload.discarded.length;

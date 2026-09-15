@@ -49,22 +49,25 @@ export default async function AttemptPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <Link
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="text-xs font-medium text-muted-foreground transition hover:text-foreground"
           href={`/classrooms/${id}/quizzes`}
         >
           {t("allQuizzes")}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
+        <h1 className="mt-3 font-heading text-4xl font-semibold tracking-[-0.035em]">
+          {t("title")}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">{classroom.name}</p>
       </div>
-      <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+      <Card className="relative overflow-hidden border-primary/15 bg-primary/[0.04]">
+        <div aria-hidden="true" className="absolute inset-x-10 top-0 h-px bg-primary/30" />
+        <CardContent className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold">
+              <h2 className="font-heading text-3xl font-semibold tracking-[-0.025em]">
                 {t("correct", {
                   correct: review.attempt.correctCount,
                   total: review.attempt.questionCount,

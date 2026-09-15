@@ -19,13 +19,19 @@ import {
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ThemeProvider } from "@/components/theme-provider";
+import { BrandMark } from "@/components/brand-mark";
 import { signOut } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
 import { getTheme } from "@/lib/theme-server";
-import { Geist } from "next/font/google";
+import { Geist, Source_Serif_4 } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  variable: "--font-editorial",
+  display: "swap",
+});
 
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -45,25 +51,28 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={locale}
       data-theme={theme}
-      className={cn("font-sans", geist.variable)}
+      className={cn("font-sans", geist.variable, sourceSerif.variable)}
       suppressHydrationWarning
     >
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className="flex min-h-screen flex-col bg-background text-foreground antialiased">
         <ThemeProvider>
           <NextIntlClientProvider>
-          <header className="border-b border-border bg-card">
-            <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-              <Link href="/" className="text-sm font-semibold">
-                {t("title")}
-              </Link>
+          <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/72">
+            <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+              <BrandMark />
               <div className="flex items-center gap-2 text-sm">
+                {user ? (
+                  <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                    <Link href="/classrooms">{t("classrooms")}</Link>
+                  </Button>
+                ) : null}
                 <LanguageSwitcher signedIn={Boolean(user)} />
                 <ThemeSwitcher currentTheme={theme} />
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon-sm"
                         aria-label={user.username ?? user.email}
                       >
@@ -102,7 +111,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                   </DropdownMenu>
                 ) : (
                   <>
-                    <Link className="text-muted-foreground hover:text-foreground" href="/signin">
+                    <Link className="hidden text-muted-foreground hover:text-foreground sm:inline" href="/signin">
                       {t("signIn")}
                     </Link>
                     <Button asChild size="sm">
@@ -113,7 +122,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               </div>
             </nav>
           </header>
-          <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+            {children}
+          </main>
           <Toaster />
           </NextIntlClientProvider>
         </ThemeProvider>

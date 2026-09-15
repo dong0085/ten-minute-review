@@ -15,7 +15,7 @@ export async function GET() {
       status: 200,
       headers: {
         "content-type": "application/json",
-        "content-disposition": 'attachment; filename="ten-minute-review-export.json"',
+        "content-disposition": 'attachment; filename="ten-minutes-review-export.json"',
       },
     });
   } catch (error) {

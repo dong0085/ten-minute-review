@@ -1,6 +1,6 @@
 # Scope
 
-**Brand:** ten-minute-review · **Repo folder:** `ten-minute-review`
+**Brand:** Ten Minutes Review · **Repo folder:** `ten-minutes-review`
 **Status:** locked. No open items. Items marked *(my call)* are decisions made on the builder's behalf — override any of them.
 
 ## What it is

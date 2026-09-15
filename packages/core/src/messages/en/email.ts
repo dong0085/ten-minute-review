@@ -1,7 +1,7 @@
 export const email = {
   actionFallback: "If the button does not work, open this link:",
   verificationSubject: "Confirm your email",
-  verificationBody: "One click and your ten-minute-review account is ready.",
+  verificationBody: "One click and your Ten Minutes Review account is ready.",
   verificationAction: "Confirm email",
   resetSubject: "Reset your password",
   resetBody: "Choose a new password with the link below. The link expires in one hour.",

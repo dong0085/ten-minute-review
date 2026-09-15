@@ -2,6 +2,7 @@ import type { en } from "../en";
 import type { MessageShape } from "../type";
 
 export const account: MessageShape<(typeof en)["Account"]> = {
+  overview: "Ton parcours d'apprentissage",
   title: "Compte",
   profileSection: "Profil",
   emailPreferencesSection: "Préférences d'e-mail",

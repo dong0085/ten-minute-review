@@ -5,7 +5,6 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export type AnswerShape =
@@ -73,11 +72,26 @@ export function QuestionReviewCard({
   }
 
   return (
-    <Card>
-      <CardContent className="space-y-3">
+    <Card
+      className={cn(
+        "relative overflow-hidden bg-card/75",
+        isCorrect === true && "border-success/20",
+        isCorrect === false && "border-destructive/20",
+      )}
+    >
+      {isCorrect !== undefined ? (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-y-5 left-0 w-px",
+            isCorrect ? "bg-success/55" : "bg-destructive/55",
+          )}
+        />
+      ) : null}
+      <CardContent className="space-y-4 sm:px-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">
+            <span className="font-heading text-sm font-semibold italic text-muted-foreground">
               {t("question", { number: question.position })}
             </span>
             <Badge variant="secondary">{categoryLabel}</Badge>
@@ -89,36 +103,41 @@ export function QuestionReviewCard({
             </Badge>
           ) : null}
         </div>
-        <p className="whitespace-pre-wrap text-sm font-medium">{question.stem}</p>
+        <h3 className="whitespace-pre-wrap font-heading text-xl leading-snug font-semibold tracking-[-0.015em]">
+          {question.stem}
+        </h3>
         {question.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={question.imageUrl}
             alt={t("handwritten")}
-            className="max-h-64 rounded-lg border border-border object-contain"
+            className="max-h-72 rounded-xl border border-border/70 bg-muted/30 object-contain"
           />
         ) : null}
-        <dl className="space-y-1 text-sm">
-          <div className="flex flex-wrap gap-x-2">
-            <dt className="text-muted-foreground">{t("yourAnswer")}</dt>
-            <dd className={cn(isCorrect === false && "font-medium text-destructive")}>
+        <dl className="grid gap-2 text-sm sm:grid-cols-2">
+          <div className="rounded-xl border border-border/65 bg-muted/30 px-3.5 py-3">
+            <dt className="text-[0.68rem] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+              {t("yourAnswer")}
+            </dt>
+            <dd className={cn("mt-1.5", isCorrect === false && "font-medium text-destructive")}>
               {formatAnswer(question.type, response, question.options)}
             </dd>
           </div>
           {correctAnswer !== undefined ? (
-            <div className="flex flex-wrap gap-x-2">
-              <dt className="text-muted-foreground">{t("correctAnswer")}</dt>
-              <dd className="font-medium text-success">
+            <div className="rounded-xl border border-success/15 bg-success/[0.045] px-3.5 py-3">
+              <dt className="text-[0.68rem] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+                {t("correctAnswer")}
+              </dt>
+              <dd className="mt-1.5 font-medium text-success">
                 {formatAnswer(question.type, correctAnswer, question.options)}
               </dd>
             </div>
           ) : null}
         </dl>
         {explanation ? (
-          <>
-            <Separator />
-            <p className="text-sm text-muted-foreground">{explanation}</p>
-          </>
+          <div className="border-t border-border/65 pt-4">
+            <p className="text-sm leading-6 text-muted-foreground">{explanation}</p>
+          </div>
         ) : null}
       </CardContent>
     </Card>

@@ -25,6 +25,7 @@ export const quiz: MessageShape<(typeof en)["Quiz"]> = {
     reviewMissed: "Revois les erreurs ci-dessous, puis réessaie.",
     retake: "Refaire",
     fullReview: "Revue complète",
+    reviewTitle: "Révision des questions",
     questionProgress: "Question {current} sur {total}",
     answeredProgress: "{answered} sur {total} répondues",
     blank: "Trou {number}",

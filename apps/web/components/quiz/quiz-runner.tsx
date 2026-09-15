@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { CATEGORIES, type Category } from "@tmr/core";
+import {
+  CATEGORIES,
+  isIndexOrder,
+  shuffledIndexOrder,
+  type Category,
+} from "@tmr/core";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +21,14 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { clearQuizDraft, loadQuizDraft, saveQuizDraft } from "@/lib/quiz-draft";
+import {
+  clearQuizDraft,
+  loadQuizDraft,
+  loadQuizOptionOrders,
+  saveQuizDraft,
+  saveQuizOptionOrders,
+  type QuizOptionOrders,
+} from "@/lib/quiz-draft";
 import { QuestionReviewCard, type AnswerShape } from "./question-review";
 import type { LocalResponse, QuizQuestion } from "./types";
 
@@ -60,6 +72,27 @@ function isAnswered(question: QuizQuestion, response: LocalResponse | undefined)
   return typeof response.index === "number";
 }
 
+function buildOptionOrders(
+  questions: QuizQuestion[],
+  restored: QuizOptionOrders = {},
+  previous: QuizOptionOrders = {},
+): QuizOptionOrders {
+  return Object.fromEntries(
+    questions
+      .filter((question) => question.type === "mcq" || question.type === "image")
+      .map((question) => {
+        const count = question.options?.length ?? 0;
+        const restoredOrder = restored[question.id];
+        return [
+          question.id,
+          isIndexOrder(restoredOrder, count)
+            ? restoredOrder
+            : shuffledIndexOrder(count, previous[question.id]),
+        ];
+      }),
+  );
+}
+
 class ApiRequestError extends Error {
   readonly code: string | undefined;
 
@@ -98,6 +131,7 @@ export function QuizRunner({
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [attemptToken, setAttemptToken] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, LocalResponse>>({});
+  const [optionOrders, setOptionOrders] = useState<QuizOptionOrders>({});
   const [current, setCurrent] = useState(0);
   const [phase, setPhase] = useState<"loading" | "taking" | "submitting" | "results" | "error">(
     "loading",
@@ -109,6 +143,7 @@ export function QuizRunner({
   const durations = useRef<Record<string, number>>({});
   const hasStarted = useRef(false);
   const blankRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const focusFirstBlank = useRef(false);
 
   const startAttempt = useCallback(async () => {
@@ -116,6 +151,7 @@ export function QuizRunner({
     setError(null);
     setResult(null);
     setResponses({});
+    setOptionOrders({});
     setQuestions([]);
     setCurrent(0);
     durations.current = {};
@@ -128,8 +164,15 @@ export function QuizRunner({
         }
         const data = (await response.json()) as { quiz: { questions: QuizQuestion[] } };
         const restoredQuestions = data.quiz.questions;
+        const restoredOptionOrders = buildOptionOrders(
+          restoredQuestions,
+          draft.optionOrders,
+          loadQuizOptionOrders(userId, quizId),
+        );
         setAttemptToken(draft.attemptToken);
         setQuestions(restoredQuestions);
+        setOptionOrders(restoredOptionOrders);
+        saveQuizOptionOrders(userId, quizId, restoredOptionOrders);
         setResponses(draft.responses);
         setCurrent(Math.max(0, Math.min(draft.current, restoredQuestions.length - 1)));
         durations.current = draft.durations;
@@ -143,8 +186,15 @@ export function QuizRunner({
         throw (await readError(response)) ?? new ApiRequestError(t("startError"));
       }
       const data = (await response.json()) as { attemptToken: string; questions: QuizQuestion[] };
+      const nextOptionOrders = buildOptionOrders(
+        data.questions,
+        {},
+        loadQuizOptionOrders(userId, quizId),
+      );
       setAttemptToken(data.attemptToken);
       setQuestions(data.questions);
+      setOptionOrders(nextOptionOrders);
+      saveQuizOptionOrders(userId, quizId, nextOptionOrders);
       const now = Date.now();
       startedAt.current = now;
       questionStartedAt.current = now;
@@ -191,9 +241,10 @@ export function QuizRunner({
       responses,
       current,
       durations: durations.current,
+      optionOrders,
       savedAt: Date.now(),
     });
-  }, [attemptToken, current, phase, quizId, responses, userId]);
+  }, [attemptToken, current, optionOrders, phase, quizId, responses, userId]);
 
   useEffect(() => {
     if (phase !== "taking" || !focusFirstBlank.current) {
@@ -202,6 +253,25 @@ export function QuizRunner({
     focusFirstBlank.current = false;
     blankRefs.current[0]?.focus();
   }, [current, phase]);
+
+  useEffect(() => {
+    if (phase !== "taking") {
+      return;
+    }
+    const question = questions[current];
+    if (!question || (question.type !== "mcq" && question.type !== "image")) {
+      return;
+    }
+    const order = optionOrders[question.id];
+    const selectedIndex = responses[question.id]?.index;
+    const indexToFocus =
+      typeof selectedIndex === "number" && order?.includes(selectedIndex)
+        ? selectedIndex
+        : order?.[0];
+    if (typeof indexToFocus === "number") {
+      optionRefs.current[indexToFocus]?.focus();
+    }
+  }, [current, optionOrders, phase, questions, responses]);
 
   const submit = useCallback(async () => {
     if (!attemptToken || questions.length === 0) {
@@ -297,8 +367,8 @@ export function QuizRunner({
 
   if (phase === "loading") {
     return (
-      <Card>
-        <CardContent className="space-y-4">
+      <Card className="mx-auto max-w-3xl">
+        <CardContent className="space-y-5 py-4">
           <span className="sr-only">{t("loading")}</span>
           <Skeleton className="h-5 w-24 rounded-full" />
           <div className="space-y-2">
@@ -317,7 +387,7 @@ export function QuizRunner({
 
   if (phase === "error") {
     return (
-      <Card>
+      <Card className="mx-auto max-w-3xl">
         <CardContent className="space-y-3">
           <Alert variant="destructive">
             <AlertDescription>{error ?? t("startError")}</AlertDescription>
@@ -341,12 +411,25 @@ export function QuizRunner({
     const scoreTone =
       scorePercent >= 80 ? "success" : scorePercent >= 50 ? "warning" : "destructive";
     return (
-      <div className="space-y-4">
-        <Card>
-          <CardContent className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-semibold">
+      <div className="mx-auto max-w-3xl space-y-5">
+        <Card className="relative overflow-hidden border-primary/15 bg-primary/[0.045]">
+          <div aria-hidden="true" className="absolute inset-x-10 top-0 h-px bg-primary/30" />
+          <CardContent className="flex flex-col items-center gap-6 py-4 text-center sm:flex-row sm:text-left">
+            <div
+              className="relative grid size-28 shrink-0 place-items-center rounded-full p-2"
+              style={{
+                background: `conic-gradient(var(--primary) ${scorePercent}%, var(--muted) 0)`,
+              }}
+              aria-hidden="true"
+            >
+              <span className="grid size-full place-items-center rounded-full bg-card font-heading text-3xl font-semibold text-primary">
+                {scorePercent}%
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+                <CheckCircle2 className="size-4.5 text-primary" />
+                <h2 className="font-heading text-2xl font-semibold tracking-[-0.025em]">
                   {t("score", {
                     correct: result.correctCount,
                     total: result.questionCount,
@@ -360,7 +443,7 @@ export function QuizRunner({
                   : t("reviewMissed")}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex shrink-0 flex-wrap justify-center gap-2 sm:justify-end">
               <Button variant="outline" onClick={() => void startAttempt()}>
                 {t("retake")}
               </Button>
@@ -372,6 +455,11 @@ export function QuizRunner({
             </div>
           </CardContent>
         </Card>
+        <div className="flex items-center gap-3 pt-3">
+          <span className="h-px flex-1 bg-border" />
+          <p className="eyebrow">{t("reviewTitle")}</p>
+          <span className="h-px flex-1 bg-border" />
+        </div>
         {questions.map((question) => {
           const item = result.results.find((entry) => entry.questionId === question.id);
           if (!item) {
@@ -397,14 +485,21 @@ export function QuizRunner({
     return null;
   }
   const response = responses[currentQuestion.id];
+  const sourceOptions = currentQuestion.options ?? [];
+  const currentOptionOrder = isIndexOrder(
+    optionOrders[currentQuestion.id],
+    sourceOptions.length,
+  )
+    ? optionOrders[currentQuestion.id]
+    : sourceOptions.map((_, index) => index);
   const answeredCount = questions.filter((question) =>
     isAnswered(question, responses[question.id]),
   ).length;
 
   return (
-    <div className="space-y-4">
-      <div>
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+    <div className="mx-auto max-w-3xl space-y-5">
+      <div className="rounded-xl border border-border/70 bg-card/55 px-4 py-3">
+        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
           <span>
             {t("questionProgress", { current: current + 1, total: questions.length })}
           </span>
@@ -412,25 +507,31 @@ export function QuizRunner({
             {t("answeredProgress", { answered: answeredCount, total: questions.length })}
           </span>
         </div>
-        <Progress className="mt-2 h-1.5" value={((current + 1) / questions.length) * 100} />
+        <Progress className="mt-2.5" value={((current + 1) / questions.length) * 100} />
       </div>
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
-      <Card>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-2">
+      <Card className="relative min-h-[25rem] border-primary/10">
+        <div aria-hidden="true" className="absolute inset-y-6 left-0 w-px bg-primary/25" />
+        <CardContent className="space-y-6 py-2 sm:px-8 sm:py-5">
+          <div className="flex items-center justify-between gap-2">
             <Badge variant="secondary">{categoryLabel(currentQuestion.category)}</Badge>
+            <span className="font-heading text-sm italic text-muted-foreground/60">
+              {String(current + 1).padStart(2, "0")}
+            </span>
           </div>
-          <p className="whitespace-pre-wrap text-base font-medium">{currentQuestion.stem}</p>
+          <h2 className="whitespace-pre-wrap font-heading text-2xl leading-snug font-semibold tracking-[-0.02em] sm:text-3xl">
+            {currentQuestion.stem}
+          </h2>
           {currentQuestion.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={currentQuestion.imageUrl}
               alt={tReview("handwritten")}
-              className="max-h-72 rounded-lg border border-border object-contain"
+              className="max-h-80 rounded-xl border border-border/70 bg-muted/30 object-contain"
             />
           ) : null}
           {currentQuestion.type === "mcq" || currentQuestion.type === "image" ? (
@@ -439,6 +540,34 @@ export function QuizRunner({
               onValueChange={(value) =>
                 setAnswer(currentQuestion.id, { index: Number(value) })
               }
+              onKeyDownCapture={(event) => {
+                if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+                  return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                if (currentOptionOrder.length === 0) {
+                  return;
+                }
+                const selectedPosition =
+                  typeof response?.index === "number"
+                    ? currentOptionOrder.indexOf(response.index)
+                    : -1;
+                const nextPosition =
+                  selectedPosition < 0
+                    ? event.key === "ArrowDown"
+                      ? 0
+                      : currentOptionOrder.length - 1
+                    : (selectedPosition +
+                        (event.key === "ArrowDown" ? 1 : -1) +
+                        currentOptionOrder.length) %
+                      currentOptionOrder.length;
+                const nextIndex = currentOptionOrder[nextPosition];
+                if (typeof nextIndex === "number") {
+                  setAnswer(currentQuestion.id, { index: nextIndex });
+                  optionRefs.current[nextIndex]?.focus();
+                }
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.repeat) {
                   event.preventDefault();
@@ -446,27 +575,48 @@ export function QuizRunner({
                 }
               }}
             >
-              {(currentQuestion.options ?? []).map((option, index) => {
-                const selected = response?.index === index;
-                const optionId = `${currentQuestion.id}-option-${index}`;
+              {currentOptionOrder.map((optionIndex, displayIndex) => {
+                const option = sourceOptions[optionIndex];
+                const selected = response?.index === optionIndex;
+                const optionId = `${currentQuestion.id}-option-${optionIndex}`;
                 return (
                   <Label
                     key={optionId}
                     htmlFor={optionId}
                     className={cn(
-                      "mb-0 w-full cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm leading-normal font-normal",
-                      selected ? "border-primary bg-muted" : "border-border hover:bg-muted",
+                      "group/option mb-0 w-full cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 text-sm leading-normal font-normal transition has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/25",
+                      selected
+                        ? "border-primary/45 bg-primary/[0.07] shadow-[0_0_0_1px_color-mix(in_oklch,var(--primary),transparent_70%)]"
+                        : "border-border/80 bg-card/45 hover:border-primary/20 hover:bg-muted/60",
                     )}
                   >
-                    <RadioGroupItem value={String(index)} id={optionId} />
-                    <span>{option}</span>
+                    <RadioGroupItem
+                      ref={(element) => {
+                        optionRefs.current[optionIndex] = element;
+                      }}
+                      value={String(optionIndex)}
+                      id={optionId}
+                      className="sr-only"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "grid size-6 shrink-0 place-items-center rounded-lg border text-[0.65rem] font-semibold transition",
+                        selected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-muted/50 text-muted-foreground group-hover/option:text-foreground",
+                      )}
+                    >
+                      {String.fromCharCode(65 + displayIndex)}
+                    </span>
+                    <span className="flex-1">{option}</span>
                   </Label>
                 );
               })}
             </RadioGroup>
           ) : null}
           {currentQuestion.type === "true_false" ? (
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-3">
               {[true, false].map((value) => {
                 const selected = response?.value === value;
                 return (
@@ -474,6 +624,7 @@ export function QuizRunner({
                     key={String(value)}
                     type="button"
                     variant={selected ? "default" : "outline"}
+                    className="h-12"
                     onClick={() => setAnswer(currentQuestion.id, { value })}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" && !event.repeat) {
@@ -523,12 +674,13 @@ export function QuizRunner({
         ) : null}
         </CardContent>
       </Card>
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="sticky bottom-3 z-20 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border/75 bg-background/85 p-2 shadow-[0_10px_36px_rgb(var(--shadow-colour)/0.1)] backdrop-blur-xl">
         <Button
           variant="outline"
           onClick={() => goTo(current - 1, currentQuestion.id)}
           disabled={current === 0}
         >
+          <ArrowLeft />
           {t("back")}
         </Button>
         <div className="flex gap-2">
@@ -538,6 +690,7 @@ export function QuizRunner({
             disabled={current === questions.length - 1}
           >
             {t("next")}
+            <ArrowRight />
           </Button>
           <Button onClick={() => void submit()} disabled={phase === "submitting"}>
             {phase === "submitting" ? <Loader2 className="animate-spin" /> : null}

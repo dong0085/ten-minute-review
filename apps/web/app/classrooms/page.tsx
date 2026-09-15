@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { ArrowRight, BookOpen, Plus, Sparkles } from "lucide-react";
 import { bankSize, getDailyQuizByClassroomAndDate, listClassrooms } from "@tmr/db";
 import {
   ClassroomCard,
@@ -30,38 +31,77 @@ export default async function ClassroomsPage() {
         bankSize(db, classroom.id),
         getDailyQuizByClassroomAndDate(db, classroom.id, today),
       ]);
-      return { classroom, bankSize: size, todayQuizId: quiz?.id ?? null };
+      return {
+        classroom,
+        bankSize: size,
+        todayQuizId: quiz?.id ?? null,
+        dormant: isClassroomDormant(classroom.activeUntil),
+      };
     }),
   );
 
   if (cards.length === 0) {
     return (
-      <div className="mx-auto max-w-xl space-y-6 py-8 text-center">
-        <h1 className="text-2xl font-semibold">{t("emptyTitle")}</h1>
-        <p className="text-muted-foreground">{t("emptyBlurb")}</p>
-        <Button asChild>
-          <Link href="/classrooms/new">{t("create")}</Link>
-        </Button>
+      <div className="mx-auto max-w-3xl py-10 sm:py-16">
+        <div className="editorial-surface relative overflow-hidden rounded-[2rem] px-6 py-12 text-center sm:px-12 sm:py-16">
+          <div aria-hidden="true" className="absolute inset-x-16 top-0 h-px bg-primary/30" />
+          <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/[0.09] text-primary">
+            <BookOpen className="size-5" />
+          </span>
+          <p className="eyebrow mt-7">{t("emptyKicker")}</p>
+          <h1 className="mx-auto mt-3 max-w-xl font-heading text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+            {t("emptyTitle")}
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
+            {t("emptyBlurb")}
+          </p>
+          <Button asChild size="lg" className="mt-8">
+            <Link href="/classrooms/new">
+              {t("create")}
+              <ArrowRight />
+            </Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
+  const activeCount = cards.filter(({ dormant }) => !dormant).length;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <Button asChild size="sm">
-          <Link href="/classrooms/new">{t("newClassroom")}</Link>
-        </Button>
+    <div className="space-y-8">
+      <div className="flex flex-col gap-6 border-b border-border/70 pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="eyebrow">{t("kicker")}</p>
+          <h1 className="mt-2 font-heading text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+            {t("title")}
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+            {t("blurb")}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="hidden items-center gap-2 rounded-xl border border-border/70 bg-card/60 px-3.5 py-2 text-xs text-muted-foreground sm:flex">
+            <Sparkles className="size-3.5 text-primary" />
+            {t("activeSummary", { active: activeCount, total: cards.length })}
+          </div>
+          <Button asChild>
+            <Link href="/classrooms/new">
+              <Plus />
+              {t("newClassroom")}
+            </Link>
+          </Button>
+        </div>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {cards.map(({ classroom, bankSize: size, todayQuizId }) => (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map(({ classroom, bankSize: size, todayQuizId, dormant }, index) => (
           <ClassroomCard
             key={classroom.id}
+            index={index + 1}
             classroom={classroom}
             bankSize={size}
             todayQuizId={todayQuizId}
-            dormant={isClassroomDormant(classroom.activeUntil)}
+            dormant={dormant}
           />
         ))}
       </div>

@@ -9,10 +9,15 @@ export default async function NewClassroomPage() {
   const defaultNativeLanguage = isLanguageCode(user.uiLanguage) ? user.uiLanguage : "en";
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("pageTitle")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("pageBlurb")}</p>
+    <div className="mx-auto max-w-lg space-y-7 py-4">
+      <div className="text-center">
+        <div className="mx-auto h-px w-10 bg-primary/40" />
+        <h1 className="mt-5 font-heading text-4xl font-semibold tracking-[-0.035em]">
+          {t("pageTitle")}
+        </h1>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+          {t("pageBlurb")}
+        </p>
       </div>
       <NewClassroomForm defaultNativeLanguage={defaultNativeLanguage} />
     </div>

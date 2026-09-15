@@ -18,7 +18,7 @@ import { languageLabel } from "@/lib/language-label";
 import { GoogleButton } from "./google-button";
 
 const selectClass =
-  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition focus:border-ring disabled:opacity-50 dark:bg-input/30";
+  "h-10 w-full rounded-xl border border-input/90 bg-card/55 px-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/25 disabled:opacity-50 dark:bg-input/20";
 
 const subscribe = () => () => {};
 
@@ -100,7 +100,7 @@ export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
 
   if (done) {
     return (
-      <Card>
+      <Card className="border-primary/10 bg-card/80">
         <CardContent className="space-y-3">
           <h2 className="text-lg font-semibold">{t("checkEmailTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("checkEmailBody", { email })}</p>
@@ -113,7 +113,7 @@ export function SignUpForm({ initialCode = "" }: { initialCode?: string }) {
   }
 
   return (
-    <Card>
+    <Card className="border-primary/10 bg-card/80">
       <CardContent className="space-y-5">
         <form className="space-y-4" onSubmit={onSubmit}>
           <div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { BookOpen, Clock3, Home, Settings2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ClassroomTabs({ classroomId }: { classroomId: string }) {
@@ -10,28 +11,30 @@ export function ClassroomTabs({ classroomId }: { classroomId: string }) {
   const pathname = usePathname();
   const base = `/classrooms/${classroomId}`;
   const tabs = [
-    { label: t("home"), href: base },
-    { label: t("upload"), href: `${base}/upload` },
-    { label: t("history"), href: `${base}/history` },
-    { label: t("quizzes"), href: `${base}/quizzes` },
-    { label: t("settings"), href: `${base}/settings` },
+    { label: t("home"), href: base, icon: Home },
+    { label: t("upload"), href: `${base}/upload`, icon: Upload },
+    { label: t("history"), href: `${base}/history`, icon: Clock3 },
+    { label: t("quizzes"), href: `${base}/quizzes`, icon: BookOpen },
+    { label: t("settings"), href: `${base}/settings`, icon: Settings2 },
   ];
 
   return (
-    <nav className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border">
+    <nav className="flex gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border/70 bg-muted/45 p-1">
       {tabs.map((tab) => {
         const active = tab.href === base ? pathname === base : pathname.startsWith(tab.href);
+        const Icon = tab.icon;
         return (
           <Link
             key={tab.href}
             href={tab.href}
             className={cn(
-              "-mb-px shrink-0 border-b-2 px-3 py-2 text-sm transition",
+              "inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition sm:text-sm",
               active
-                ? "border-primary font-medium text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground",
+                ? "bg-card text-foreground shadow-[0_1px_3px_rgb(var(--shadow-colour)/0.08)]"
+                : "text-muted-foreground hover:bg-card/45 hover:text-foreground",
             )}
           >
+            <Icon className={cn("size-3.5", active && "text-primary")} />
             {tab.label}
           </Link>
         );

@@ -22,6 +22,7 @@ export const quiz = {
     reviewMissed: "Review the missed ones below, then try again.",
     retake: "Retake",
     fullReview: "Full review",
+    reviewTitle: "Question review",
     questionProgress: "Question {current} of {total}",
     answeredProgress: "{answered} of {total} answered",
     blank: "Blank {number}",

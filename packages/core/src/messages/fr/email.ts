@@ -4,7 +4,7 @@ import type { MessageShape } from "../type";
 export const email: MessageShape<(typeof en)["Email"]> = {
   actionFallback: "Si le bouton ne fonctionne pas, ouvre ce lien :",
   verificationSubject: "Confirme ton adresse e-mail",
-  verificationBody: "Un clic et ton compte ten-minute-review est prêt.",
+  verificationBody: "Un clic et ton compte Ten Minutes Review est prêt.",
   verificationAction: "Confirmer mon adresse",
   resetSubject: "Réinitialise ton mot de passe",
   resetBody:

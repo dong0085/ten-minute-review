@@ -1,4 +1,4 @@
-# ten-minute-review — agent notes
+# ten-minutes-review — agent notes
 
 Specs live in `docs/`: `SCOPE.md` (every product decision), `PROMPTS.md` (the two prompts), `TECHNICAL.md` (architecture, data model, API, pipelines), `FLOWS.md` (screen behaviour), `TRIAL-RUN.md` (field notes). Read `docs/TECHNICAL.md` before changing architecture.
 

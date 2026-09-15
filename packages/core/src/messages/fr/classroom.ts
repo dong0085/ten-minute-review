@@ -18,6 +18,7 @@ export const classroom: MessageShape<(typeof en)["Classroom"]> = {
     addNotes: "Ajouter des notes",
   },
   TodayQuiz: {
+    kicker: "Dix nouvelles minutes",
     title: "Le quiz du jour",
     ready: "Ton quiz du jour est prêt.",
     idle: "Crée-le maintenant ou attends ton e-mail du matin.",
@@ -88,20 +89,28 @@ export const classroom: MessageShape<(typeof en)["Classroom"]> = {
     deleteError: "Impossible de supprimer cette classe. Réessaie.",
   },
   BankSummary: {
+    kicker: "Ton contenu",
     title: "Banque de questions",
     empty: "Aucun point de connaissance pour le moment. Ajoute des notes pour construire la banque.",
     total:
       "{count, plural, one {# point de connaissance} other {# points de connaissance}} prêts à être utilisés.",
   },
   ListPage: {
+    kicker: "Tes espaces d'apprentissage",
     title: "Classes",
-    newClassroom: "+ Nouvelle classe",
+    blurb: "Chaque classe rassemble un fil de notes, de questions et de révisions quotidiennes.",
+    activeSummary: "{active} sur {total} actives",
+    newClassroom: "Nouvelle classe",
+    emptyKicker: "Commence par un cours",
     emptyTitle: "Tes notes deviennent un quiz de dix minutes",
     emptyBlurb:
       "Crée une classe, colle ou photographie tes notes de cours, et chaque matin tu reçois un petit quiz tiré de ce que tu as étudié : vocabulaire, expressions, grammaire, idées et compréhension.",
     create: "Créer une classe",
   },
   Layout: {
+    back: "Toutes les classes",
+    activeStatus: "Active",
+    dormantStatus: "En pause",
     dormant: "Les e-mails sont en pause — ajoute des notes ou ouvre cette page pour les relancer.",
   },
   HomePage: {
@@ -165,6 +174,7 @@ export const classroom: MessageShape<(typeof en)["Classroom"]> = {
     deleteError: "Impossible de supprimer ce quiz. Réessaie.",
   },
   UploadPage: {
+    kicker: "Enrichis la banque de questions",
     title: "Ajouter des notes",
     blurb:
       "Colle les notes de ta séance ou joins des photos de ton écriture. Les points rejoignent la banque dès que l'extraction est terminée.",

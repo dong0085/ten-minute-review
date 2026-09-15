@@ -75,9 +75,12 @@ export default async function AccountPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+    <div className="space-y-7">
+      <div className="border-b border-border/70 pb-7">
+        <p className="eyebrow">{t("overview")}</p>
+        <h1 className="mt-2 font-heading text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+          {t("title")}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">{user.username ?? user.email}</p>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <Badge variant="secondary">{t("free")}</Badge>
@@ -99,7 +102,7 @@ export default async function AccountPage() {
 
       <Card>
         <CardContent>
-          <h2 className="text-sm font-semibold">{t("profileSection")}</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("profileSection")}</h2>
           <ProfileForm
             defaultUsername={user.username}
             defaultUiLanguage={user.uiLanguage}
@@ -110,7 +113,7 @@ export default async function AccountPage() {
 
       <Card>
         <CardContent>
-          <h2 className="text-sm font-semibold">{t("emailPreferencesSection")}</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("emailPreferencesSection")}</h2>
           <EmailPreferencesForm
             defaultDailyEnabled={preferences?.dailyEnabled ?? true}
             defaultSendHourLocal={preferences?.sendHourLocal ?? 7}
@@ -123,7 +126,7 @@ export default async function AccountPage() {
 
       <Card>
         <CardContent>
-          <h2 className="text-sm font-semibold">{t("classroomsSection")}</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("classroomsSection")}</h2>
           {classrooms.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">
               {t("noClassrooms")}{" "}
@@ -164,7 +167,7 @@ export default async function AccountPage() {
 
       <Card>
         <CardContent>
-          <h2 className="text-sm font-semibold">{t("quizHistorySection")}</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("quizHistorySection")}</h2>
           {groupedQuizzes.size === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">{t("noQuizzes")}</p>
           ) : (
@@ -207,7 +210,7 @@ export default async function AccountPage() {
 
       <Card>
         <CardContent>
-          <h2 className="text-sm font-semibold">{t("referralsSection")}</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("referralsSection")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{t("shareBlurb")}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <code className="rounded bg-muted px-2 py-1 text-sm">
@@ -255,7 +258,7 @@ export default async function AccountPage() {
 
       <Card>
         <CardContent>
-          <h2 className="text-sm font-semibold">{t("dataSection")}</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("dataSection")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{t("exportBlurb")}</p>
           <Button asChild variant="outline" className="mt-3">
             <a href="/api/me/export">{t("exportButton")}</a>
@@ -269,7 +272,7 @@ export default async function AccountPage() {
       {process.env.NODE_ENV !== "production" ? (
         <Card>
           <CardContent>
-            <h2 className="text-sm font-semibold">{t("subscriptionSection")}</h2>
+            <h2 className="font-heading text-xl font-semibold">{t("subscriptionSection")}</h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{t("free")}</Badge>
               <p className="text-sm text-muted-foreground">{t("billingOff")}</p>

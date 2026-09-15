@@ -14,6 +14,7 @@ export const classroom = {
     addNotes: "Add notes",
   },
   TodayQuiz: {
+    kicker: "A fresh ten minutes",
     title: "Today's quiz",
     ready: "Your quiz for today is ready.",
     idle: "Create one now, or wait for your morning email.",
@@ -84,19 +85,27 @@ export const classroom = {
     deleteError: "Could not delete this classroom. Please try again.",
   },
   BankSummary: {
+    kicker: "Your material",
     title: "Question bank",
     empty: "No knowledge points yet. Add notes to build the bank.",
     total: "{count, plural, one {# knowledge point} other {# knowledge points}} ready to draw from.",
   },
   ListPage: {
+    kicker: "Your learning spaces",
     title: "Classrooms",
-    newClassroom: "+ New classroom",
+    blurb: "Each classroom keeps one stream of notes, questions, and daily reviews together.",
+    activeSummary: "{active} of {total} active",
+    newClassroom: "New classroom",
+    emptyKicker: "Begin with one lesson",
     emptyTitle: "Your notes become a ten-minute quiz",
     emptyBlurb:
       "Create a classroom, paste or photograph your tutoring notes, and every morning you get a short quiz drawn from what you studied: vocabulary, phrases, grammar, ideas, and comprehension.",
     create: "Create a classroom",
   },
   Layout: {
+    back: "All classrooms",
+    activeStatus: "Active",
+    dormantStatus: "Dormant",
     dormant: "Emails have stopped — add notes or open this page to resume.",
   },
   HomePage: {
@@ -158,6 +167,7 @@ export const classroom = {
     deleteError: "Could not delete this quiz. Please try again.",
   },
   UploadPage: {
+    kicker: "Build the question bank",
     title: "Add notes",
     blurb:
       "Paste your session notes or attach photos of your handwriting. Points join the bank as soon as extraction finishes.",

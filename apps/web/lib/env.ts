@@ -19,7 +19,7 @@ export const env = {
     "brevo",
   ] as const),
   storageProvider: provider(process.env.STORAGE_PROVIDER, "local", ["local", "vercel"] as const),
-  emailFrom: process.env.EMAIL_FROM ?? "Ten Minute Review <onboarding@resend.dev>",
+  emailFrom: process.env.EMAIL_FROM ?? "Ten Minutes Review <onboarding@resend.dev>",
   resendApiKey: process.env.RESEND_API_KEY ?? "",
   brevoApiKey: process.env.BREVO_API_KEY ?? "",
   deepseekApiKey: process.env.DEEPSEEK_API_KEY ?? "",

@@ -7,7 +7,7 @@ export function startHealthServer(port: number): http.Server {
       response.end(
         JSON.stringify({
           status: "ok",
-          service: "ten-minute-review-worker",
+          service: "ten-minutes-review-worker",
           uptimeSeconds: Math.round(process.uptime()),
         }),
       );

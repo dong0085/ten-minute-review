@@ -40,7 +40,7 @@ export const env = {
     "brevo",
   ] as const),
   storageProvider: provider(process.env.STORAGE_PROVIDER, "local", ["local", "vercel"] as const),
-  emailFrom: process.env.EMAIL_FROM ?? "ten-minute-review <onboarding@resend.dev>",
+  emailFrom: process.env.EMAIL_FROM ?? "Ten Minutes Review <onboarding@resend.dev>",
   deepseekApiKey: process.env.DEEPSEEK_API_KEY ?? "",
   deepseekBaseUrl: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
   deepseekModel: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",

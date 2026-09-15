@@ -1,4 +1,4 @@
-# ten-minute-review
+# ten-minutes-review
 
 Turns a tutoring session's notes — typed text or photos of handwriting — into a daily quiz that takes under 10 minutes.
 

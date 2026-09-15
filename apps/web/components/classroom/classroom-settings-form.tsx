@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { languageLabel } from "@/lib/language-label";
 
 const selectClass =
-  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition focus:border-ring disabled:opacity-50 dark:bg-input/30";
+  "h-10 w-full rounded-xl border border-input/90 bg-card/55 px-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/25 disabled:opacity-50 dark:bg-input/20";
 
 export function ClassroomSettingsForm({
   classroom,
@@ -75,7 +75,7 @@ export function ClassroomSettingsForm({
     <Card>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
-        <h2 className="text-lg font-semibold">{t("title")}</h2>
+        <h2 className="font-heading text-2xl font-semibold tracking-[-0.025em]">{t("title")}</h2>
         <div>
           <Label>{t("name")}</Label>
           <Input

@@ -1,4 +1,4 @@
-export const APP_NAME = "ten-minute-review";
+export const APP_NAME = "Ten Minutes Review";
 
 export const DEFAULT_AUTO_STOP_DAYS = 7;
 

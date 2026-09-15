@@ -21,15 +21,15 @@ export default async function QuizPage({
     notFound();
   }
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-7">
+      <div className="mx-auto max-w-3xl">
         <Link
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="text-xs font-medium text-muted-foreground transition hover:text-foreground"
           href={`/classrooms/${id}/quizzes`}
         >
           {t("allQuizzes")}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">
+        <h1 className="mt-3 font-heading text-4xl font-semibold tracking-[-0.035em]">
           {formatQuizDate(data.quiz.quizDate, locale)}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

@@ -17,9 +17,12 @@ export default async function ResetPage({
   const t = await getTranslations("Auth.ResetPage");
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+    <div className="mx-auto max-w-md space-y-7 py-6 sm:py-10">
+      <div className="text-center">
+        <div className="mx-auto h-px w-10 bg-primary/40" />
+        <h1 className="mt-5 font-heading text-4xl font-semibold tracking-[-0.035em]">
+          {t("title")}
+        </h1>
       </div>
       {token ? (
         <ResetForm token={token} />

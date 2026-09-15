@@ -1,8 +1,38 @@
 export const home = {
-  title: "Your notes become a ten-minute quiz",
+  eyebrow: "A quieter way to keep learning",
+  title: "Your notes become a <highlight>ten-minute quiz</highlight>",
   description:
     "Paste your tutoring notes or photograph your handwriting. Every morning you get a quiz drawn from what you actually studied — vocabulary, phrases, grammar, ideas, and comprehension.",
   goToClassrooms: "Go to my classrooms",
   createAccount: "Create account",
   signIn: "Sign in",
+  proof: {
+    handwriting: "Text or handwriting",
+    fresh: "Fresh questions each day",
+    tenMinutes: "Made for ten minutes",
+  },
+  preview: {
+    kicker: "From your last lesson",
+    title: "Tuesday's review",
+    notes: "Tutor notes",
+    session: "French · 4:20 pm",
+    quiz: "Daily quiz",
+    question: "Question 3 of 8",
+    ready: "Ready",
+  },
+  howItWorksKicker: "A simple rhythm",
+  howItWorksTitle: "Study what was actually taught.",
+  steps: {
+    addTitle: "Add your notes",
+    addCopy: "Paste the session recap or photograph a handwritten page.",
+    shapeTitle: "We shape the material",
+    shapeCopy: "Useful vocabulary, grammar, phrases, ideas, and passages become a question bank.",
+    reviewTitle: "Review each morning",
+    reviewCopy: "Open a fresh quiz sized to fit comfortably inside ten minutes.",
+  },
+  categoriesTitle: "More than a <highlight>vocabulary drill.</highlight>",
+  categoriesCopy:
+    "Each review moves between recall, production, structure, and comprehension so the lesson stays connected.",
+  closingKicker: "Tomorrow's review starts today",
+  closingTitle: "Give the lesson <highlight>ten more minutes</highlight> before it slips away.",
 } as const;

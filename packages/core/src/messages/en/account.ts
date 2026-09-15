@@ -1,4 +1,5 @@
 export const account = {
+  overview: "Your learning record",
   title: "Account",
   profileSection: "Profile",
   emailPreferencesSection: "Email preferences",

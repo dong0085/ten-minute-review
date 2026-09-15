@@ -1,5 +1,5 @@
 {
-  "name": "ten-minute-review",
+  "name": "ten-minutes-review",
   "private": true,
   "packageManager": "pnpm@10.15.0",
   "engines": {

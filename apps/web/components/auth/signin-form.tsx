@@ -45,7 +45,7 @@ export function SignInForm() {
   }
 
   return (
-    <Card>
+    <Card className="border-primary/10 bg-card/80">
       <CardContent className="space-y-5">
         <form className="space-y-4" onSubmit={onSubmit}>
           <div>

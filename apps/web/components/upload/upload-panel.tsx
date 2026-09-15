@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+} from "react";
 import { useTranslations } from "next-intl";
+import { ArrowRight, FileText, ImagePlus, Loader2, UploadCloud, X } from "lucide-react";
 import { MAX_IMAGE_BYTES } from "@tmr/core";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -30,9 +38,6 @@ type UploadRow = {
   createdAt: string;
   imageUrl: string | null;
 };
-
-const fileInputClass =
-  "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground focus:border-ring dark:bg-input/30";
 
 async function readError(response: Response): Promise<string | null> {
   const data: unknown = await response.json().catch(() => null);
@@ -64,6 +69,31 @@ function StatusBadge({ status }: { status: ExtractionStatus }) {
   return <Badge variant="warning">{t("queued")}</Badge>;
 }
 
+function SelectedFilePreview({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const t = useTranslations("Upload.Panel");
+
+  return (
+    <li className="group relative overflow-hidden rounded-xl border border-border/70 bg-card">
+      <div className="paper-lines grid h-24 place-items-center bg-primary/[0.035]">
+        <span className="grid size-9 place-items-center rounded-xl bg-card text-primary shadow-sm">
+          <ImagePlus className="size-4" />
+        </span>
+      </div>
+      <div className="flex items-center gap-2 px-2.5 py-2">
+        <span className="min-w-0 flex-1 truncate text-xs">{file.name}</span>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+          aria-label={`${t("remove")} ${file.name}`}
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+    </li>
+  );
+}
+
 export function UploadPanel({ classroomId }: { classroomId: string }) {
   const t = useTranslations("Upload.Panel");
   const tCommon = useTranslations("Common");
@@ -77,6 +107,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
   const [bankBefore, setBankBefore] = useState<number | null>(null);
   const [bankAfter, setBankAfter] = useState<number | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [dragActive, setDragActive] = useState(false);
 
   const loadUploads = useCallback(async () => {
     const response = await fetch(`/api/classrooms/${classroomId}/uploads`);
@@ -143,9 +174,8 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
     }
   };
 
-  const handleFiles = (event: ChangeEvent<HTMLInputElement>) => {
+  const addFiles = (selected: File[]) => {
     setFileError(null);
-    const selected = Array.from(event.target.files ?? []);
     const next = [...files];
     for (const file of selected) {
       if (!file.type.startsWith("image/")) {
@@ -163,6 +193,16 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
       next.push(file);
     }
     setFiles(next);
+  };
+
+  const handleFiles = (event: ChangeEvent<HTMLInputElement>) => {
+    addFiles(Array.from(event.target.files ?? []));
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDragActive(false);
+    addFiles(Array.from(event.dataTransfer.files));
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -223,73 +263,127 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <Label>{t("pasteLabel")}</Label>
-            <Textarea
-              rows={8}
-              value={text}
-              onChange={(event) => setText(event.target.value)}
-              placeholder={t("pastePlaceholder")}
-            />
-          </div>
-          <div>
-            <Label>{t("attachImages")}</Label>
-            <input
-              key={fileInputKey}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleFiles}
-              className={fileInputClass}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t("upToImages", { max: MAX_FILES })}
-            </p>
-            {fileError ? <p className="mt-2 text-sm text-destructive">{fileError}</p> : null}
-            {files.length > 0 ? (
-              <ul className="mt-3 space-y-1">
-                {files.map((file, index) => (
-                  <li
-                    key={`${file.name}-${index}`}
-                    className="flex items-center justify-between gap-3 rounded-lg bg-muted px-3 py-2 text-sm"
+      <form onSubmit={handleSubmit}>
+        <Card className="overflow-visible bg-card/75">
+          <CardContent className="grid gap-6 lg:grid-cols-2">
+            <section>
+              <div className="mb-4 flex items-start gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/[0.08] text-primary">
+                  <FileText className="size-4" />
+                </span>
+                <div>
+                  <Label htmlFor="note-text" className="mb-0 font-heading text-lg font-semibold">
+                    {t("pasteLabel")}
+                  </Label>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("textHint")}</p>
+                </div>
+              </div>
+              <Textarea
+                id="note-text"
+                rows={12}
+                value={text}
+                onChange={(event) => setText(event.target.value)}
+                placeholder={t("pastePlaceholder")}
+                className="paper-lines min-h-80 resize-y bg-background/45 leading-8"
+              />
+            </section>
+
+            <section>
+              <div className="mb-4 flex items-start gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/[0.08] text-primary">
+                  <ImagePlus className="size-4" />
+                </span>
+                <div>
+                  <Label className="mb-0 font-heading text-lg font-semibold">
+                    {t("attachImages")}
+                  </Label>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {t("upToImages", { max: MAX_FILES })}
+                  </p>
+                </div>
+              </div>
+              <div
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  setDragActive(true);
+                }}
+                onDragOver={(event) => event.preventDefault()}
+                onDragLeave={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    setDragActive(false);
+                  }
+                }}
+                onDrop={handleDrop}
+                className={`grid min-h-48 place-items-center rounded-2xl border border-dashed p-6 text-center transition ${
+                  dragActive
+                    ? "border-primary bg-primary/[0.08]"
+                    : "border-border bg-muted/25 hover:border-primary/30 hover:bg-primary/[0.035]"
+                }`}
+              >
+                <div>
+                  <UploadCloud className="mx-auto size-6 text-primary" strokeWidth={1.6} />
+                  <p className="mt-4 text-sm font-medium">{t("dropTitle")}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("dropCopy")}</p>
+                  <Label
+                    htmlFor={`note-images-${fileInputKey}`}
+                    className="mx-auto mt-4 inline-flex h-9 w-fit cursor-pointer items-center rounded-[0.7rem] border border-border bg-card px-3.5 text-sm shadow-sm transition hover:border-primary/25 hover:bg-accent"
                   >
-                    <span className="min-w-0 truncate">{file.name}</span>
-                    <button
-                      type="button"
-                      className="text-xs text-muted-foreground hover:text-destructive"
-                      onClick={() =>
+                    {t("chooseImages")}
+                  </Label>
+                  <input
+                    key={fileInputKey}
+                    id={`note-images-${fileInputKey}`}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFiles}
+                    className="sr-only"
+                  />
+                </div>
+              </div>
+              {fileError ? <p className="mt-2 text-sm text-destructive">{fileError}</p> : null}
+              {files.length > 0 ? (
+                <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+                  {files.map((file, index) => (
+                    <SelectedFilePreview
+                      key={`${file.name}-${file.lastModified}-${index}`}
+                      file={file}
+                      onRemove={() =>
                         setFiles((current) =>
                           current.filter((_, fileIndex) => fileIndex !== index),
                         )
                       }
-                    >
-                      {t("remove")}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+                    />
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          </CardContent>
+          <div className="flex flex-col gap-3 border-t border-border/65 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              {formError ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+              ) : (
+                <p className="text-xs text-muted-foreground">{t("backgroundHint")}</p>
+              )}
+            </div>
+            <Button type="submit" size="lg" disabled={submitting}>
+              {submitting ? <Loader2 className="animate-spin" /> : null}
+              {submitting ? t("savingNotes") : t("uploadNotes")}
+              {!submitting ? <ArrowRight /> : null}
+            </Button>
           </div>
-          {formError ? (
-            <Alert variant="destructive">
-              <AlertDescription>{formError}</AlertDescription>
-            </Alert>
-          ) : null}
-          <Button type="submit" disabled={submitting}>
-            {submitting ? t("savingNotes") : t("uploadNotes")}
-          </Button>
-          </form>
-        </CardContent>
-      </Card>
+        </Card>
+      </form>
       {sessionIds.length > 0 ? (
-        <Card>
+        <Card className="border-primary/15 bg-primary/[0.035]" aria-live="polite">
           <CardContent>
             <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold">
+              <p className="eyebrow">{t("statusKicker")}</p>
+              <h2 className="mt-2 font-heading text-2xl font-semibold">
                 {processing ? t("readingNotes") : t("processingFinished")}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -310,7 +404,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
                 upload.extractionStatus === "done" &&
                 sessionUploads.length === 1;
               return (
-                <li key={upload.id} className="rounded-lg border border-border p-3">
+                <li key={upload.id} className="rounded-xl border border-border/70 bg-card/65 p-3.5">
                   <div className="flex items-center justify-between gap-3">
                     <p className="min-w-0 truncate text-sm">
                       {upload.subject ??
@@ -345,10 +439,11 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
           ) : null}
           <div className="mt-4 text-sm">
             <Link
-              className="text-muted-foreground underline hover:text-foreground"
+              className="inline-flex items-center gap-1 font-medium text-muted-foreground transition hover:text-foreground"
               href={`/classrooms/${classroomId}/history`}
             >
               {t("viewHistory")}
+              <ArrowRight className="size-3.5" />
             </Link>
           </div>
           </CardContent>

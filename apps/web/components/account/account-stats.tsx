@@ -27,7 +27,7 @@ export async function AccountStats({
 
   if (activity.attemptCount === 0) {
     return (
-      <Card>
+      <Card className="border-primary/10 bg-card/75">
         <CardContent>
           <p className="text-sm text-muted-foreground">{t("empty")}</p>
           <Button asChild variant="outline" className="mt-3">
@@ -61,13 +61,15 @@ export async function AccountStats({
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-card/75">
         <CardContent>
-          <h2 className="text-sm font-semibold">{t("activityTitle")}</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("activityTitle")}</h2>
           <dl className="mt-3 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {tiles.map((tile) => (
-              <div key={tile.label}>
-                <dd className="text-xl font-semibold">{tile.value}</dd>
+              <div key={tile.label} className="rounded-xl border border-border/60 bg-muted/25 px-3 py-3">
+                <dd className="font-heading text-2xl font-semibold tabular-nums text-primary">
+                  {tile.value}
+                </dd>
                 <dt className="mt-0.5 text-xs text-muted-foreground">{tile.label}</dt>
               </div>
             ))}
@@ -75,10 +77,10 @@ export async function AccountStats({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-card/75">
         <CardContent>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold">{t("learningTitle")}</h2>
+            <h2 className="font-heading text-xl font-semibold">{t("learningTitle")}</h2>
             {attempts.length >= 2 ? (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>{t("trend", { count: attempts.length })}</span>
@@ -120,7 +122,7 @@ export async function AccountStats({
                         {accuracy}%
                       </span>
                     </div>
-                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full rounded-full bg-primary"
                         style={{ width: `${accuracy}%` }}

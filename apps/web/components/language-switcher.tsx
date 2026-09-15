@@ -44,7 +44,7 @@ export function LanguageSwitcher({ signedIn }: { signedIn: boolean }) {
   return (
     <select
       aria-label={t("language")}
-      className="h-7 rounded-lg border border-input bg-transparent px-2 text-sm text-muted-foreground outline-none transition focus:border-ring disabled:opacity-50 dark:bg-input/30"
+      className="h-8 rounded-[0.65rem] border border-input/80 bg-card/60 px-2.5 text-xs font-medium text-muted-foreground outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/25 disabled:opacity-50 dark:bg-input/20"
       value={locale}
       onChange={handleChange}
       disabled={saving || pending}

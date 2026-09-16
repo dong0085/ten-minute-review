@@ -1,12 +1,13 @@
 import { getTranslations } from "next-intl/server";
 import { isLanguageCode } from "@tmr/core";
 import { NewClassroomForm } from "@/components/classroom/new-classroom-form";
-import { requireUser } from "@/lib/session";
+import { getCurrentUserOrGuest } from "@/lib/session";
 
 export default async function NewClassroomPage() {
-  const user = await requireUser();
+  const current = await getCurrentUserOrGuest();
   const t = await getTranslations("Classroom.NewForm");
-  const defaultNativeLanguage = isLanguageCode(user.uiLanguage) ? user.uiLanguage : "en";
+  const defaultNativeLanguage =
+    current && isLanguageCode(current.user.uiLanguage) ? current.user.uiLanguage : "en";
 
   return (
     <div className="mx-auto max-w-lg space-y-7 py-4">

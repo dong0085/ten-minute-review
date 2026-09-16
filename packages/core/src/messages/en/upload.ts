@@ -39,5 +39,12 @@ export const upload = {
       "Your upload is kept. A retry is automatic, and you can read the material any time in History.",
     pointsAdded: "+{count} knowledge points added from these uploads.",
     viewHistory: "View upload history",
+    guestModalTitle: "Notes uploaded!",
+    guestModalDescription:
+      "We're processing your notes into studyable points. Sign up to receive your 10-minute daily quiz every morning and keep your notes safe.",
+    guestModalSignUp: "Sign up to receive your daily quiz",
+    guestModalContinue: "Continue previewing",
+    guestStatusPrompt: "Notes uploaded! Sign up to receive your daily quiz and preserve your classroom.",
+    guestUploadLimit: "Guest preview is limited to 1 upload. Sign up to add more notes.",
   },
 };

@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { z } from "zod";
 import { MAX_IMAGE_BYTES, MAX_UPLOADS_PER_USER_PER_DAY } from "@tmr/core";
 import {
@@ -10,8 +11,11 @@ import {
 } from "@tmr/db";
 import { handleRouteError, jsonError, jsonOk, readJson } from "@/lib/api";
 import { getDb } from "@/lib/db";
-import { getSessionUser } from "@/lib/session";
+import { processUploadExtraction } from "@/lib/extract";
+import { getCurrentUserOrGuest } from "@/lib/session";
 import { objectUrl, putObject } from "@/lib/storage";
+
+export const maxDuration = 60;
 
 const textUploadSchema = z.object({
   text: z.string().trim().min(1),
@@ -53,10 +57,11 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const current = await getCurrentUserOrGuest();
+    if (!current) {
       return jsonError("Unauthorized", 401);
     }
+    const { user } = current;
     const { id } = await context.params;
     const db = getDb();
     const classroom = await getClassroom(db, user.id, id);
@@ -92,10 +97,11 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const current = await getCurrentUserOrGuest();
+    if (!current) {
       return jsonError("Unauthorized", 401);
     }
+    const { user } = current;
     const { id } = await context.params;
     const db = getDb();
     const classroom = await getClassroom(db, user.id, id);
@@ -105,12 +111,16 @@ export async function POST(request: Request, context: RouteContext) {
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const recentCount = await countUploadsSince(db, user.id, since);
-    if (recentCount >= MAX_UPLOADS_PER_USER_PER_DAY) {
+    if (user.isGuest && recentCount >= 1) {
+      return jsonError("Guest preview is limited to 1 upload. Sign up to add more.", 403);
+    }
+    if (!user.isGuest && recentCount >= MAX_UPLOADS_PER_USER_PER_DAY) {
       return jsonError("Upload limit reached: 50 uploads per day", 429);
     }
 
     const contentType = request.headers.get("content-type") ?? "";
     const uploadIds: string[] = [];
+    const scheduled: { uploadId: string; jobId: string }[] = [];
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData().catch(() => null);
@@ -123,7 +133,10 @@ export async function POST(request: Request, context: RouteContext) {
       if (files.length < 1 || files.length > 10) {
         return jsonError("Attach between 1 and 10 images", 400);
       }
-      if (recentCount + files.length > MAX_UPLOADS_PER_USER_PER_DAY) {
+      if (user.isGuest && files.length > 1) {
+        return jsonError("Guest preview is limited to 1 image. Sign up to add more.", 403);
+      }
+      if (!user.isGuest && recentCount + files.length > MAX_UPLOADS_PER_USER_PER_DAY) {
         return jsonError("Upload limit reached: 50 uploads per day", 429);
       }
       const validated: { file: File; mimeType: string }[] = [];
@@ -152,8 +165,9 @@ export async function POST(request: Request, context: RouteContext) {
           mimeType,
           byteSize: file.size,
         });
-        await enqueueJob(db, { kind: "extract", payload: { uploadId: upload.id } });
+        const job = await enqueueJob(db, { kind: "extract", payload: { uploadId: upload.id } });
         uploadIds.push(upload.id);
+        scheduled.push({ uploadId: upload.id, jobId: job.id });
       }
     } else {
       const body = await readJson(request, textUploadSchema);
@@ -162,11 +176,22 @@ export async function POST(request: Request, context: RouteContext) {
         kind: "text",
         textContent: body.text,
       });
-      await enqueueJob(db, { kind: "extract", payload: { uploadId: upload.id } });
+      const job = await enqueueJob(db, { kind: "extract", payload: { uploadId: upload.id } });
       uploadIds.push(upload.id);
+      scheduled.push({ uploadId: upload.id, jobId: job.id });
     }
 
     await extendClassroomActivity(db, user.id, classroom.autoStopDays, id);
+
+    // Schedule real-time extraction in Next.js background via after()
+    after(async () => {
+      for (const item of scheduled) {
+        await processUploadExtraction(item.uploadId, item.jobId).catch((err) =>
+          console.error("[web-after] extraction failed", err),
+        );
+      }
+    });
+
     return jsonOk({ uploadIds }, 202);
   } catch (error) {
     return handleRouteError(error);

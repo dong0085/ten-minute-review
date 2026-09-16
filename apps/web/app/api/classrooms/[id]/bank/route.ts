@@ -2,16 +2,17 @@ import type { Category } from "@tmr/core";
 import { countBankByCategory, getClassroom } from "@tmr/db";
 import { handleRouteError, jsonError, jsonOk } from "@/lib/api";
 import { getDb } from "@/lib/db";
-import { getSessionUser } from "@/lib/session";
+import { getCurrentUserOrGuest } from "@/lib/session";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const current = await getCurrentUserOrGuest();
+    if (!current) {
       return jsonError("Unauthorized", 401);
     }
+    const { user } = current;
     const { id } = await context.params;
     const db = getDb();
     const classroom = await getClassroom(db, user.id, id);

@@ -36,6 +36,13 @@
       "when": 1789161845308,
       "tag": "0004_white_rattler",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789525343978,
+      "tag": "0005_glossy_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

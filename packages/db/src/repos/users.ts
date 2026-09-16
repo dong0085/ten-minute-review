@@ -10,6 +10,7 @@ export type CreateUserInput = {
   passwordHash?: string | null;
   uiLanguage?: string;
   timezone?: string;
+  isGuest?: boolean;
   emailVerifiedAt?: Date | null;
 };
 
@@ -19,6 +20,7 @@ export type UpdateUserInput = {
   passwordHash?: string | null;
   uiLanguage?: string;
   timezone?: string;
+  isGuest?: boolean;
   emailVerifiedAt?: Date | null;
 };
 
@@ -42,10 +44,41 @@ export async function createUser(db: Db, input: CreateUserInput) {
       passwordHash: input.passwordHash ?? null,
       uiLanguage: input.uiLanguage ?? "en",
       timezone: input.timezone ?? "UTC",
+      isGuest: input.isGuest ?? false,
       emailVerifiedAt: input.emailVerifiedAt ?? null,
     })
     .returning();
   return user;
+}
+
+export async function createGuestUser(
+  db: Db,
+  input?: { uiLanguage?: string; timezone?: string },
+) {
+  const guestId = crypto.randomUUID();
+  const [user] = await db
+    .insert(users)
+    .values({
+      id: guestId,
+      email: `guest-${guestId}@guest.local`,
+      isGuest: true,
+      uiLanguage: input?.uiLanguage ?? "en",
+      timezone: input?.timezone ?? "America/Toronto",
+    })
+    .returning();
+  return user;
+}
+
+export async function cleanupExpiredGuests(
+  db: Db,
+  maxAgeMs = 24 * 60 * 60 * 1000,
+) {
+  const cutoff = new Date(Date.now() - maxAgeMs);
+  const deleted = await db
+    .delete(users)
+    .where(and(eq(users.isGuest, true), lt(users.createdAt, cutoff)))
+    .returning({ id: users.id });
+  return deleted.length;
 }
 
 export async function updateUser(db: Db, id: string, patch: UpdateUserInput) {

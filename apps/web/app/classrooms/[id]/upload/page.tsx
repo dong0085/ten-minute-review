@@ -3,11 +3,15 @@ import { getTranslations } from "next-intl/server";
 import { getClassroom } from "@tmr/db";
 import { UploadPanel } from "@/components/upload/upload-panel";
 import { getDb } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { getCurrentUserOrGuest } from "@/lib/session";
 
 export default async function UploadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await requireUser();
+  const current = await getCurrentUserOrGuest();
+  if (!current) {
+    notFound();
+  }
+  const { user, isGuest } = current;
   const t = await getTranslations("Classroom.UploadPage");
   const classroom = await getClassroom(getDb(), user.id, id);
   if (!classroom) {
@@ -22,7 +26,7 @@ export default async function UploadPage({ params }: { params: Promise<{ id: str
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t("blurb")}</p>
       </div>
-      <UploadPanel classroomId={id} />
+      <UploadPanel classroomId={id} isGuest={isGuest} />
     </div>
   );
 }

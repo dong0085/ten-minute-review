@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { hash } from "@node-rs/argon2";
 import { z } from "zod";
 import { toUiLocale } from "@tmr/core";
@@ -5,8 +6,10 @@ import { randomToken } from "@tmr/core/node";
 import {
   createUser,
   createVerificationToken,
+  deleteUser,
   getUserByEmail,
   recordReferralSignup,
+  transferClassrooms,
   upsertEmailPreferences,
 } from "@tmr/db";
 import { handleRouteError, jsonError, jsonOk, readJson } from "@/lib/api";
@@ -14,6 +17,7 @@ import { getDb } from "@/lib/db";
 import { renderVerificationEmail, sendEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { resolveInviteCode } from "@/lib/invite";
+import { GUEST_COOKIE_NAME } from "@/lib/session";
 
 const signupSchema = z.object({
   email: z.email(),
@@ -77,7 +81,21 @@ export async function POST(request: Request) {
       sendHourLocal: 7,
     });
 
-    return jsonOk({ ok: true }, 201);
+    const cookieStore = await cookies();
+    const guestId = cookieStore.get(GUEST_COOKIE_NAME)?.value;
+    if (guestId) {
+      await transferClassrooms(db, guestId, user.id).catch((err) =>
+        console.error("Failed to transfer guest classrooms", err),
+      );
+      await deleteUser(db, guestId).catch(() => null);
+    }
+
+    const response = jsonOk({ ok: true }, 201);
+    if (guestId) {
+      response.cookies.delete(GUEST_COOKIE_NAME);
+    }
+
+    return response;
   } catch (error) {
     return handleRouteError(error);
   }

@@ -16,6 +16,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -94,7 +102,13 @@ function SelectedFilePreview({ file, onRemove }: { file: File; onRemove: () => v
   );
 }
 
-export function UploadPanel({ classroomId }: { classroomId: string }) {
+export function UploadPanel({
+  classroomId,
+  isGuest = false,
+}: {
+  classroomId: string;
+  isGuest?: boolean;
+}) {
   const t = useTranslations("Upload.Panel");
   const tCommon = useTranslations("Common");
   const [text, setText] = useState("");
@@ -108,6 +122,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
   const [bankAfter, setBankAfter] = useState<number | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
   const [dragActive, setDragActive] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
 
   const loadUploads = useCallback(async () => {
     const response = await fetch(`/api/classrooms/${classroomId}/uploads`);
@@ -249,6 +264,9 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
         ids.push(...data.uploadIds);
       }
       setSessionIds(ids);
+      if (isGuest && ids.length > 0) {
+        setShowGuestModal(true);
+      }
       setText("");
       setFiles([]);
       setFileInputKey((key) => key + 1);
@@ -437,7 +455,7 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
               {t("pointsAdded", { count: pointsDelta })}
             </p>
           ) : null}
-          <div className="mt-4 text-sm">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
             <Link
               className="inline-flex items-center gap-1 font-medium text-muted-foreground transition hover:text-foreground"
               href={`/classrooms/${classroomId}/history`}
@@ -446,9 +464,48 @@ export function UploadPanel({ classroomId }: { classroomId: string }) {
               <ArrowRight className="size-3.5" />
             </Link>
           </div>
+
+          {isGuest ? (
+            <div className="mt-5 flex flex-col items-start justify-between gap-3 rounded-xl border border-primary/25 bg-primary/[0.08] p-4 sm:flex-row sm:items-center">
+              <div>
+                <p className="text-sm font-semibold text-foreground">{t("guestStatusPrompt")}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t("guestModalDescription")}</p>
+              </div>
+              <Button asChild size="sm" className="shrink-0">
+                <Link href="/signup">
+                  {t("guestModalSignUp")}
+                  <ArrowRight className="ml-1 size-3.5" />
+                </Link>
+              </Button>
+            </div>
+          ) : null}
           </CardContent>
         </Card>
       ) : null}
+
+      <Dialog open={showGuestModal} onOpenChange={setShowGuestModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-2xl font-semibold">
+              {t("guestModalTitle")}
+            </DialogTitle>
+            <DialogDescription className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {t("guestModalDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={() => setShowGuestModal(false)}>
+              {t("guestModalContinue")}
+            </Button>
+            <Button asChild size="default">
+              <Link href="/signup">
+                {t("guestModalSignUp")}
+                <ArrowRight className="ml-1 size-4" />
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

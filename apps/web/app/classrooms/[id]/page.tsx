@@ -20,7 +20,7 @@ import { TodayQuizAction } from "@/components/classroom/today-quiz-action";
 import { formatQuizDate } from "@/lib/format";
 import { getDb } from "@/lib/db";
 import { formatResetTime } from "@/lib/send-time";
-import { requireUser } from "@/lib/session";
+import { getCurrentUserOrGuest } from "@/lib/session";
 
 const REHYDRATE_WINDOW_MS = 10 * 60 * 1000;
 
@@ -50,7 +50,11 @@ export default async function ClassroomHomePage({
 }) {
   const { id } = await params;
   const { create } = await searchParams;
-  const user = await requireUser();
+  const current = await getCurrentUserOrGuest();
+  if (!current) {
+    notFound();
+  }
+  const { user, isGuest } = current;
   const t = await getTranslations("Classroom.HomePage");
   const locale = await getLocale();
   const format = await getFormatter();
@@ -77,28 +81,65 @@ export default async function ClassroomHomePage({
 
   return (
     <div className="space-y-5">
+      {isGuest ? (
+        <div className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-primary/[0.06] p-4 sm:flex-row sm:px-5">
+          <p className="text-sm font-medium text-foreground/90">{t("guestBanner")}</p>
+          <Button asChild size="sm">
+            <Link href="/signup">
+              {t("guestBannerAction")}
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </Button>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-5">
         <Card className="paper-lines relative border-primary/15 bg-primary/[0.055] lg:col-span-3">
           <div aria-hidden="true" className="absolute inset-x-6 top-0 h-px bg-primary/25" />
           <CardContent className="relative">
-            <TodayQuizAction
-              classroomId={classroom.id}
-              dailyQuizId={dailyQuiz?.id ?? null}
-              bankSize={size}
-              nowMs={nowMs()}
-              autoStart={create === "1"}
-              resetLocal={reset.local}
-              resetUtc={reset.utc}
-              resetTomorrow={reset.tomorrow}
-              initialJob={
-                composeJob
-                  ? {
-                      status: composeJob.status as "pending" | "running",
-                      requestedAt: composeJob.createdAt.toISOString(),
-                    }
-                  : null
-              }
-            />
+            {isGuest ? (
+              <div className="flex flex-1 flex-col justify-between gap-4 py-2">
+                <div>
+                  <span className="grid size-10 place-items-center rounded-xl bg-primary/[0.08] text-primary">
+                    <Clock3 className="size-4.5" />
+                  </span>
+                  <p className="eyebrow mt-5">{t("guestDailyQuizTitle")}</p>
+                  <h2 className="mt-2 font-heading text-2xl font-semibold tracking-[-0.025em]">
+                    {t("guestDailyQuizTitle")}
+                  </h2>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+                    {t("guestDailyQuizBlurb")}
+                  </p>
+                </div>
+                <div className="pt-3">
+                  <Button asChild size="lg">
+                    <Link href="/signup">
+                      {t("guestDailyQuizCta")}
+                      <ArrowRight />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <TodayQuizAction
+                classroomId={classroom.id}
+                dailyQuizId={dailyQuiz?.id ?? null}
+                bankSize={size}
+                nowMs={nowMs()}
+                autoStart={create === "1"}
+                resetLocal={reset.local}
+                resetUtc={reset.utc}
+                resetTomorrow={reset.tomorrow}
+                initialJob={
+                  composeJob
+                    ? {
+                        status: composeJob.status as "pending" | "running",
+                        requestedAt: composeJob.createdAt.toISOString(),
+                      }
+                    : null
+                }
+              />
+            )}
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">

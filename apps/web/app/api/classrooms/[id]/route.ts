@@ -7,7 +7,7 @@ import {
 } from "@tmr/db";
 import { handleRouteError, jsonError, jsonOk, readJson } from "@/lib/api";
 import { getDb } from "@/lib/db";
-import { getSessionUser } from "@/lib/session";
+import { getCurrentUserOrGuest } from "@/lib/session";
 
 const updateClassroomSchema = z.object({
   name: z.string().trim().min(1).max(80).optional(),
@@ -20,10 +20,11 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const current = await getCurrentUserOrGuest();
+    if (!current) {
       return jsonError("Unauthorized", 401);
     }
+    const { user } = current;
     const { id } = await context.params;
     const db = getDb();
     const classroom = await getClassroom(db, user.id, id);
@@ -44,10 +45,11 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const current = await getCurrentUserOrGuest();
+    if (!current) {
       return jsonError("Unauthorized", 401);
     }
+    const { user } = current;
     const { id } = await context.params;
     const body = await readJson(request, updateClassroomSchema);
     const classroom = await updateClassroom(getDb(), user.id, id, body);
@@ -62,10 +64,11 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const current = await getCurrentUserOrGuest();
+    if (!current) {
       return jsonError("Unauthorized", 401);
     }
+    const { user } = current;
     const { id } = await context.params;
     const db = getDb();
     const classroom = await getClassroom(db, user.id, id);

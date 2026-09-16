@@ -8,7 +8,7 @@ import {
 } from "@/components/classroom/classroom-card";
 import { Button } from "@/components/ui/button";
 import { getDb } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { getCurrentUserOrGuest } from "@/lib/session";
 
 function localDate(timezone: string): string {
   try {
@@ -19,8 +19,37 @@ function localDate(timezone: string): string {
 }
 
 export default async function ClassroomsPage() {
-  const user = await requireUser();
+  const current = await getCurrentUserOrGuest();
   const t = await getTranslations("Classroom.ListPage");
+  const tHome = await getTranslations("Classroom.HomePage");
+
+  if (!current) {
+    return (
+      <div className="mx-auto max-w-3xl py-10 sm:py-16">
+        <div className="editorial-surface relative overflow-hidden rounded-[2rem] px-6 py-12 text-center sm:px-12 sm:py-16">
+          <div aria-hidden="true" className="absolute inset-x-16 top-0 h-px bg-primary/30" />
+          <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/[0.09] text-primary">
+            <BookOpen className="size-5" />
+          </span>
+          <p className="eyebrow mt-7">{t("emptyKicker")}</p>
+          <h1 className="mx-auto mt-3 max-w-xl font-heading text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+            {t("emptyTitle")}
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
+            {t("emptyBlurb")}
+          </p>
+          <Button asChild size="lg" className="mt-8">
+            <Link href="/classrooms/new">
+              {t("create")}
+              <ArrowRight />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { user, isGuest } = current;
   const db = getDb();
   const classrooms = await listClassrooms(db, user.id);
   const today = localDate(user.timezone);
@@ -70,6 +99,18 @@ export default async function ClassroomsPage() {
 
   return (
     <div className="space-y-8">
+      {isGuest ? (
+        <div className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-primary/[0.06] p-4 sm:flex-row sm:px-5">
+          <p className="text-sm font-medium text-foreground/90">{tHome("guestBanner")}</p>
+          <Button asChild size="sm">
+            <Link href="/signup">
+              {tHome("guestBannerAction")}
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </Button>
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-6 border-b border-border/70 pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="eyebrow">{t("kicker")}</p>

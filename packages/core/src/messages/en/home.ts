@@ -6,6 +6,7 @@ export const home = {
   goToClassrooms: "Go to my classrooms",
   createAccount: "Create account",
   signIn: "Sign in",
+  tryAsGuest: "Try without an account",
   proof: {
     handwriting: "Text or handwriting",
     fresh: "Fresh questions each day",

@@ -40,6 +40,20 @@ export async function claimJob(db: Db, workerId: string) {
   return rows[0] ?? null;
 }
 
+export async function claimSpecificJob(db: Db, jobId: string, workerId: string) {
+  const result = await db.execute(sql`
+    UPDATE jobs
+    SET status = 'running',
+        locked_at = now(),
+        locked_by = ${workerId},
+        attempts = attempts + 1
+    WHERE id = ${jobId} AND status = 'pending' AND run_at <= now()
+    RETURNING *
+  `);
+  const rows = Array.from(result) as unknown as Job[];
+  return rows[0] ?? null;
+}
+
 export async function completeJob(db: Db, jobId: string) {
   await db
     .update(jobs)

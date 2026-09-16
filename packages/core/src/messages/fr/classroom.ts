@@ -138,6 +138,13 @@ export const classroom: MessageShape<(typeof en)["Classroom"]> = {
     best: "Meilleur : {score} / {size}",
     unfinished: "Inachevés",
     unfinishedBlurb: "Des quiz que tu as créés mais pas encore faits.",
+    guestBanner:
+      "Tu explores en mode aperçu. Les notes et classes sont temporaires tant que tu ne crées pas de compte.",
+    guestBannerAction: "S'inscrire pour enregistrer",
+    guestDailyQuizTitle: "Des quiz quotidiens livrés dans ta boîte de réception",
+    guestDailyQuizBlurb:
+      "Chaque matin à 7h00, tu recevras un quiz de 10 minutes adapté à ces notes. Inscris-toi pour activer les quiz quotidiens de cette classe.",
+    guestDailyQuizCta: "S'inscrire pour recevoir les quiz",
   },
   HistoryPage: {
     title: "Historique des imports",

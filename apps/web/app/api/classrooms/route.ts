@@ -4,12 +4,13 @@ import {
   bankSize,
   countClassrooms,
   createClassroom,
+  createGuestUser,
   listClassrooms,
   listQuizzesForUserOnDate,
 } from "@tmr/db";
 import { handleRouteError, jsonError, jsonOk, readJson } from "@/lib/api";
 import { getDb } from "@/lib/db";
-import { getSessionUser } from "@/lib/session";
+import { GUEST_COOKIE_NAME, getCurrentUserOrGuest } from "@/lib/session";
 import { localDateFor } from "@/app/api/_lib/quiz";
 
 const createClassroomSchema = z.object({
@@ -20,10 +21,11 @@ const createClassroomSchema = z.object({
 
 export async function GET() {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const current = await getCurrentUserOrGuest();
+    if (!current) {
       return jsonError("Unauthorized", 401);
     }
+    const { user } = current;
     const db = getDb();
     const classrooms = await listClassrooms(db, user.id);
     const today = localDateFor(user.timezone);
@@ -53,23 +55,47 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await getSessionUser();
-    if (!user) {
-      return jsonError("Unauthorized", 401);
-    }
     const body = await readJson(request, createClassroomSchema);
     const db = getDb();
+    const current = await getCurrentUserOrGuest();
+
+    let user = current?.user;
+    let isNewGuest = false;
+
+    if (!user) {
+      user = await createGuestUser(db, {
+        uiLanguage: body.nativeLanguage,
+        timezone: "America/Toronto",
+      });
+      isNewGuest = true;
+    }
+
     const existingCount = await countClassrooms(db, user.id);
-    if (existingCount >= FREE_TIER.classrooms) {
+    if (user.isGuest && existingCount >= 1) {
+      return jsonError("Guest preview is limited to 1 classroom. Sign up to create more.", 403);
+    }
+    if (!user.isGuest && existingCount >= FREE_TIER.classrooms) {
       return jsonError("Free plan is limited to 3 classrooms", 403);
     }
+
     const classroom = await createClassroom(db, user.id, {
       name: body.name,
       targetLanguage: body.targetLanguage,
       nativeLanguage: body.nativeLanguage,
       activeUntil: new Date(),
     });
-    return jsonOk({ classroom }, 201);
+
+    const response = jsonOk({ classroom }, 201);
+    if (isNewGuest) {
+      response.cookies.set(GUEST_COOKIE_NAME, user.id, {
+        path: "/",
+        httpOnly: true,
+        maxAge: 60 * 60 * 24 * 7,
+        sameSite: "lax",
+      });
+    }
+
+    return response;
   } catch (error) {
     return handleRouteError(error);
   }

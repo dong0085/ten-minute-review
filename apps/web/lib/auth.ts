@@ -5,14 +5,17 @@ import { verify } from "@node-rs/argon2";
 import { cookies } from "next/headers";
 import {
   createUser,
+  deleteUser,
   extendClassroomActivityForLogin,
   getUserByEmail,
   recordReferralSignup,
+  transferClassrooms,
   upsertEmailPreferences,
 } from "@tmr/db";
 import { env } from "./env";
 import { getDb } from "./db";
 import { resolveInviteCode } from "./invite";
+import { GUEST_COOKIE_NAME } from "./session";
 
 declare module "next-auth" {
   interface Session {
@@ -73,6 +76,12 @@ export const authConfig: NextAuthConfig = {
       const existing = await getUserByEmail(db, user.email);
       if (existing) {
         user.id = existing.id;
+        const store = await cookies();
+        const guestId = store.get(GUEST_COOKIE_NAME)?.value;
+        if (guestId && guestId !== existing.id) {
+          await transferClassrooms(db, guestId, existing.id).catch(() => null);
+          await deleteUser(db, guestId).catch(() => null);
+        }
         return true;
       }
       if (account?.provider === "credentials") {
@@ -100,6 +109,14 @@ export const authConfig: NextAuthConfig = {
         return false;
       }
       user.id = created.id;
+
+      const store = await cookies();
+      const guestId = store.get(GUEST_COOKIE_NAME)?.value;
+      if (guestId && guestId !== created.id) {
+        await transferClassrooms(db, guestId, created.id).catch(() => null);
+        await deleteUser(db, guestId).catch(() => null);
+      }
+
       await upsertEmailPreferences(db, created.id, {
         dailyEnabled: true,
         sendHourLocal: 7,

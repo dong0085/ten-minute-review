@@ -1,5 +1,5 @@
 import os from "node:os";
-import { claimJob, completeJob, failJob, reapStaleJobs } from "@tmr/db";
+import { claimJob, cleanupExpiredGuests, completeJob, failJob, reapStaleJobs } from "@tmr/db";
 import type { Db, Job } from "@tmr/db";
 import { handleComposeJob } from "./handlers/compose";
 import { handleExtractJob } from "./handlers/extract";
@@ -90,6 +90,7 @@ export async function drainJobs(db: Db): Promise<DrainResult> {
 
 export type WorkerRunDependencies = {
   reapStaleJobs: typeof reapStaleJobs;
+  cleanupExpiredGuests?: typeof cleanupExpiredGuests;
   enqueueDueDailyComposeJobs: typeof enqueueDueDailyComposeJobs;
   enqueueReadyDailyEmailJobs: typeof enqueueReadyDailyEmailJobs;
   auditOverdueDailyEmails: typeof auditOverdueDailyEmails;
@@ -98,6 +99,7 @@ export type WorkerRunDependencies = {
 
 const defaultDependencies: WorkerRunDependencies = {
   reapStaleJobs,
+  cleanupExpiredGuests,
   enqueueDueDailyComposeJobs,
   enqueueReadyDailyEmailJobs,
   auditOverdueDailyEmails,
@@ -110,6 +112,11 @@ export async function runWorkerOnce(
   dependencies: WorkerRunDependencies = defaultDependencies,
 ): Promise<WorkerRunSummary> {
   const stale = await dependencies.reapStaleJobs(db);
+  if (dependencies.cleanupExpiredGuests) {
+    await dependencies.cleanupExpiredGuests(db).catch((err) =>
+      console.error("[worker] cleanup expired guests error", err),
+    );
+  }
   const composeJobsEnqueued = await dependencies.enqueueDueDailyComposeJobs(db, now);
   const composeDrain = await dependencies.drainJobs(db);
   const emailJobsEnqueued = await dependencies.enqueueReadyDailyEmailJobs(db, now);

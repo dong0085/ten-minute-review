@@ -42,5 +42,12 @@ export const upload: MessageShape<(typeof en)["Upload"]> = {
       "Ton envoi est conservé. Une nouvelle tentative est automatique, et tu peux relire le contenu à tout moment dans l'historique.",
     pointsAdded: "+{count} points de connaissance ajoutés par ces envois.",
     viewHistory: "Voir l'historique des envois",
+    guestModalTitle: "Notes téléversées !",
+    guestModalDescription:
+      "Nous traitons tes notes en points d'apprentissage. Crée un compte pour recevoir ton quiz quotidien de 10 minutes chaque matin et conserver tes notes.",
+    guestModalSignUp: "S'inscrire pour recevoir le quiz",
+    guestModalContinue: "Continuer l'aperçu",
+    guestStatusPrompt: "Notes téléversées ! Crée un compte pour recevoir ton quiz quotidien et conserver tes données.",
+    guestUploadLimit: "L'aperçu invité est limité à 1 envoi. Crée un compte pour ajouter d'autres notes.",
   },
 };

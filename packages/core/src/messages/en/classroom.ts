@@ -132,6 +132,13 @@ export const classroom = {
     best: "Best {score} / {size}",
     unfinished: "Unfinished",
     unfinishedBlurb: "Quizzes you created but have not taken yet.",
+    guestBanner:
+      "You are exploring in preview mode. Notes and classrooms are temporary until you create an account.",
+    guestBannerAction: "Sign up to save",
+    guestDailyQuizTitle: "Daily quizzes delivered to your inbox",
+    guestDailyQuizBlurb:
+      "Every morning at 7:00 AM, you'll receive a 10-minute quiz tailored to these notes. Sign up to activate daily quizzes for this classroom.",
+    guestDailyQuizCta: "Sign up to receive daily quizzes",
   },
   HistoryPage: {
     title: "Upload history",

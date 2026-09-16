@@ -6,6 +6,7 @@ export const home = {
   goToClassrooms: "Voir mes classes",
   createAccount: "Créer un compte",
   signIn: "Se connecter",
+  tryAsGuest: "Essayer sans compte",
   proof: {
     handwriting: "Texte ou notes manuscrites",
     fresh: "De nouvelles questions chaque jour",

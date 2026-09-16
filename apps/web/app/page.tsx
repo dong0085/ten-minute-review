@@ -47,12 +47,15 @@ export default async function HomePage() {
             ) : (
               <>
                 <Button asChild size="lg">
-                  <Link href="/signup">
-                    {t("createAccount")}
+                  <Link href="/classrooms/new">
+                    {t("tryAsGuest")}
                     <ArrowRight />
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
+                  <Link href="/signup">{t("createAccount")}</Link>
+                </Button>
+                <Button asChild size="lg" variant="ghost">
                   <Link href="/signin">{t("signIn")}</Link>
                 </Button>
               </>

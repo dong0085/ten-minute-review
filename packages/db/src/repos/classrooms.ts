@@ -144,6 +144,7 @@ export async function listDueClassrooms(db: Db, sendAt: Date) {
     LEFT JOIN email_preferences ep ON ep.user_id = u.id
     WHERE c.archived_at IS NULL
       AND c.active_until > now()
+      AND COALESCE(u.is_guest, false) = false
       AND COALESCE(ep.daily_enabled, true)
       AND ep.unsubscribed_at IS NULL
       AND now() >= ${encodedSendAt}
@@ -186,6 +187,7 @@ export async function listReadyDailyEmailRecipients(db: Db, sendAt: Date) {
       LEFT JOIN email_preferences ep ON ep.user_id = u.id
       WHERE c.archived_at IS NULL
         AND c.active_until > now()
+        AND COALESCE(u.is_guest, false) = false
         AND COALESCE(ep.daily_enabled, true)
         AND ep.unsubscribed_at IS NULL
         AND now() >= ${encodedSendAt}
@@ -361,4 +363,17 @@ export async function countUploadsSince(db: Db, userId: string, since: Date) {
     .innerJoin(classrooms, eq(uploads.classroomId, classrooms.id))
     .where(and(eq(classrooms.userId, userId), gte(uploads.createdAt, since)));
   return Number(row?.value ?? 0);
+}
+
+export async function transferClassrooms(
+  db: Db,
+  fromUserId: string,
+  toUserId: string,
+): Promise<number> {
+  const result = await db
+    .update(classrooms)
+    .set({ userId: toUserId, updatedAt: new Date() })
+    .where(eq(classrooms.userId, fromUserId))
+    .returning({ id: classrooms.id });
+  return result.length;
 }

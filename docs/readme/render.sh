@@ -19,5 +19,6 @@ done
 typst compile --creation-timestamp 0 "$source_dir/hero.typ" "$output_dir/hero.svg"
 typst compile --creation-timestamp 0 "$source_dir/learning-loop.typ" "$output_dir/learning-loop.svg"
 typst compile --creation-timestamp 0 "$source_dir/architecture.typ" "$output_dir/architecture.svg"
+typst compile --creation-timestamp 0 --ppi 144 "$source_dir/thumbnail.typ" "$output_dir/thumbnail.png"
 
 echo "Rendered README artwork in docs/readme/generated"

@@ -1,5 +1,7 @@
 # Ten Minutes Review
 
+![Ten Minutes Review project card](docs/readme/generated/thumbnail.png)
+
 Turns tutoring notes—typed text or photos of handwriting—into a fresh daily quiz that fits inside ten minutes.
 
 ![Notes flow through a question bank into a focused daily quiz](docs/readme/generated/hero.svg)
@@ -93,7 +95,7 @@ pnpm build
 pnpm docs:render
 ```
 
-`pnpm docs:render` rebuilds the committed README SVGs from the Typst sources in `docs/readme/`. It requires Typst 0.15 or newer and no Typst packages or network access.
+`pnpm docs:render` rebuilds the committed README artwork from the Typst sources in `docs/readme/`. It requires Typst 0.15 or newer and no Typst packages or network access.
 
 ## Deployment
 
